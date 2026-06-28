@@ -7,13 +7,22 @@ export default async function DashboardGroupLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
+    if (!user) {
+      redirect("/login");
+    }
+  } catch (err) {
+    // createClient throws if env vars are missing; treat as unauthenticated
+    if (err instanceof Error && err.message.startsWith("Missing Supabase")) {
+      redirect("/login?error=config");
+    }
+    // Re-throw redirect signals from next/navigation
+    throw err;
   }
 
   return <DashboardLayout>{children}</DashboardLayout>;
