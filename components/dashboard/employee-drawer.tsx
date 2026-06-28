@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Calendar,
   CheckCircle2,
@@ -28,8 +28,7 @@ import { Progress } from "@/components/ui/progress";
 import { CountdownTimer } from "./countdown-timer";
 import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/lib/utils";
-import type { EmployeeWithPresence } from "@/types/database";
-import type { ActivityLog } from "@/types/database";
+import type { EmployeeWithPresence, ActivityLog } from "@/types/database";
 import {
   STATUS_CONFIG,
   PRIORITY_CONFIG,
@@ -37,30 +36,73 @@ import {
   formatTimeAgo,
 } from "./status-config";
 import { getRoleLabel } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+
+const ACTION_ICONS: Record<string, string> = {
+  status_changed: "🔄",
+  started_task: "▶️",
+  completed_task: "✅",
+  task_assigned: "📋",
+  added_note: "📝",
+  created: "🆕",
+};
+
+const ACTION_LABELS: Record<string, string> = {
+  status_changed: "تغيير الحالة",
+  started_task: "بدء مهمة",
+  completed_task: "إنهاء مهمة",
+  task_assigned: "تكليف بمهمة",
+  added_note: "ملاحظة",
+  created: "إنشاء",
+};
 
 interface EmployeeDrawerProps {
   employee: EmployeeWithPresence | null;
-  timeline: ActivityLog[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onUpdateStatus?: () => void;
 }
-
-const ACTION_LABELS: Record<string, string> = {
-  started_task: "بدأ المهمة",
-  completed_task: "أكمل المهمة",
-  status_changed: "غيّر الحالة",
-  added_note: "أضاف ملاحظة",
-  assigned: "تم التكليف",
-  created: "تم الإنشاء",
-};
 
 export function EmployeeDrawer({
   employee,
-  timeline,
   open,
   onOpenChange,
+  onUpdateStatus,
 }: EmployeeDrawerProps) {
-  const [notes, setNotes] = useState(employee?.presence?.notes ?? "");
+  const [notes, setNotes] = useState("");
+  const [timeline, setTimeline] = useState<ActivityLog[]>([]);
+  const [loadingTimeline, setLoadingTimeline] = useState(false);
+
+  // Reset notes when employee changes
+  useEffect(() => {
+    setNotes(employee?.presence?.notes ?? "");
+  }, [employee]);
+
+  // Fetch timeline when drawer opens
+  useEffect(() => {
+    if (!open || !employee) return;
+
+    async function fetchTimeline() {
+      if (!employee) return;
+      setLoadingTimeline(true);
+      const supabase = createClient();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const { data } = await supabase
+        .from("activity_logs")
+        .select("*")
+        .eq("actor_id", employee.id)
+        .gte("created_at", today.toISOString())
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      setTimeline((data as ActivityLog[]) ?? []);
+      setLoadingTimeline(false);
+    }
+
+    fetchTimeline();
+  }, [open, employee]);
 
   if (!employee) return null;
 
@@ -86,7 +128,7 @@ export function EmployeeDrawer({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full max-w-[480px] p-0">
-        {/* ── Header ─────────────────────────────────────── */}
+        {/* ── Header ─────────────────────────────── */}
         <SheetHeader className="relative border-b bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6">
           <SheetClose className="absolute top-4 start-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-ring">
             <X className="h-4 w-4" />
@@ -120,7 +162,13 @@ export function EmployeeDrawer({
                   cfg.badgeClass
                 )}
               >
-                <span className={cn("w-2 h-2 rounded-full me-1.5", cfg.dotClass)} />
+                <span
+                  className={cn(
+                    "w-2 h-2 rounded-full me-1.5",
+                    cfg.dotClass,
+                    status === "available" && "animate-pulse"
+                  )}
+                />
                 {cfg.label}
               </span>
             </div>
@@ -133,7 +181,7 @@ export function EmployeeDrawer({
           )}
         </SheetHeader>
 
-        {/* ── Body ───────────────────────────────────────── */}
+        {/* ── Body ───────────────────────────────── */}
         <SheetBody className="space-y-5 pt-5">
 
           {/* Current Task */}
@@ -153,13 +201,11 @@ export function EmployeeDrawer({
                     {PRIORITY_CONFIG[task.priority].label}
                   </Badge>
                 </div>
-
                 {task.description && (
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     {task.description}
                   </p>
                 )}
-
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   {task.started_at && (
                     <InfoItem
@@ -182,15 +228,17 @@ export function EmployeeDrawer({
             )}
           </Section>
 
-          {/* Countdown + Progress */}
+          {/* Countdown */}
           {task?.due_date && (
-            <Section icon={<TimerIcon className="h-4 w-4" />} title="الوقت المتبقي">
+            <Section
+              icon={<TimerIcon className="h-4 w-4" />}
+              title="الوقت المتبقي"
+            >
               <div className="rounded-xl border bg-muted/30 dark:bg-slate-800/40 p-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">العد التنازلي</span>
                   <CountdownTimer dueDate={task.due_date} />
                 </div>
-
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">إنجاز المهمة (بالوقت)</span>
@@ -235,21 +283,36 @@ export function EmployeeDrawer({
             </div>
           </Section>
 
-          {/* Accept New Task */}
+          {/* Actions */}
           <Section icon={<PlusCircle className="h-4 w-4" />} title="إجراءات">
-            <Button
-              className="w-full gap-2"
-              variant={status === "available" ? "default" : "outline"}
-              disabled={status === "busy" || status === "meeting"}
-            >
-              <CheckCircle2 className="h-4 w-4" />
-              قبول مهمة جديدة
-            </Button>
-            {(status === "busy" || status === "meeting") && (
-              <p className="text-xs text-muted-foreground text-center mt-1">
-                الموظف غير متاح حالياً
-              </p>
-            )}
+            <div className="space-y-2">
+              <Button
+                className="w-full gap-2"
+                variant={status === "available" ? "default" : "outline"}
+                disabled={status === "busy" || status === "meeting"}
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                قبول مهمة جديدة
+              </Button>
+              {onUpdateStatus && (
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={() => {
+                    onOpenChange(false);
+                    onUpdateStatus();
+                  }}
+                >
+                  <User className="h-4 w-4" />
+                  تحديث الحالة
+                </Button>
+              )}
+              {(status === "busy" || status === "meeting") && (
+                <p className="text-xs text-muted-foreground text-center">
+                  الموظف غير متاح حالياً
+                </p>
+              )}
+            </div>
           </Section>
 
           {/* Notes */}
@@ -268,13 +331,23 @@ export function EmployeeDrawer({
           </Section>
 
           {/* Today's Timeline */}
-          <Section icon={<User className="h-4 w-4" />} title="نشاط اليوم">
-            {timeline.length > 0 ? (
-              <ol className="relative border-s border-border ms-3 space-y-4">
-                {timeline.map((entry) => (
-                  <TimelineEntry key={entry.id} entry={entry} />
+          <Section icon={<Clock className="h-4 w-4" />} title="نشاط اليوم">
+            {loadingTimeline ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-12 rounded-lg bg-muted animate-pulse" />
                 ))}
-              </ol>
+              </div>
+            ) : timeline.length > 0 ? (
+              <div className="relative">
+                {/* Vertical line */}
+                <div className="absolute start-[18px] top-0 bottom-0 w-px bg-border" />
+                <ol className="space-y-3">
+                  {timeline.map((entry) => (
+                    <TimelineEntry key={entry.id} entry={entry} />
+                  ))}
+                </ol>
+              </div>
             ) : (
               <EmptyState label="لا يوجد نشاط مسجل اليوم" />
             )}
@@ -287,7 +360,7 @@ export function EmployeeDrawer({
   );
 }
 
-/* ──── Sub-components ────────────────────────────────────── */
+/* ──── Sub-components ──────────────────────── */
 
 function Section({
   icon,
@@ -338,31 +411,51 @@ function EmptyState({ label }: { label: string }) {
 }
 
 function TimelineEntry({ entry }: { entry: ActivityLog }) {
-  const label =
-    ACTION_LABELS[entry.action] ??
-    entry.action.replace(/_/g, " ");
+  const icon = ACTION_ICONS[entry.action] ?? "•";
+  const label = ACTION_LABELS[entry.action] ?? entry.action.replace(/_/g, " ");
+  const vals = entry.new_values as Record<string, string> | null;
+  const detail = vals?.task ?? vals?.status ?? vals?.note ?? null;
 
-  const detail =
-    (entry.new_values as Record<string, string> | null)?.task ??
-    (entry.new_values as Record<string, string> | null)?.status ??
-    (entry.new_values as Record<string, string> | null)?.note ??
-    null;
+  const time = new Date(entry.created_at).toLocaleTimeString("ar-SA", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+
+  // Status color for the dot
+  const statusColor = vals?.status
+    ? STATUS_CONFIG[vals.status as keyof typeof STATUS_CONFIG]?.dotClass ?? "bg-muted-foreground"
+    : "bg-primary";
 
   return (
-    <li className="ms-6 relative">
-      <span className="absolute -start-[25px] flex h-4 w-4 items-center justify-center rounded-full bg-muted border border-border text-[8px] font-bold ring-2 ring-background">
-        ✓
-      </span>
-      <div className="flex flex-col">
-        <p className="text-xs font-medium text-foreground">{label}</p>
-        {detail && (
-          <p className="text-[10px] text-muted-foreground truncate mt-0.5">
-            {detail}
-          </p>
+    <li className="relative flex gap-3 ps-10">
+      {/* Timeline dot */}
+      <div
+        className={cn(
+          "absolute start-3 top-1 w-4 h-4 rounded-full border-2 border-background flex items-center justify-center text-[8px] z-10",
+          statusColor
         )}
-        <time className="text-[10px] text-muted-foreground mt-0.5">
-          {formatTimeAgo(entry.created_at)}
-        </time>
+      >
+        <span className="sr-only">{label}</span>
+      </div>
+
+      <div className="flex-1 min-w-0 pb-3">
+        <div className="flex items-start gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs">{icon}</span>
+              <p className="text-xs font-medium text-foreground">{label}</p>
+            </div>
+            {detail && (
+              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                {detail}
+              </p>
+            )}
+          </div>
+          <time className="text-[10px] text-muted-foreground shrink-0 font-mono">
+            {time}
+          </time>
+        </div>
       </div>
     </li>
   );

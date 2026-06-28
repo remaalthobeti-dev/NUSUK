@@ -1,43 +1,96 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { useState, useMemo } from "react";
+import { ArrowRight, ClipboardList, Plus } from "lucide-react";
 import Link from "next/link";
-import type { EmployeeWithPresence, ActivityLog, Team } from "@/types/database";
+import type { EmployeeWithPresence, Team } from "@/types/database";
 import type { AvailabilityStatus } from "@/types/database";
 import { TeamStats } from "./team-stats";
 import { EmployeeCard } from "./employee-card";
 import { EmployeeDrawer } from "./employee-drawer";
+import { SearchFilters } from "./search-filters";
+import { AlertsPanel } from "./alerts-panel";
+import { UpdateStatusDialog } from "./update-status-dialog";
+import { AssignTaskDialog } from "./assign-task-dialog";
 import { TEAM_EMOJI } from "./status-config";
+import { useRealtimeTeam } from "@/hooks/use-realtime-team";
+import { useAlertChecker } from "@/hooks/use-alert-checker";
+import { Button } from "@/components/ui/button";
 
 interface TeamDashboardProps {
   team: Team;
   employees: EmployeeWithPresence[];
   presenceSummary: Record<AvailabilityStatus, number>;
   totalPresent: number;
-  timelineMap: Record<string, ActivityLog[]>;
 }
 
 export function TeamDashboard({
   team,
-  employees,
-  presenceSummary,
-  totalPresent,
-  timelineMap,
+  employees: initialEmployees,
+  presenceSummary: initialSummary,
+  totalPresent: initialTotal,
 }: TeamDashboardProps) {
-  const [selectedEmployee, setSelectedEmployee] =
-    useState<EmployeeWithPresence | null>(null);
+  const { employees } = useRealtimeTeam(team.id, initialEmployees);
+  const { alerts, dismiss, dismissAll } = useAlertChecker(employees);
+
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeWithPresence | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [updateStatusEmployee, setUpdateStatusEmployee] = useState<EmployeeWithPresence | null>(null);
+  const [assignTaskOpen, setAssignTaskOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilters, setActiveFilters] = useState<AvailabilityStatus[]>([]);
 
   function openEmployee(emp: EmployeeWithPresence) {
     setSelectedEmployee(emp);
     setDrawerOpen(true);
   }
 
+  function toggleFilter(s: AvailabilityStatus) {
+    setActiveFilters((prev) =>
+      prev.includes(s) ? prev.filter((f) => f !== s) : [...prev, s]
+    );
+  }
+
+  function clearAll() {
+    setSearchQuery("");
+    setActiveFilters([]);
+  }
+
+  const filteredEmployees = useMemo(() => {
+    return employees.filter((emp) => {
+      if (activeFilters.length > 0) {
+        const status = emp.presence?.availability_status ?? "available";
+        if (!activeFilters.includes(status)) return false;
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        const matchName = emp.full_name.toLowerCase().includes(q);
+        const matchTask = emp.current_task?.title.toLowerCase().includes(q) ?? false;
+        const matchStatus = (emp.presence?.availability_status ?? "").includes(q);
+        if (!matchName && !matchTask && !matchStatus) return false;
+      }
+      return true;
+    });
+  }, [employees, searchQuery, activeFilters]);
+
+  // Recompute presence summary from realtime employees
+  const presenceSummary = useMemo(() => {
+    const summary = { ...initialSummary } as Record<AvailabilityStatus, number>;
+    const statuses: AvailabilityStatus[] = ["available", "busy", "break", "meeting", "outside_office", "remote"];
+    statuses.forEach((s) => (summary[s] = 0));
+    employees.forEach((emp) => {
+      const s = emp.presence?.availability_status;
+      if (s) summary[s] = (summary[s] ?? 0) + 1;
+    });
+    return summary;
+  }, [employees, initialSummary]);
+
+  const totalPresent = useMemo(
+    () => employees.filter((e) => e.presence?.availability_status).length,
+    [employees]
+  );
+
   const emoji = TEAM_EMOJI[team.icon ?? ""] ?? "👥";
-  const timeline = selectedEmployee
-    ? (timelineMap[selectedEmployee.id] ?? [])
-    : [];
 
   return (
     <>
@@ -55,23 +108,40 @@ export function TeamDashboard({
       </div>
 
       <div className="mb-8">
-        <div className="flex items-center gap-3">
-          <span className="text-4xl select-none">{emoji}</span>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{team.name}</h1>
-            {team.description && (
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {team.description}
-              </p>
-            )}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <span className="text-4xl select-none">{emoji}</span>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">{team.name}</h1>
+              {team.description && (
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {team.description}
+                </p>
+              )}
+            </div>
+            <div
+              className="h-8 w-1 rounded-full ms-2 hidden sm:block"
+              style={{ background: team.color }}
+            />
           </div>
-          {/* Colored accent bar */}
-          <div
-            className="h-8 w-1 rounded-full ms-2 hidden sm:block"
-            style={{ background: team.color }}
-          />
+
+          <Button
+            onClick={() => setAssignTaskOpen(true)}
+            className="gap-2 shrink-0"
+          >
+            <Plus className="h-4 w-4" />
+            <ClipboardList className="h-4 w-4" />
+            تكليف مهمة جديدة
+          </Button>
         </div>
       </div>
+
+      {/* Alerts */}
+      {alerts.length > 0 && (
+        <div className="mb-6">
+          <AlertsPanel alerts={alerts} onDismiss={dismiss} onDismissAll={dismissAll} />
+        </div>
+      )}
 
       {/* Stats */}
       <div className="mb-8">
@@ -85,24 +155,42 @@ export function TeamDashboard({
         />
       </div>
 
+      {/* Search & Filters */}
+      <div className="mb-6">
+        <SearchFilters
+          searchQuery={searchQuery}
+          activeFilters={activeFilters}
+          onSearchChange={setSearchQuery}
+          onFilterToggle={toggleFilter}
+          onClearAll={clearAll}
+          resultCount={filteredEmployees.length}
+          totalCount={employees.length}
+        />
+      </div>
+
       {/* Employee Grid */}
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-          الموظفون ({employees.length})
+          الموظفون ({filteredEmployees.length})
         </h2>
       </div>
 
-      {employees.length === 0 ? (
+      {filteredEmployees.length === 0 ? (
         <div className="rounded-2xl border border-dashed bg-muted/20 p-16 text-center">
-          <p className="text-muted-foreground">لا يوجد موظفون في هذا الفريق</p>
+          <p className="text-muted-foreground">
+            {employees.length === 0
+              ? "لا يوجد موظفون في هذا الفريق"
+              : "لا توجد نتائج تطابق البحث"}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-          {employees.map((emp) => (
+          {filteredEmployees.map((emp) => (
             <EmployeeCard
               key={emp.id}
               employee={emp}
               onClick={() => openEmployee(emp)}
+              onUpdateStatus={() => setUpdateStatusEmployee(emp)}
             />
           ))}
         </div>
@@ -111,9 +199,28 @@ export function TeamDashboard({
       {/* Employee Drawer */}
       <EmployeeDrawer
         employee={selectedEmployee}
-        timeline={timeline}
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
+        onUpdateStatus={() => {
+          if (selectedEmployee) setUpdateStatusEmployee(selectedEmployee);
+        }}
+      />
+
+      {/* Update Status Dialog */}
+      <UpdateStatusDialog
+        employee={updateStatusEmployee}
+        open={!!updateStatusEmployee}
+        onOpenChange={(open) => {
+          if (!open) setUpdateStatusEmployee(null);
+        }}
+      />
+
+      {/* Assign Task Dialog */}
+      <AssignTaskDialog
+        employees={employees}
+        teamId={team.id}
+        open={assignTaskOpen}
+        onOpenChange={setAssignTaskOpen}
       />
     </>
   );
