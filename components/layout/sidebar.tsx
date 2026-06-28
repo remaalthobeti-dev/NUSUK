@@ -4,14 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Users,
-  CheckSquare,
+  BarChart3,
   Bell,
   Activity,
   Settings,
   ChevronLeft,
   Building2,
-  UsersRound,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,9 +26,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: "/dashboard", icon: LayoutDashboard, label: "الرئيسية" },
-  { href: "/dashboard/teams", icon: UsersRound, label: "الفرق" },
-  { href: "/dashboard/employees", icon: Users, label: "الموظفون" },
-  { href: "/dashboard/tasks", icon: CheckSquare, label: "المهام" },
+  { href: "/dashboard/analytics", icon: BarChart3, label: "التحليلات" },
   { href: "/dashboard/notifications", icon: Bell, label: "الإشعارات" },
   { href: "/dashboard/activity", icon: Activity, label: "سجل النشاط" },
 ];
