@@ -1,147 +1,87 @@
 import type { Metadata } from "next";
+import { getAllTeams } from "@/lib/data/dashboard";
 import { createClient } from "@/lib/supabase/server";
-import {
-  Users,
-  CheckSquare,
-  UsersRound,
-  Activity,
-  Clock,
-  TrendingUp,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TeamCard } from "@/components/dashboard/team-card";
 import { Badge } from "@/components/ui/badge";
+import { Activity } from "lucide-react";
+import type { AvailabilityStatus } from "@/types/database";
 
 export const metadata: Metadata = {
   title: "الرئيسية",
 };
 
-async function getStats() {
-  const supabase = await createClient();
-
-  const [
-    { count: teamsCount },
-    { count: employeesCount },
-    { count: tasksCount },
-    { count: pendingTasksCount },
-  ] = await Promise.all([
-    supabase.from("teams").select("*", { count: "exact", head: true }).eq("is_active", true),
-    supabase.from("employees").select("*", { count: "exact", head: true }).eq("is_active", true),
-    supabase.from("tasks").select("*", { count: "exact", head: true }),
-    supabase.from("tasks").select("*", { count: "exact", head: true }).eq("status", "pending"),
+export default async function DashboardPage() {
+  const [teams, supabase] = await Promise.all([
+    getAllTeams(),
+    createClient(),
   ]);
 
-  return {
-    teams: teamsCount ?? 0,
-    employees: employeesCount ?? 0,
-    tasks: tasksCount ?? 0,
-    pendingTasks: pendingTasksCount ?? 0,
-  };
-}
+  // Fetch presence counts per team for the cards
+  const { data: presenceRows } = await supabase
+    .from("employee_presence")
+    .select("employee_id, availability_status, employees!inner(team_id)")
+    .returns<{
+      employee_id: string;
+      availability_status: AvailabilityStatus;
+      employees: { team_id: string };
+    }[]>();
 
-export default async function DashboardPage() {
-  const stats = await getStats();
+  // Fetch employee counts per team
+  const { data: empRows } = await supabase
+    .from("employees")
+    .select("team_id")
+    .eq("is_active", true)
+    .returns<{ team_id: string }[]>();
 
-  const statCards = [
-    {
-      title: "الفرق",
-      value: stats.teams,
-      icon: UsersRound,
-      color: "text-blue-600 dark:text-blue-400",
-      bg: "bg-blue-50 dark:bg-blue-950",
-      change: "فريق نشط",
-    },
-    {
-      title: "الموظفون",
-      value: stats.employees,
-      icon: Users,
-      color: "text-green-600 dark:text-green-400",
-      bg: "bg-green-50 dark:bg-green-950",
-      change: "موظف نشط",
-    },
-    {
-      title: "إجمالي المهام",
-      value: stats.tasks,
-      icon: CheckSquare,
-      color: "text-purple-600 dark:text-purple-400",
-      bg: "bg-purple-50 dark:bg-purple-950",
-      change: "مهمة مسجلة",
-    },
-    {
-      title: "مهام معلقة",
-      value: stats.pendingTasks,
-      icon: Clock,
-      color: "text-amber-600 dark:text-amber-400",
-      bg: "bg-amber-50 dark:bg-amber-950",
-      change: "بانتظار التنفيذ",
-    },
-  ];
+  // Build maps
+  const empCountMap: Record<string, number> = {};
+  (empRows ?? []).forEach((e) => {
+    if (e.team_id) empCountMap[e.team_id] = (empCountMap[e.team_id] ?? 0) + 1;
+  });
+
+  const presenceMap: Record<
+    string,
+    Partial<Record<AvailabilityStatus, number>>
+  > = {};
+  (presenceRows ?? []).forEach((p) => {
+    const teamId = p.employees?.team_id;
+    if (!teamId) return;
+    if (!presenceMap[teamId]) presenceMap[teamId] = {};
+    const cur = presenceMap[teamId][p.availability_status] ?? 0;
+    presenceMap[teamId][p.availability_status] = cur + 1;
+  });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">لوحة التحكم</h1>
-          <p className="text-muted-foreground mt-1">
-            مرحباً بك في نظام إدارة عمليات بطاقات نسك
+          <p className="text-muted-foreground mt-1 text-sm">
+            اختر فريقاً لعرض التفاصيل والموظفين
           </p>
         </div>
-        <Badge variant="outline" className="gap-1.5">
+        <Badge variant="outline" className="gap-1.5 hidden sm:flex">
           <Activity className="h-3 w-3 text-green-500" />
           النظام يعمل
         </Badge>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {statCards.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={stat.title} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {stat.title}
-                  </CardTitle>
-                  <div className={`p-2 rounded-lg ${stat.bg}`}>
-                    <Icon className={`h-5 w-5 ${stat.color}`} />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  {stat.change}
-                </p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Placeholder sections for Phase 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="min-h-[200px]">
-          <CardHeader>
-            <CardTitle className="text-base">المهام الأخيرة</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              سيتم إضافة هذا القسم في المرحلة الثانية
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="min-h-[200px]">
-          <CardHeader>
-            <CardTitle className="text-base">آخر النشاطات</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              سيتم إضافة هذا القسم في المرحلة الثانية
-            </p>
-          </CardContent>
-        </Card>
+      {/* Section title */}
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+          الفرق التشغيلية
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+          {teams.map((team) => (
+            <TeamCard
+              key={team.id}
+              team={team}
+              employeeCount={empCountMap[team.id] ?? 0}
+              presenceCounts={presenceMap[team.id] ?? {}}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

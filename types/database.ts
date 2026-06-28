@@ -25,6 +25,14 @@ export type NotificationType =
   | "mention"
   | "system";
 
+export type AvailabilityStatus =
+  | "available"
+  | "busy"
+  | "break"
+  | "meeting"
+  | "outside_office"
+  | "remote";
+
 export interface Database {
   public: {
     Tables: {
@@ -58,6 +66,11 @@ export interface Database {
         Insert: Omit<ActivityLog, "id" | "created_at">;
         Update: never;
       };
+      employee_presence: {
+        Row: EmployeePresence;
+        Insert: Omit<EmployeePresence, "id" | "updated_at">;
+        Update: Partial<Omit<EmployeePresence, "id">>;
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -66,6 +79,7 @@ export interface Database {
       task_status: TaskStatus;
       task_priority: TaskPriority;
       notification_type: NotificationType;
+      availability_status: AvailabilityStatus;
     };
   };
 }
@@ -107,6 +121,7 @@ export interface Task {
   assigned_to: string | null;
   created_by: string | null;
   due_date: string | null;
+  started_at: string | null;
   completed_at: string | null;
   metadata: Json | null;
   created_at: string;
@@ -114,6 +129,25 @@ export interface Task {
   team?: Team;
   assignee?: Employee;
   creator?: Employee;
+}
+
+export interface EmployeePresence {
+  id: string;
+  employee_id: string;
+  availability_status: AvailabilityStatus;
+  workload_percent: number;
+  notes: string | null;
+  updated_at: string;
+}
+
+export interface EmployeeWithPresence extends Employee {
+  presence: EmployeePresence | null;
+  current_task: Task | null;
+}
+
+export interface TeamWithStats extends Team {
+  employee_count: number;
+  presence_summary: Record<AvailabilityStatus, number>;
 }
 
 export interface Status {

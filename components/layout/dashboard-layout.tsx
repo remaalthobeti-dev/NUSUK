@@ -10,7 +10,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     useSidebar();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen dashboard-bg">
       {/* Sidebar */}
       <Sidebar
         isCollapsed={isCollapsed}
