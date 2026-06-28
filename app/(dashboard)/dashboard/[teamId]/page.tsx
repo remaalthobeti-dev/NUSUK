@@ -9,13 +9,18 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { teamId } = await params;
-  const data = await getTeamDashboard(teamId);
-  return { title: data?.team.name ?? "الفريق" };
+  try {
+    const data = await getTeamDashboard(teamId);
+    return { title: data?.team.name ?? "الفريق" };
+  } catch {
+    return { title: "الفريق" };
+  }
 }
 
 export default async function TeamPage({ params }: PageProps) {
   const { teamId } = await params;
-  const data = await getTeamDashboard(teamId);
+  let data;
+  try { data = await getTeamDashboard(teamId); } catch { notFound(); return; }
 
   if (!data) notFound();
 

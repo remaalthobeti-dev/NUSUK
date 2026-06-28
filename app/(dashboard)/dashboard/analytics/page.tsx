@@ -6,7 +6,12 @@ import { PageHeader } from "@/components/shared/page-header";
 export const metadata: Metadata = { title: "التحليلات — نسك" };
 
 export default async function AnalyticsPage() {
-  const data = await getAnalyticsData();
+  let data;
+  try {
+    data = await getAnalyticsData();
+  } catch {
+    data = { completedToday: 0, activeTasksCount: 0, avgTaskDurationHours: 0, mostActiveEmployee: null, employeeWorkloads: [], teamWorkloads: [], taskStatusCounts: [], completionsByTeam: [] };
+  }
 
   return (
     <>

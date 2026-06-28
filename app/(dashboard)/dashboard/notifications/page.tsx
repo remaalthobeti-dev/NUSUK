@@ -6,7 +6,8 @@ import { PageHeader } from "@/components/shared/page-header";
 export const metadata: Metadata = { title: "الإشعارات — نسك" };
 
 export default async function NotificationsPage() {
-  const notifications = await getAllNotifications();
+  let notifications: Awaited<ReturnType<typeof getAllNotifications>> = [];
+  try { notifications = await getAllNotifications(); } catch { /* stays empty */ }
 
   return (
     <>

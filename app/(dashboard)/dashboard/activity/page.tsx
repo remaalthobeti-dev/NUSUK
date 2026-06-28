@@ -8,7 +8,9 @@ export const metadata: Metadata = { title: "سجل النشاط — نسك" };
 const PAGE_SIZE = 25;
 
 export default async function ActivityPage() {
-  const { logs, total } = await getAuditLogs(1, PAGE_SIZE);
+  let logs: Awaited<ReturnType<typeof getAuditLogs>>["logs"] = [];
+  let total = 0;
+  try { ({ logs, total } = await getAuditLogs(1, PAGE_SIZE)); } catch { /* stays empty */ }
 
   return (
     <>

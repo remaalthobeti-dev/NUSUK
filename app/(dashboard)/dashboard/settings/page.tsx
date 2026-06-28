@@ -6,10 +6,14 @@ import { PageHeader } from "@/components/shared/page-header";
 export const metadata: Metadata = { title: "الإعدادات — نسك" };
 
 export default async function SettingsPage() {
-  const [teams, employees] = await Promise.all([
-    getTeamsForSettings(),
-    getEmployeesForSettings(),
-  ]);
+  let teams: Awaited<ReturnType<typeof getTeamsForSettings>> = [];
+  let employees: Awaited<ReturnType<typeof getEmployeesForSettings>> = [];
+  try {
+    [teams, employees] = await Promise.all([
+      getTeamsForSettings(),
+      getEmployeesForSettings(),
+    ]);
+  } catch { /* data stays empty */ }
 
   return (
     <>
