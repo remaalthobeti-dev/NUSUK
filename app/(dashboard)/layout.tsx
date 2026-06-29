@@ -58,10 +58,19 @@ export default async function DashboardGroupLayout({
       }
     }
   } catch (err) {
-    if (err instanceof Error && err.message.startsWith("Missing Supabase")) {
-      redirect("/login?error=config");
+    // Let Next.js internal signals (redirect, dynamic server usage, not-found, etc.)
+    // propagate so the framework can handle them correctly.
+    const digest = (err as { digest?: string }).digest;
+    if (
+      digest === "DYNAMIC_SERVER_USAGE" ||
+      digest === "NEXT_NOT_FOUND" ||
+      (typeof digest === "string" && digest.startsWith("NEXT_REDIRECT"))
+    ) {
+      throw err;
     }
-    throw err;
+    // For real application errors, never show a blank page — send the user to login.
+    console.error("[dashboard/layout] unexpected error:", err);
+    redirectTo = "/login?error=server";
   }
 
   // Call redirect() outside try-catch — it throws a special Next.js error

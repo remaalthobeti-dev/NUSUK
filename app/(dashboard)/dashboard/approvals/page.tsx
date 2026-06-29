@@ -7,24 +7,34 @@ import { ApprovalsDashboard } from "@/components/approvals/approvals-dashboard";
 export const metadata: Metadata = { title: "مركز الموافقات" };
 
 export default async function ApprovalsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  let redirectTo: string | null = null;
+  let requests: Awaited<ReturnType<typeof getAllRequests>> = [];
+  let teams: Awaited<ReturnType<typeof getTeamsForApprovals>> = [];
 
-  const { data: emp } = await supabase
-    .from("employees")
-    .select("role")
-    .eq("user_id", user.id)
-    .single();
-
-  if (!emp || (emp as { role: string }).role !== "super_admin") {
-    redirect("/dashboard");
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { redirectTo = "/login"; }
+    else {
+      const { data: empData } = await supabase
+        .from("employees")
+        .select("role")
+        .eq("user_id", user.id)
+        .single();
+      const emp = empData as { role: string } | null;
+      if (!emp || emp.role !== "super_admin") { redirectTo = "/dashboard"; }
+      else {
+        [requests, teams] = await Promise.all([getAllRequests(), getTeamsForApprovals()]);
+      }
+    }
+  } catch (err) {
+    const digest = (err as { digest?: string }).digest;
+    if (digest === "DYNAMIC_SERVER_USAGE" || (typeof digest === "string" && digest.startsWith("NEXT_REDIRECT"))) throw err;
+    console.error("[approvals/page]", err);
+    redirectTo = "/dashboard";
   }
 
-  const [requests, teams] = await Promise.all([
-    getAllRequests(),
-    getTeamsForApprovals(),
-  ]);
+  if (redirectTo) redirect(redirectTo);
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
