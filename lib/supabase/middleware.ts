@@ -36,6 +36,8 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  console.log(`[middleware] path=${pathname} user=${user?.id ?? "none"}`);
+
   // Only truly public paths — no session required.
   // /pending-approval and /rejected require auth; unauthenticated users
   // attempting to reach them are redirected to /login by the guard below.
@@ -43,12 +45,14 @@ export async function updateSession(request: NextRequest) {
   const isPublicPath = publicPaths.some((p) => pathname.startsWith(p));
 
   if (!user && !isPublicPath) {
+    console.log(`[middleware] no user, non-public path → redirect /login`);
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     return NextResponse.redirect(loginUrl);
   }
 
   if (user && (pathname === "/login" || pathname === "/register")) {
+    console.log(`[middleware] authenticated user on auth page → redirect /dashboard`);
     const dashboardUrl = request.nextUrl.clone();
     dashboardUrl.pathname = "/dashboard";
     return NextResponse.redirect(dashboardUrl);
