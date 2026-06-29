@@ -36,7 +36,10 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  const publicPaths = ["/login", "/register", "/forgot-password", "/reset-password", "/auth/callback", "/pending-approval", "/rejected"];
+  // Only truly public paths — no session required.
+  // /pending-approval and /rejected require auth; unauthenticated users
+  // attempting to reach them are redirected to /login by the guard below.
+  const publicPaths = ["/login", "/register", "/forgot-password", "/reset-password", "/auth/callback"];
   const isPublicPath = publicPaths.some((p) => pathname.startsWith(p));
 
   if (!user && !isPublicPath) {

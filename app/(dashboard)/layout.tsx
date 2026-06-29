@@ -7,6 +7,9 @@ export default async function DashboardGroupLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Resolve auth state outside try-catch so redirect() throws are never caught.
+  let redirectTo: string | null = null;
+
   try {
     const supabase = await createClient();
     const {
@@ -14,41 +17,43 @@ export default async function DashboardGroupLayout({
     } = await supabase.auth.getUser();
 
     if (!user) {
-      redirect("/login");
-    }
-
-    // Check if user has an approved employee record
-    const { data: employeeData } = await supabase
-      .from("employees")
-      .select("id, is_active")
-      .eq("user_id", user.id)
-      .single();
-
-    const employee = employeeData as { id: string; is_active: boolean } | null;
-
-    if (!employee || !employee.is_active) {
-      // Check registration request status
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: requestData } = await (supabase as any)
-        .from("registration_requests")
-        .select("status")
-        .eq("auth_user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
+      redirectTo = "/login";
+    } else {
+      // Check for an approved, active employee record
+      const { data: empData } = await supabase
+        .from("employees")
+        .select("id, is_active")
+        .eq("user_id", user.id)
         .single();
 
-      const request = requestData as { status: string } | null;
+      const employee = empData as { id: string; is_active: boolean } | null;
 
-      if (request?.status === "rejected") {
-        redirect("/rejected");
+      if (!employee || !employee.is_active) {
+        // No active employee — check the registration request status
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: reqData } = await (supabase as any)
+          .from("registration_requests")
+          .select("status")
+          .eq("auth_user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+
+        const req = reqData as { status: string } | null;
+        redirectTo = req?.status === "rejected" ? "/rejected" : "/pending-approval";
       }
-      redirect("/pending-approval");
     }
   } catch (err) {
     if (err instanceof Error && err.message.startsWith("Missing Supabase")) {
       redirect("/login?error=config");
     }
     throw err;
+  }
+
+  // Call redirect() outside try-catch — it throws a special Next.js error
+  // that must propagate to the framework without being caught by user code.
+  if (redirectTo) {
+    redirect(redirectTo);
   }
 
   return <DashboardLayout>{children}</DashboardLayout>;
