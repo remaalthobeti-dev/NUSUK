@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -109,6 +110,15 @@ export function LoginForm() {
         {errors.password && (
           <p className="text-xs text-destructive">{errors.password.message}</p>
         )}
+      </div>
+
+      <div className="flex justify-end">
+        <Link
+          href="/forgot-password"
+          className="text-xs text-muted-foreground hover:text-primary transition-colors"
+        >
+          نسيت كلمة المرور؟
+        </Link>
       </div>
 
       <Button

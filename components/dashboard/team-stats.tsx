@@ -11,10 +11,10 @@ interface TeamStatsProps {
 const STAT_ORDER: AvailabilityStatus[] = [
   "available",
   "busy",
-  "meeting",
-  "break",
+  "in_meeting",
+  "field_work",
   "remote",
-  "outside_office",
+  "offline",
 ];
 
 export function TeamStats({ summary, total, teamColor }: TeamStatsProps) {

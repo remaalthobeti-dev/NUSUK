@@ -75,10 +75,10 @@ export interface AuditLogsResult {
 const EMPTY_SUMMARY = (): Record<AvailabilityStatus, number> => ({
   available: 0,
   busy: 0,
-  break: 0,
-  meeting: 0,
-  outside_office: 0,
+  in_meeting: 0,
+  field_work: 0,
   remote: 0,
+  offline: 0,
 });
 
 export async function getAdminOverview(): Promise<AdminOverviewData> {

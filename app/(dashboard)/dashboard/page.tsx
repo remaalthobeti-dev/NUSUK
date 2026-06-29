@@ -10,7 +10,7 @@ export default async function AdminDashboardPage() {
   try {
     data = await getAdminOverview();
   } catch {
-    data = { teams: [], globalStats: { totalEmployees: 0, totalPresent: 0, byStatus: { available: 0, busy: 0, break: 0, meeting: 0, outside_office: 0, remote: 0 } } };
+    data = { teams: [], globalStats: { totalEmployees: 0, totalPresent: 0, byStatus: { available: 0, busy: 0, in_meeting: 0, field_work: 0, remote: 0, offline: 0 } } };
   }
 
   return (

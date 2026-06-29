@@ -1,8 +1,9 @@
-import { Clock, Edit2, Eye, RefreshCw, Zap } from "lucide-react";
+import { Briefcase, Clock, Edit2, Eye, RefreshCw, Zap } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { formatStatusDuration } from "@/lib/utils";
 import type { EmployeeWithPresence } from "@/types/database";
 import {
   STATUS_CONFIG,
@@ -82,9 +83,16 @@ export function EmployeeCard({
             <p className="font-semibold text-sm text-foreground truncate">
               {employee.full_name}
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {getRoleLabel(employee.role)}
-            </p>
+            {employee.job_title ? (
+              <p className="text-xs text-muted-foreground mt-0.5 truncate flex items-center gap-1">
+                <Briefcase className="h-2.5 w-2.5 shrink-0" />
+                {employee.job_title}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {getRoleLabel(employee.role)}
+              </p>
+            )}
           </div>
 
           <span
@@ -153,12 +161,12 @@ export function EmployeeCard({
           />
         </div>
 
-        {/* Last updated */}
+        {/* Status duration */}
         {employee.presence && (
           <div className="flex items-center gap-1 mt-3 pt-3 border-t border-border/50">
-            <RefreshCw className="h-2.5 w-2.5 text-muted-foreground" />
+            <Clock className="h-2.5 w-2.5 text-muted-foreground" />
             <span className="text-[10px] text-muted-foreground">
-              {formatTimeAgo(employee.presence.updated_at)}
+              {formatStatusDuration(employee.presence.started_at || employee.presence.updated_at)}
             </span>
           </div>
         )}

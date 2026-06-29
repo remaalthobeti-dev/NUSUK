@@ -27,8 +27,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CountdownTimer } from "./countdown-timer";
 import { cn } from "@/lib/utils";
-import { formatDateTime } from "@/lib/utils";
-import type { EmployeeWithPresence, ActivityLog } from "@/types/database";
+import { formatDateTime, formatStatusDuration, formatTime } from "@/lib/utils";
+import type { AvailabilityStatus, EmployeePresence, EmployeeWithPresence, ActivityLog } from "@/types/database";
 import {
   STATUS_CONFIG,
   PRIORITY_CONFIG,
@@ -153,9 +153,11 @@ export function EmployeeDrawer({
 
             <div className="flex-1">
               <SheetTitle className="text-xl">{employee.full_name}</SheetTitle>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {getRoleLabel(employee.role)}
-              </p>
+              {employee.job_title ? (
+                <p className="text-sm text-muted-foreground mt-0.5">{employee.job_title}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground mt-0.5">{getRoleLabel(employee.role)}</p>
+              )}
               <span
                 className={cn(
                   "mt-2 inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full border",
@@ -171,8 +173,16 @@ export function EmployeeDrawer({
                 />
                 {cfg.label}
               </span>
+              {employee.presence?.started_at && (
+                <p className="text-[11px] text-muted-foreground mt-1.5">
+                  منذ {formatStatusDuration(employee.presence.started_at)}
+                </p>
+              )}
             </div>
           </div>
+
+          {/* Status context details */}
+          <StatusContextDisplay presence={employee.presence} status={status} />
 
           {employee.presence?.notes && (
             <p className="text-xs text-muted-foreground mt-3 bg-background/50 rounded-lg px-3 py-2 border italic">
@@ -289,7 +299,7 @@ export function EmployeeDrawer({
               <Button
                 className="w-full gap-2"
                 variant={status === "available" ? "default" : "outline"}
-                disabled={status === "busy" || status === "meeting"}
+                disabled={status === "busy" || status === "in_meeting"}
               >
                 <CheckCircle2 className="h-4 w-4" />
                 قبول مهمة جديدة
@@ -307,7 +317,7 @@ export function EmployeeDrawer({
                   تحديث الحالة
                 </Button>
               )}
-              {(status === "busy" || status === "meeting") && (
+              {(status === "busy" || status === "in_meeting") && (
                 <p className="text-xs text-muted-foreground text-center">
                   الموظف غير متاح حالياً
                 </p>
@@ -408,6 +418,72 @@ function EmptyState({ label }: { label: string }) {
       <p className="text-xs text-muted-foreground">{label}</p>
     </div>
   );
+}
+
+function StatusContextDisplay({
+  presence,
+  status,
+}: {
+  presence: EmployeePresence | null | undefined;
+  status: AvailabilityStatus;
+}) {
+  if (!presence?.context) return null;
+  const ctx = presence.context as unknown as Record<string, string>;
+
+  if (status === "busy") {
+    return (
+      <div className="mt-3 rounded-lg border border-red-200 dark:border-red-900 bg-red-50/50 dark:bg-red-950/20 px-3 py-2 space-y-1">
+        {ctx.description && (
+          <p className="text-xs text-red-700 dark:text-red-400">
+            <span className="font-medium">النشاط: </span>{ctx.description}
+          </p>
+        )}
+        {ctx.expected_finish && (
+          <p className="text-xs text-red-700 dark:text-red-400">
+            <span className="font-medium">الانتهاء المتوقع: </span>
+            {formatDateTime(ctx.expected_finish)}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (status === "in_meeting") {
+    return (
+      <div className="mt-3 rounded-lg border border-yellow-200 dark:border-yellow-900 bg-yellow-50/50 dark:bg-yellow-950/20 px-3 py-2 space-y-1">
+        {ctx.title && (
+          <p className="text-xs text-yellow-700 dark:text-yellow-400">
+            <span className="font-medium">الاجتماع: </span>{ctx.title}
+          </p>
+        )}
+        {ctx.end_time && (
+          <p className="text-xs text-yellow-700 dark:text-yellow-400">
+            <span className="font-medium">ينتهي في: </span>
+            {formatDateTime(ctx.end_time)}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (status === "field_work") {
+    return (
+      <div className="mt-3 rounded-lg border border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/20 px-3 py-2 space-y-1">
+        {ctx.location && (
+          <p className="text-xs text-blue-700 dark:text-blue-400">
+            <span className="font-medium">الموقع: </span>{ctx.location}
+          </p>
+        )}
+        {ctx.activity && (
+          <p className="text-xs text-blue-700 dark:text-blue-400">
+            <span className="font-medium">النشاط: </span>{ctx.activity}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  return null;
 }
 
 function TimelineEntry({ entry }: { entry: ActivityLog }) {

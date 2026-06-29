@@ -76,7 +76,7 @@ export function TeamDashboard({
   // Recompute presence summary from realtime employees
   const presenceSummary = useMemo(() => {
     const summary = { ...initialSummary } as Record<AvailabilityStatus, number>;
-    const statuses: AvailabilityStatus[] = ["available", "busy", "break", "meeting", "outside_office", "remote"];
+    const statuses: AvailabilityStatus[] = ["available", "busy", "in_meeting", "field_work", "remote", "offline"];
     statuses.forEach((s) => (summary[s] = 0));
     employees.forEach((emp) => {
       const s = emp.presence?.availability_status;

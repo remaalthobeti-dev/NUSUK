@@ -33,15 +33,15 @@ export function useAlertChecker(employees: EmployeeWithPresence[]) {
         const { availability_status, updated_at } = emp.presence;
         const elapsed = now - new Date(updated_at).getTime();
 
-        // Break exceeded 30 min
-        if (availability_status === "break" && elapsed > BREAK_LIMIT_MS) {
+        // Offline more than 30 min during working hours
+        if (availability_status === "offline" && elapsed > BREAK_LIMIT_MS) {
           next.push({
-            id: `break-${emp.id}`,
+            id: `offline-${emp.id}`,
             severity: "warning",
             employeeId: emp.id,
             employeeName: emp.full_name,
-            title: "استراحة طويلة",
-            description: `${emp.full_name} في استراحة منذ أكثر من ${Math.floor(elapsed / 60_000)} دقيقة`,
+            title: "غير متصل فترة طويلة",
+            description: `${emp.full_name} غير متصل منذ أكثر من ${Math.floor(elapsed / 60_000)} دقيقة`,
           });
         }
 

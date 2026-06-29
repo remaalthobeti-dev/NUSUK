@@ -10,10 +10,10 @@ import { STATUS_CONFIG } from "./status-config";
 const FILTER_STATUSES: AvailabilityStatus[] = [
   "available",
   "busy",
-  "break",
-  "meeting",
+  "in_meeting",
+  "field_work",
   "remote",
-  "outside_office",
+  "offline",
 ];
 
 interface SearchFiltersProps {

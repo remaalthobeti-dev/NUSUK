@@ -59,10 +59,10 @@ const TEAM_ICONS = [
   { value: "users", label: "👥 افتراضي" },
 ];
 
-const ROLES: UserRole[] = ["admin", "supervisor", "employee"];
+const ROLES: UserRole[] = ["super_admin", "track_manager", "team_member"];
 
 const STATUS_LIST: AvailabilityStatus[] = [
-  "available", "busy", "break", "meeting", "outside_office", "remote",
+  "available", "busy", "in_meeting", "field_work", "remote", "offline",
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -449,7 +449,7 @@ function EmployeesTab({
     full_name: "",
     email: "",
     phone: "",
-    role: "employee" as UserRole,
+    role: "team_member" as UserRole,
     team_id: "",
     is_active: true,
   });
@@ -462,7 +462,7 @@ function EmployeesTab({
 
   function openCreate() {
     setEditing(null);
-    setForm({ full_name: "", email: "", phone: "", role: "employee", team_id: "", is_active: true });
+    setForm({ full_name: "", email: "", phone: "", role: "team_member", team_id: "", is_active: true });
     setDialogOpen(true);
   }
 
@@ -709,7 +709,7 @@ function EmployeesTab({
 function RolesTab() {
   const roles = [
     {
-      role: "admin" as UserRole,
+      role: "super_admin" as UserRole,
       label: "مدير النظام",
       description: "صلاحيات كاملة على جميع الفرق والموظفين والإعدادات",
       permissions: ["عرض جميع البيانات", "إدارة الفرق", "إدارة الموظفين", "تعديل الإعدادات", "تصدير التقارير"],
@@ -718,8 +718,8 @@ function RolesTab() {
       border: "border-purple-200 dark:border-purple-800",
     },
     {
-      role: "supervisor" as UserRole,
-      label: "مشرف",
+      role: "track_manager" as UserRole,
+      label: "مشرف المسار",
       description: "إدارة فريقه وتكليف المهام ومتابعة حالات الموظفين",
       permissions: ["عرض بيانات الفريق", "تكليف المهام", "تحديث حالات الموظفين", "عرض التقارير"],
       color: "text-blue-600 dark:text-blue-400",
@@ -727,8 +727,8 @@ function RolesTab() {
       border: "border-blue-200 dark:border-blue-800",
     },
     {
-      role: "employee" as UserRole,
-      label: "موظف",
+      role: "team_member" as UserRole,
+      label: "عضو الفريق",
       description: "تحديث حالته الخاصة وعرض مهامه المكلف بها",
       permissions: ["تحديث الحالة الشخصية", "عرض المهام المكلف بها", "إضافة ملاحظات"],
       color: "text-green-600 dark:text-green-400",

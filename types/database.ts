@@ -6,7 +6,9 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type UserRole = "admin" | "supervisor" | "employee";
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+export type UserRole = "super_admin" | "track_manager" | "team_member";
 
 export type TaskStatus =
   | "pending"
@@ -28,10 +30,32 @@ export type NotificationType =
 export type AvailabilityStatus =
   | "available"
   | "busy"
-  | "break"
-  | "meeting"
-  | "outside_office"
-  | "remote";
+  | "in_meeting"
+  | "field_work"
+  | "remote"
+  | "offline";
+
+// ─── Status Context Types ─────────────────────────────────────────────────────
+// Stored as JSONB in employee_presence.context
+
+export interface BusyContext {
+  description: string;
+  expected_finish?: string; // ISO datetime
+}
+
+export interface MeetingContext {
+  title: string;
+  end_time?: string; // ISO datetime
+}
+
+export interface FieldWorkContext {
+  location: string;
+  activity?: string;
+}
+
+export type StatusContext = BusyContext | MeetingContext | FieldWorkContext | null;
+
+// ─── Database Schema ──────────────────────────────────────────────────────────
 
 export interface Database {
   public: {
@@ -84,6 +108,8 @@ export interface Database {
   };
 }
 
+// ─── Core Entities ────────────────────────────────────────────────────────────
+
 export interface Team {
   id: string;
   name: string;
@@ -104,6 +130,7 @@ export interface Employee {
   email: string;
   phone: string | null;
   role: UserRole;
+  job_title: string | null;
   avatar_url: string | null;
   is_active: boolean;
   created_at: string;
@@ -137,17 +164,9 @@ export interface EmployeePresence {
   availability_status: AvailabilityStatus;
   workload_percent: number;
   notes: string | null;
+  started_at: string;
+  context: StatusContext;
   updated_at: string;
-}
-
-export interface EmployeeWithPresence extends Employee {
-  presence: EmployeePresence | null;
-  current_task: Task | null;
-}
-
-export interface TeamWithStats extends Team {
-  employee_count: number;
-  presence_summary: Record<AvailabilityStatus, number>;
 }
 
 export interface Status {
@@ -188,4 +207,16 @@ export interface ActivityLog {
   user_agent: string | null;
   created_at: string;
   actor?: Employee;
+}
+
+// ─── Composite / View Types ───────────────────────────────────────────────────
+
+export interface EmployeeWithPresence extends Employee {
+  presence: EmployeePresence | null;
+  current_task: Task | null;
+}
+
+export interface TeamWithStats extends Team {
+  employee_count: number;
+  presence_summary: Record<AvailabilityStatus, number>;
 }

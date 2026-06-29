@@ -37,8 +37,8 @@ export const STATUS_CONFIG: Record<AvailabilityStatus, StatusConfig> = {
       "bg-red-100 text-red-800 border-red-200 dark:bg-red-950/60 dark:text-red-300 dark:border-red-800",
     ringClass: "ring-red-500/30",
   },
-  break: {
-    label: "استراحة",
+  in_meeting: {
+    label: "في اجتماع",
     emoji: "🟡",
     color: "#eab308",
     bgClass: "bg-yellow-500",
@@ -49,8 +49,8 @@ export const STATUS_CONFIG: Record<AvailabilityStatus, StatusConfig> = {
       "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-950/60 dark:text-yellow-300 dark:border-yellow-800",
     ringClass: "ring-yellow-500/30",
   },
-  meeting: {
-    label: "اجتماع",
+  field_work: {
+    label: "عمل ميداني",
     emoji: "🔵",
     color: "#3b82f6",
     bgClass: "bg-blue-500",
@@ -60,18 +60,6 @@ export const STATUS_CONFIG: Record<AvailabilityStatus, StatusConfig> = {
     badgeClass:
       "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800",
     ringClass: "ring-blue-500/30",
-  },
-  outside_office: {
-    label: "خارج المكتب",
-    emoji: "⚫",
-    color: "#6b7280",
-    bgClass: "bg-gray-500",
-    textClass: "text-gray-700 dark:text-gray-400",
-    borderClass: "border-gray-400",
-    dotClass: "bg-gray-500",
-    badgeClass:
-      "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/60 dark:text-gray-300 dark:border-gray-700",
-    ringClass: "ring-gray-500/30",
   },
   remote: {
     label: "عن بُعد",
@@ -85,7 +73,28 @@ export const STATUS_CONFIG: Record<AvailabilityStatus, StatusConfig> = {
       "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800",
     ringClass: "ring-purple-500/30",
   },
+  offline: {
+    label: "غير متاح",
+    emoji: "⚫",
+    color: "#6b7280",
+    bgClass: "bg-gray-500",
+    textClass: "text-gray-600 dark:text-gray-400",
+    borderClass: "border-gray-400",
+    dotClass: "bg-gray-400",
+    badgeClass:
+      "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800/60 dark:text-gray-300 dark:border-gray-700",
+    ringClass: "ring-gray-400/30",
+  },
 };
+
+export const STATUS_OPTIONS: AvailabilityStatus[] = [
+  "available",
+  "busy",
+  "in_meeting",
+  "field_work",
+  "remote",
+  "offline",
+];
 
 export const PRIORITY_CONFIG: Record<
   TaskPriority,
@@ -138,7 +147,10 @@ export function calcProgress(
   const end = new Date(dueDate).getTime();
   const now = Date.now();
   if (end <= start) return 0;
-  return Math.min(100, Math.max(0, Math.round(((now - start) / (end - start)) * 100)));
+  return Math.min(
+    100,
+    Math.max(0, Math.round(((now - start) / (end - start)) * 100))
+  );
 }
 
 export function formatTimeAgo(dateStr: string): string {

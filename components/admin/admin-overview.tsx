@@ -15,10 +15,10 @@ const GLOBAL_STATS_ORDER: Array<{
 }> = [
   { key: "available", label: "متاح" },
   { key: "busy", label: "مشغول" },
-  { key: "break", label: "استراحة" },
-  { key: "meeting", label: "اجتماع" },
+  { key: "in_meeting", label: "اجتماع" },
+  { key: "field_work", label: "ميداني" },
   { key: "remote", label: "عن بُعد" },
-  { key: "outside_office", label: "خارج" },
+  { key: "offline", label: "غير متاح" },
 ];
 
 interface AdminOverviewProps {
