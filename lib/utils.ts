@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { AvailabilityStatus, UserRole } from "@/types/database";
+import type { UserRole } from "@/types/database";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -24,24 +24,6 @@ export function formatDateTime(date: string | Date, locale: "ar" | "en" = "ar") 
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(date));
-}
-
-export function formatTime(date: string | Date, locale: "ar" | "en" = "ar") {
-  return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(date));
-}
-
-/** Returns a human-readable "time since" string in Arabic. */
-export function formatTimeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const m = Math.floor(diff / 60_000);
-  if (m < 1) return "الآن";
-  if (m < 60) return `منذ ${m} دقيقة`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `منذ ${h} ساعة`;
-  return `منذ ${Math.floor(h / 24)} يوم`;
 }
 
 /** Returns how long ago a status started, e.g. "منذ ساعتين". */
@@ -70,17 +52,4 @@ export function getRoleLabel(role: string): string {
   return ROLE_LABELS[role as UserRole] ?? role;
 }
 
-// ─── Status Labels ────────────────────────────────────────────────────────────
 
-const STATUS_LABELS: Record<AvailabilityStatus, string> = {
-  available:  "متاح",
-  busy:       "مشغول",
-  in_meeting: "في اجتماع",
-  field_work: "عمل ميداني",
-  remote:     "عن بُعد",
-  offline:    "غير متاح",
-};
-
-export function getStatusLabel(status: AvailabilityStatus): string {
-  return STATUS_LABELS[status] ?? status;
-}

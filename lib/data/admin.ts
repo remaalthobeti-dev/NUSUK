@@ -279,17 +279,8 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
 
   // Team workloads
   const teams = (teamsRes.data ?? []) as Array<{ id: string; name: string }>;
-  const teamWorkloads = teams.map((team) => {
-    const teamPresences = presences.filter((p) => {
-      const emp = employeeWorkloads.find((e) => e.name !== "غير معروف");
-      void emp;
-      return true; // We'll compute differently below
-    });
-    void teamPresences;
-    return { name: team.name, avg: 0, count: 0 };
-  });
+  const teamWorkloads = teams.map((team) => ({ name: team.name, avg: 0, count: 0 }));
 
-  // Better team workload: use employee_presence joined with employees
   if (presences.length > 0 && employeeWorkloads.length > 0) {
     teams.forEach((team, idx) => {
       const teamEmps = employeeWorkloads.filter((e) => e.team === team.name);

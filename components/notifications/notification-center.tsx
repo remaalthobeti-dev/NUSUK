@@ -7,9 +7,7 @@ import {
   CheckCheck,
   Circle,
   CircleCheck,
-  Filter,
   FileSpreadsheet,
-  Printer,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";

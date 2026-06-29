@@ -27,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CountdownTimer } from "./countdown-timer";
 import { cn } from "@/lib/utils";
-import { formatDateTime, formatStatusDuration, formatTime } from "@/lib/utils";
+import { formatDateTime, formatStatusDuration } from "@/lib/utils";
 import type { AvailabilityStatus, EmployeePresence, EmployeeWithPresence, ActivityLog } from "@/types/database";
 import {
   STATUS_CONFIG,
@@ -69,14 +69,8 @@ export function EmployeeDrawer({
   onOpenChange,
   onUpdateStatus,
 }: EmployeeDrawerProps) {
-  const [notes, setNotes] = useState("");
   const [timeline, setTimeline] = useState<ActivityLog[]>([]);
   const [loadingTimeline, setLoadingTimeline] = useState(false);
-
-  // Reset notes when employee changes
-  useEffect(() => {
-    setNotes(employee?.presence?.notes ?? "");
-  }, [employee]);
 
   // Fetch timeline when drawer opens
   useEffect(() => {
@@ -326,19 +320,13 @@ export function EmployeeDrawer({
           </Section>
 
           {/* Notes */}
-          <Section icon={<MessageSquare className="h-4 w-4" />} title="ملاحظات">
-            <textarea
-              className={cn(
-                "w-full resize-none rounded-xl border bg-muted/30 dark:bg-slate-800/40 p-3",
-                "text-sm text-foreground placeholder:text-muted-foreground",
-                "focus:outline-none focus:ring-2 focus:ring-ring",
-                "min-h-[80px] transition-colors"
-              )}
-              placeholder="أضف ملاحظة..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </Section>
+          {employee.presence?.notes && (
+            <Section icon={<MessageSquare className="h-4 w-4" />} title="ملاحظات">
+              <div className="rounded-xl border bg-muted/30 dark:bg-slate-800/40 p-3 text-sm text-muted-foreground italic">
+                {employee.presence.notes}
+              </div>
+            </Section>
+          )}
 
           {/* Today's Timeline */}
           <Section icon={<Clock className="h-4 w-4" />} title="نشاط اليوم">

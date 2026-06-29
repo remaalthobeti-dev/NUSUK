@@ -18,7 +18,6 @@ export function ProfileForm({ employee }: ProfileFormProps) {
   const router = useRouter();
   const [fullName, setFullName] = useState(employee.full_name);
   const [jobTitle, setJobTitle] = useState(employee.job_title ?? "");
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [saving, setSaving] = useState(false);
@@ -61,7 +60,6 @@ export function ProfileForm({ employee }: ProfileFormProps) {
       setPasswordMsg({ type: "error", text: error.message });
     } else {
       setPasswordMsg({ type: "success", text: "تم تغيير كلمة المرور بنجاح" });
-      setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     }
