@@ -2,7 +2,7 @@
 -- MIGRATION 004 — Phase 1: RBAC Roles + Status System Redesign
 -- ============================================================
 -- Run this on top of migrations 001–003.
--- Safe to run multiple times (idempotent where possible).
+-- Idempotent: safe to re-run after a partial failure.
 -- ============================================================
 
 -- ──────────────────────────────────────────────────────────────
@@ -12,71 +12,116 @@
 --   employee   → team_member
 -- ──────────────────────────────────────────────────────────────
 
--- Create replacement enum
-CREATE TYPE user_role_v2 AS ENUM ('super_admin', 'track_manager', 'team_member');
+DO $$
+BEGIN
+  -- Only run if the old enum values still exist (i.e. not yet migrated)
+  IF EXISTS (
+    SELECT 1 FROM pg_enum e
+    JOIN pg_type t ON t.oid = e.enumtypid
+    WHERE t.typname = 'user_role' AND e.enumlabel = 'admin'
+  ) THEN
 
--- Migrate employees.role column
-ALTER TABLE employees
-  ALTER COLUMN role TYPE user_role_v2
-  USING CASE role::text
-    WHEN 'admin'      THEN 'super_admin'::user_role_v2
-    WHEN 'supervisor' THEN 'track_manager'::user_role_v2
-    WHEN 'employee'   THEN 'team_member'::user_role_v2
-  END;
+    -- Create replacement enum
+    CREATE TYPE user_role_v2 AS ENUM ('super_admin', 'track_manager', 'team_member');
 
--- Swap enum names
-DROP TYPE user_role;
-ALTER TYPE user_role_v2 RENAME TO user_role;
+    -- Drop column default before type change (prevents cast error)
+    ALTER TABLE employees ALTER COLUMN role DROP DEFAULT;
+
+    -- Migrate column using explicit CASE map
+    ALTER TABLE employees
+      ALTER COLUMN role TYPE user_role_v2
+      USING CASE role::text
+        WHEN 'admin'      THEN 'super_admin'::user_role_v2
+        WHEN 'supervisor' THEN 'track_manager'::user_role_v2
+        WHEN 'employee'   THEN 'team_member'::user_role_v2
+        ELSE                   'team_member'::user_role_v2
+      END;
+
+    -- Swap enum names
+    DROP TYPE user_role;
+    ALTER TYPE user_role_v2 RENAME TO user_role;
+
+    -- Restore column default with new enum value
+    ALTER TABLE employees ALTER COLUMN role SET DEFAULT 'team_member'::user_role;
+
+  END IF;
+END $$;
 
 -- ──────────────────────────────────────────────────────────────
 -- STEP 2: Rename availability_status enum
---   break        → offline    (break is not in new spec)
---   meeting      → in_meeting
+--   break          → offline
+--   meeting        → in_meeting
 --   outside_office → field_work
 --   available / busy / remote → unchanged
 -- ──────────────────────────────────────────────────────────────
 
-CREATE TYPE availability_status_v2 AS ENUM (
-  'available',
-  'busy',
-  'in_meeting',
-  'field_work',
-  'remote',
-  'offline'
-);
+DO $$
+BEGIN
+  -- Only run if the old enum values still exist
+  IF EXISTS (
+    SELECT 1 FROM pg_enum e
+    JOIN pg_type t ON t.oid = e.enumtypid
+    WHERE t.typname = 'availability_status' AND e.enumlabel = 'meeting'
+  ) THEN
 
-ALTER TABLE employee_presence
-  ALTER COLUMN availability_status TYPE availability_status_v2
-  USING CASE availability_status::text
-    WHEN 'available'     THEN 'available'::availability_status_v2
-    WHEN 'busy'          THEN 'busy'::availability_status_v2
-    WHEN 'break'         THEN 'offline'::availability_status_v2
-    WHEN 'meeting'       THEN 'in_meeting'::availability_status_v2
-    WHEN 'outside_office' THEN 'field_work'::availability_status_v2
-    WHEN 'remote'        THEN 'remote'::availability_status_v2
-    ELSE                      'available'::availability_status_v2
-  END;
+    CREATE TYPE availability_status_v2 AS ENUM (
+      'available',
+      'busy',
+      'in_meeting',
+      'field_work',
+      'remote',
+      'offline'
+    );
 
-DROP TYPE availability_status;
-ALTER TYPE availability_status_v2 RENAME TO availability_status;
+    -- Drop column default before type change
+    ALTER TABLE employee_presence ALTER COLUMN availability_status DROP DEFAULT;
+
+    ALTER TABLE employee_presence
+      ALTER COLUMN availability_status TYPE availability_status_v2
+      USING CASE availability_status::text
+        WHEN 'available'      THEN 'available'::availability_status_v2
+        WHEN 'busy'           THEN 'busy'::availability_status_v2
+        WHEN 'break'          THEN 'offline'::availability_status_v2
+        WHEN 'meeting'        THEN 'in_meeting'::availability_status_v2
+        WHEN 'outside_office' THEN 'field_work'::availability_status_v2
+        WHEN 'remote'         THEN 'remote'::availability_status_v2
+        ELSE                       'available'::availability_status_v2
+      END;
+
+    DROP TYPE availability_status;
+    ALTER TYPE availability_status_v2 RENAME TO availability_status;
+
+    -- Restore column default with new enum value
+    ALTER TABLE employee_presence
+      ALTER COLUMN availability_status SET DEFAULT 'available'::availability_status;
+
+  END IF;
+END $$;
 
 -- ──────────────────────────────────────────────────────────────
--- STEP 3: Add new columns
+-- STEP 3: Add new columns (idempotent via IF NOT EXISTS)
 -- ──────────────────────────────────────────────────────────────
 
--- employees: job title
 ALTER TABLE employees
   ADD COLUMN IF NOT EXISTS job_title TEXT;
 
--- employee_presence: when the current status started + structured context
 ALTER TABLE employee_presence
-  ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ NOT NULL DEFAULT now();
+  ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ;
 
 ALTER TABLE employee_presence
   ADD COLUMN IF NOT EXISTS context JSONB;
 
--- Backfill started_at from updated_at for existing rows
-UPDATE employee_presence SET started_at = updated_at WHERE started_at IS NULL;
+-- Backfill started_at from updated_at for any rows where it is NULL
+UPDATE employee_presence
+  SET started_at = updated_at
+  WHERE started_at IS NULL;
+
+-- Now enforce NOT NULL + default going forward
+ALTER TABLE employee_presence
+  ALTER COLUMN started_at SET DEFAULT now();
+
+ALTER TABLE employee_presence
+  ALTER COLUMN started_at SET NOT NULL;
 
 -- ──────────────────────────────────────────────────────────────
 -- STEP 4: Recreate helper functions with new role names
@@ -208,27 +253,15 @@ GRANT SELECT ON v_team_stats     TO authenticated;
 -- STEP 7: Update seed employees with job titles
 -- ──────────────────────────────────────────────────────────────
 
-UPDATE employees SET job_title = 'مدير عمليات البطاقات'
-  WHERE email = 'admin@nusuk.sa';
-UPDATE employees SET job_title = 'مشرفة مسار العلاقات'
-  WHERE email = 'sara.zahrani@nusuk.sa';
-UPDATE employees SET job_title = 'مشرف فريق التوزيع'
-  WHERE email = 'khaled.mutairi@nusuk.sa';
-UPDATE employees SET job_title = 'مشرفة الفريق التقني'
-  WHERE email = 'nora.harbi@nusuk.sa';
-UPDATE employees SET job_title = 'مشرف إدارة التشغيل'
-  WHERE email = 'abdulrahman.qahtani@nusuk.sa';
-UPDATE employees SET job_title = 'أخصائية علاقات عملاء'
-  WHERE email = 'fatima.shamri@nusuk.sa';
-UPDATE employees SET job_title = 'أخصائي علاقات عملاء'
-  WHERE email = 'omar.dosari@nusuk.sa';
-UPDATE employees SET job_title = 'موظفة توزيع ميداني'
-  WHERE email = 'munira.otaibi@nusuk.sa';
-UPDATE employees SET job_title = 'موظف توزيع ميداني'
-  WHERE email = 'bandar.ghamdi@nusuk.sa';
-UPDATE employees SET job_title = 'مهندسة أنظمة'
-  WHERE email = 'reem.anazi@nusuk.sa';
-UPDATE employees SET job_title = 'مهندس دعم تقني'
-  WHERE email = 'sultan.rashidi@nusuk.sa';
-UPDATE employees SET job_title = 'محللة أداء تشغيلي'
-  WHERE email = 'haya.maliki@nusuk.sa';
+UPDATE employees SET job_title = 'مدير عمليات البطاقات'    WHERE email = 'admin@nusuk.sa'              AND job_title IS NULL;
+UPDATE employees SET job_title = 'مشرفة مسار العلاقات'      WHERE email = 'sara.zahrani@nusuk.sa'       AND job_title IS NULL;
+UPDATE employees SET job_title = 'مشرف فريق التوزيع'        WHERE email = 'khaled.mutairi@nusuk.sa'     AND job_title IS NULL;
+UPDATE employees SET job_title = 'مشرفة الفريق التقني'      WHERE email = 'nora.harbi@nusuk.sa'         AND job_title IS NULL;
+UPDATE employees SET job_title = 'مشرف إدارة التشغيل'       WHERE email = 'abdulrahman.qahtani@nusuk.sa' AND job_title IS NULL;
+UPDATE employees SET job_title = 'أخصائية علاقات عملاء'     WHERE email = 'fatima.shamri@nusuk.sa'      AND job_title IS NULL;
+UPDATE employees SET job_title = 'أخصائي علاقات عملاء'      WHERE email = 'omar.dosari@nusuk.sa'        AND job_title IS NULL;
+UPDATE employees SET job_title = 'موظفة توزيع ميداني'        WHERE email = 'munira.otaibi@nusuk.sa'      AND job_title IS NULL;
+UPDATE employees SET job_title = 'موظف توزيع ميداني'         WHERE email = 'bandar.ghamdi@nusuk.sa'      AND job_title IS NULL;
+UPDATE employees SET job_title = 'مهندسة أنظمة'             WHERE email = 'reem.anazi@nusuk.sa'         AND job_title IS NULL;
+UPDATE employees SET job_title = 'مهندس دعم تقني'           WHERE email = 'sultan.rashidi@nusuk.sa'     AND job_title IS NULL;
+UPDATE employees SET job_title = 'محللة أداء تشغيلي'        WHERE email = 'haya.maliki@nusuk.sa'        AND job_title IS NULL;
