@@ -13,7 +13,7 @@ export default async function ProfilePage() {
   const { data: employee } = await supabase
     .from("employees")
     .select("*")
-    .eq("auth_user_id", user.id)
+    .eq("user_id", user.id)
     .single();
 
   if (!employee) redirect("/login");
