@@ -16,6 +16,15 @@
 --   Once one linked Super Admin exists the gate closes and
 --   every subsequent signup follows the normal approval flow.
 --
+-- Race-condition safety:
+--   pg_advisory_xact_lock(2026000004) serializes the EXISTS
+--   check + INSERT inside the trigger.  Two concurrent signups
+--   cannot both pass the check before either commits: the second
+--   transaction blocks on the lock, then re-evaluates EXISTS()
+--   after the first commits and correctly takes the normal path.
+--   The lock is transaction-scoped and released automatically on
+--   commit or rollback.
+--
 -- Idempotency:
 --   CREATE OR REPLACE on the function and the DO block guards
 --   make this safe to run multiple times on the same database.
@@ -35,7 +44,20 @@ AS $$
 DECLARE
   v_linked_admin_exists boolean;
 BEGIN
+  -- Serialize the bootstrap critical section across concurrent
+  -- transactions.  Without this lock, two simultaneous signups
+  -- on an empty database could both pass the EXISTS() check
+  -- before either commits, producing two super_admin rows.
+  --
+  -- The lock key (2026000004) is an arbitrary fixed bigint that
+  -- must not collide with any other advisory lock in the system.
+  -- It is transaction-scoped: released automatically on commit
+  -- or rollback, so it cannot cause a permanent deadlock.
+  PERFORM pg_advisory_xact_lock(2026000004);
+
   -- Determine whether a Super Admin with a live auth link exists.
+  -- Evaluated AFTER acquiring the lock so concurrent transactions
+  -- see each other's committed rows.
   -- user_id IS NOT NULL is the gate: seeded placeholder rows
   -- (user_id = NULL) are intentionally invisible to this check.
   SELECT EXISTS (
