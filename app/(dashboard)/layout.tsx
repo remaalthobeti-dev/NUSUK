@@ -12,28 +12,37 @@ export default async function DashboardGroupLayout({
 
   try {
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
-    console.log(`[dashboard/layout] user=${user?.id ?? "none"}`);
+    // Use optional chaining on the response so a malformed SDK response never
+    // throws "Cannot destructure property 'user' of null/undefined".
+    const getUserResult = await supabase.auth.getUser();
+    const user = getUserResult.data?.user ?? null;
 
     if (!user) {
+      // No authenticated session → send to login.
+      // This is safe: an unauthenticated user at /login will NOT be bounced
+      // back by middleware (the bounce only applies to authenticated users).
       redirectTo = "/login";
     } else {
       // Check for an approved, active employee record
-      const { data: empData, error: empError } = await supabase
+      const { data: empData } = await supabase
         .from("employees")
         .select("id, is_active")
         .eq("user_id", user.id)
         .single();
 
       const employee = empData as { id: string; is_active: boolean } | null;
-      console.log(`[dashboard/layout] employee=${employee?.id ?? "none"} is_active=${employee?.is_active} empError=${empError?.code}`);
 
       if (!employee || !employee.is_active) {
         // No active employee — check the registration request status.
-        // Guard against the table not existing (migration not yet applied).
+        // Guard against the table not existing (migration 002 not yet applied):
+        // any error code other than PGRST116 ("zero rows") indicates an infra
+        // issue, and we fall through to /pending-approval rather than /login.
+        //
+        // IMPORTANT: we must NOT redirect an authenticated user to /login here.
+        // Middleware will bounce authenticated users from /login → /dashboard,
+        // creating an infinite redirect loop.  /pending-approval is the correct
+        // fallback for an authenticated user with no active employee record.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: reqData, error: reqError } = await (supabase as any)
           .from("registration_requests")
@@ -44,22 +53,21 @@ export default async function DashboardGroupLayout({
           .single();
 
         const req = reqData as { status: string } | null;
-        console.log(`[dashboard/layout] req=${req?.status ?? "none"} reqError=${reqError?.code}`);
 
-        // If the table doesn't exist yet (42P01) or any DB error, fall through to /login
-        // rather than incorrectly showing the pending/rejected screen.
         if (reqError && reqError.code !== "PGRST116") {
-          // PGRST116 = "no rows" — that's expected; anything else is an infra issue
-          console.log(`[dashboard/layout] registration_requests query failed (${reqError.code}) → redirect /login`);
-          redirectTo = "/login";
+          // Table missing or unexpected DB error — default to pending-approval.
+          // The user is authenticated; /pending-approval will show them a safe
+          // waiting screen without creating a redirect loop.
+          redirectTo = "/pending-approval";
         } else {
           redirectTo = req?.status === "rejected" ? "/rejected" : "/pending-approval";
         }
       }
     }
   } catch (err) {
-    // Let Next.js internal signals (redirect, dynamic server usage, not-found, etc.)
-    // propagate so the framework can handle them correctly.
+    // Let Next.js internal signals (DYNAMIC_SERVER_USAGE, NEXT_REDIRECT,
+    // NEXT_NOT_FOUND) propagate so the framework can handle them correctly.
+    // These are thrown by cookies(), redirect(), and notFound() respectively.
     const digest = (err as { digest?: string }).digest;
     if (
       digest === "DYNAMIC_SERVER_USAGE" ||
@@ -68,9 +76,12 @@ export default async function DashboardGroupLayout({
     ) {
       throw err;
     }
-    // For real application errors, never show a blank page — send the user to login.
-    console.error("[dashboard/layout] unexpected error:", err);
-    redirectTo = "/login?error=server";
+    // For all other errors (network failure, unexpected SDK error), redirect to
+    // /pending-approval rather than /login.  An authenticated user at /login
+    // would be immediately bounced back to /dashboard by middleware, creating
+    // an infinite loop.  /pending-approval is auth-protected and loop-free.
+    console.error("[dashboard/layout] unexpected error:", (err as Error)?.message);
+    redirectTo = "/pending-approval";
   }
 
   // Call redirect() outside try-catch — it throws a special Next.js error
