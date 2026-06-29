@@ -16,12 +16,38 @@ export default async function DashboardGroupLayout({
     if (!user) {
       redirect("/login");
     }
+
+    // Check if user has an approved employee record
+    const { data: employeeData } = await supabase
+      .from("employees")
+      .select("id, is_active")
+      .eq("user_id", user.id)
+      .single();
+
+    const employee = employeeData as { id: string; is_active: boolean } | null;
+
+    if (!employee || !employee.is_active) {
+      // Check registration request status
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: requestData } = await (supabase as any)
+        .from("registration_requests")
+        .select("status")
+        .eq("auth_user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      const request = requestData as { status: string } | null;
+
+      if (request?.status === "rejected") {
+        redirect("/rejected");
+      }
+      redirect("/pending-approval");
+    }
   } catch (err) {
-    // createClient throws if env vars are missing; treat as unauthenticated
     if (err instanceof Error && err.message.startsWith("Missing Supabase")) {
       redirect("/login?error=config");
     }
-    // Re-throw redirect signals from next/navigation
     throw err;
   }
 

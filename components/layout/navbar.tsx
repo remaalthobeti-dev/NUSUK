@@ -31,7 +31,7 @@ export function Navbar({ onMobileMenuToggle, sidebarCollapsed }: NavbarProps) {
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/login");
+    window.location.href = "/login";
   }
 
   const initials = employee?.full_name

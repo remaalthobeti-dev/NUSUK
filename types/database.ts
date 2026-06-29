@@ -27,6 +27,8 @@ export type NotificationType =
   | "mention"
   | "system";
 
+export type RequestStatus = "pending" | "approved" | "rejected";
+
 export type AvailabilityStatus =
   | "available"
   | "busy"
@@ -95,6 +97,11 @@ export interface Database {
         Insert: Omit<EmployeePresence, "id" | "updated_at">;
         Update: Partial<Omit<EmployeePresence, "id">>;
       };
+      registration_requests: {
+        Row: RegistrationRequest;
+        Insert: Omit<RegistrationRequest, "id" | "created_at">;
+        Update: Partial<Omit<RegistrationRequest, "id" | "created_at">>;
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -104,6 +111,7 @@ export interface Database {
       task_priority: TaskPriority;
       notification_type: NotificationType;
       availability_status: AvailabilityStatus;
+      request_status: RequestStatus;
     };
   };
 }
@@ -207,6 +215,21 @@ export interface ActivityLog {
   user_agent: string | null;
   created_at: string;
   actor?: Employee;
+}
+
+export interface RegistrationRequest {
+  id: string;
+  auth_user_id: string;
+  full_name: string;
+  email: string;
+  status: RequestStatus;
+  approved_role: UserRole | null;
+  approved_team_id: string | null;
+  approved_title: string | null;
+  rejection_reason: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
 }
 
 // ─── Composite / View Types ───────────────────────────────────────────────────

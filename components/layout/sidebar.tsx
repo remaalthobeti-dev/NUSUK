@@ -11,12 +11,13 @@ import {
   ChevronLeft,
   Building2,
   X,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/use-auth";
 
 interface NavItem {
   href: string;
@@ -49,6 +50,8 @@ export function Sidebar({
   onMobileClose,
 }: SidebarProps) {
   const pathname = usePathname();
+  const { employee } = useAuth();
+  const isSuperAdmin = employee?.role === "super_admin";
 
   return (
     <>
@@ -140,6 +143,14 @@ export function Sidebar({
                   onClick={onMobileClose}
                 />
               ))}
+              {isSuperAdmin && (
+                <SidebarItem
+                  item={{ href: "/dashboard/approvals", icon: ShieldCheck, label: "الموافقات" }}
+                  isCollapsed={isCollapsed}
+                  isActive={pathname.startsWith("/dashboard/approvals")}
+                  onClick={onMobileClose}
+                />
+              )}
             </nav>
           </TooltipProvider>
         </ScrollArea>
