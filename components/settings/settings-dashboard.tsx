@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Building2,
   Users,
@@ -12,7 +13,6 @@ import {
   Loader2,
   RefreshCw,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,13 +38,16 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { STATUS_CONFIG } from "@/components/dashboard/status-config";
 import { getRoleLabel } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import {
+  createTeamAction,
+  updateTeamAction,
+  setTeamActiveAction,
+  createEmployeeAction,
+  updateEmployeeAction,
+  setEmployeeActiveAction,
+} from "@/app/(dashboard)/dashboard/settings/actions";
 import type { TeamForSettings, EmployeeForSettings } from "@/lib/data/admin";
-import type { Database, UserRole, AvailabilityStatus } from "@/types/database";
-
-type TeamInsert = Database["public"]["Tables"]["teams"]["Insert"];
-type TeamUpdate = Database["public"]["Tables"]["teams"]["Update"];
-type EmployeeInsert = Database["public"]["Tables"]["employees"]["Insert"];
-type EmployeeUpdate = Database["public"]["Tables"]["employees"]["Update"];
+import type { UserRole, AvailabilityStatus } from "@/types/database";
 
 const TEAM_COLORS = [
   "#0ea5e9", "#10b981", "#f59e0b", "#ef4444",
@@ -76,48 +79,17 @@ export function SettingsDashboard({
   initialTeams,
   initialEmployees,
 }: SettingsDashboardProps) {
+  const router = useRouter();
   const [teams, setTeams] = useState(initialTeams);
   const [employees, setEmployees] = useState(initialEmployees);
 
-  const refreshTeams = useCallback(async () => {
-    const supabase = createClient();
-    const { data: t } = await supabase.from("teams").select("*").order("created_at");
-    const { data: e } = await supabase
-      .from("employees")
-      .select("id, team_id")
-      .eq("is_active", true);
-    if (t) {
-      const empList = (e ?? []) as Array<{ id: string; team_id: string | null }>;
-      setTeams(
-        (t as TeamForSettings[]).map((team) => ({
-          ...team,
-          employeeCount: empList.filter((emp) => emp.team_id === team.id).length,
-        }))
-      );
-    }
-  }, []);
+  // Sync with server-rendered data after router.refresh()
+  useEffect(() => { setTeams(initialTeams); }, [initialTeams]);
+  useEffect(() => { setEmployees(initialEmployees); }, [initialEmployees]);
 
-  const refreshEmployees = useCallback(async () => {
-    const supabase = createClient();
-    const { data } = await supabase
-      .from("employees")
-      .select("*, teams!left(name, color)")
-      .order("full_name");
-    if (data) {
-      setEmployees(
-        (
-          data as Array<
-            EmployeeForSettings & { teams: { name: string; color: string } | null }
-          >
-        ).map((row) => ({
-          ...row,
-          teams: undefined,
-          teamName: row.teams?.name ?? null,
-          teamColor: row.teams?.color ?? null,
-        }))
-      );
-    }
-  }, []);
+  const refresh = useCallback(async () => {
+    router.refresh();
+  }, [router]);
 
   return (
     <Tabs defaultValue="teams">
@@ -142,7 +114,7 @@ export function SettingsDashboard({
 
       {/* ── Teams ── */}
       <TabsContent value="teams">
-        <TeamsTab teams={teams} onRefresh={refreshTeams} />
+        <TeamsTab teams={teams} onRefresh={refresh} />
       </TabsContent>
 
       {/* ── Employees ── */}
@@ -150,7 +122,7 @@ export function SettingsDashboard({
         <EmployeesTab
           employees={employees}
           teams={teams}
-          onRefresh={refreshEmployees}
+          onRefresh={refresh}
         />
       </TabsContent>
 
@@ -181,6 +153,7 @@ function TeamsTab({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<TeamForSettings | null>(null);
   const [loading, setLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -192,12 +165,14 @@ function TeamsTab({
 
   function openCreate() {
     setEditing(null);
+    setActionError(null);
     setForm({ name: "", name_en: "", description: "", color: TEAM_COLORS[0], icon: "handshake" });
     setDialogOpen(true);
   }
 
   function openEdit(team: TeamForSettings) {
     setEditing(team);
+    setActionError(null);
     setForm({
       name: team.name,
       name_en: team.name_en ?? "",
@@ -211,38 +186,31 @@ function TeamsTab({
   async function handleSave() {
     if (!form.name.trim()) return;
     setLoading(true);
-    const supabase = createClient();
+    setActionError(null);
 
-    if (editing) {
-      await (supabase.from("teams") as unknown as { update: (v: TeamUpdate) => { eq: (k: string, v: string) => Promise<void> } }).update({
-        name: form.name,
-        name_en: form.name_en || null,
-        description: form.description || null,
-        color: form.color,
-        icon: form.icon,
-      }).eq("id", editing.id);
-    } else {
-      await (supabase.from("teams") as unknown as { insert: (v: TeamInsert) => Promise<void> }).insert({
-        name: form.name,
-        name_en: form.name_en || null,
-        description: form.description || null,
-        color: form.color,
-        icon: form.icon,
-        is_active: true,
-      } as unknown as TeamInsert);
-    }
+    const payload = {
+      name: form.name,
+      name_en: form.name_en || null,
+      description: form.description || null,
+      color: form.color,
+      icon: form.icon,
+    };
 
-    await onRefresh();
+    const result = editing
+      ? await updateTeamAction(editing.id, payload)
+      : await createTeamAction(payload);
+
     setLoading(false);
+    if (result.error) {
+      setActionError(result.error);
+      return;
+    }
+    await onRefresh();
     setDialogOpen(false);
   }
 
   async function toggleActive(team: TeamForSettings) {
-    const supabase = createClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase.from("teams") as any)
-      .update({ is_active: !team.is_active })
-      .eq("id", team.id);
+    await setTeamActiveAction(team.id, !team.is_active);
     await onRefresh();
   }
 
@@ -411,6 +379,9 @@ function TeamsTab({
                 ))}
               </div>
             </div>
+            {actionError && (
+              <p className="text-sm text-destructive">{actionError}</p>
+            )}
           </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
@@ -444,6 +415,7 @@ function EmployeesTab({
   const [editing, setEditing] = useState<EmployeeForSettings | null>(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     full_name: "",
@@ -462,12 +434,14 @@ function EmployeesTab({
 
   function openCreate() {
     setEditing(null);
+    setActionError(null);
     setForm({ full_name: "", email: "", phone: "", role: "team_member", team_id: "", is_active: true });
     setDialogOpen(true);
   }
 
   function openEdit(emp: EmployeeForSettings) {
     setEditing(emp);
+    setActionError(null);
     setForm({
       full_name: emp.full_name,
       email: emp.email,
@@ -482,38 +456,36 @@ function EmployeesTab({
   async function handleSave() {
     if (!form.full_name.trim() || !form.email.trim()) return;
     setLoading(true);
-    const supabase = createClient();
+    setActionError(null);
 
-    const payload = {
-      full_name: form.full_name,
-      email: form.email,
-      phone: form.phone || null,
-      role: form.role,
-      team_id: form.team_id || null,
-      is_active: form.is_active,
-    };
+    const result = editing
+      ? await updateEmployeeAction(editing.id, {
+          full_name: form.full_name,
+          email: form.email,
+          phone: form.phone || null,
+          role: form.role,
+          team_id: form.team_id || null,
+          is_active: form.is_active,
+        })
+      : await createEmployeeAction({
+          full_name: form.full_name,
+          email: form.email,
+          phone: form.phone || null,
+          role: form.role,
+          team_id: form.team_id || null,
+        });
 
-    if (editing) {
-      await (supabase.from("employees") as unknown as {
-        update: (v: EmployeeUpdate) => { eq: (k: string, v: string) => Promise<void> };
-      }).update(payload as unknown as EmployeeUpdate).eq("id", editing.id);
-    } else {
-      await (supabase.from("employees") as unknown as {
-        insert: (v: EmployeeInsert) => Promise<void>;
-      }).insert(payload as unknown as EmployeeInsert);
-    }
-
-    await onRefresh();
     setLoading(false);
+    if (result.error) {
+      setActionError(result.error);
+      return;
+    }
+    await onRefresh();
     setDialogOpen(false);
   }
 
   async function toggleActive(emp: EmployeeForSettings) {
-    const supabase = createClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase.from("employees") as any)
-      .update({ is_active: !emp.is_active })
-      .eq("id", emp.id);
+    await setEmployeeActiveAction(emp.id, !emp.is_active);
     await onRefresh();
   }
 
@@ -683,6 +655,9 @@ function EmployeesTab({
                 </select>
               </div>
             </div>
+            {actionError && (
+              <p className="text-sm text-destructive">{actionError}</p>
+            )}
           </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>

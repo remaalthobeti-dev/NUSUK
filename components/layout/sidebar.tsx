@@ -32,9 +32,7 @@ const navItems: NavItem[] = [
   { href: "/dashboard/activity", icon: Activity, label: "سجل النشاط" },
 ];
 
-const bottomItems: NavItem[] = [
-  { href: "/dashboard/settings", icon: Settings, label: "الإعدادات" },
-];
+const bottomItems: NavItem[] = [];
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -167,6 +165,14 @@ export function Sidebar({
                 onClick={onMobileClose}
               />
             ))}
+            {isSuperAdmin && (
+              <SidebarItem
+                item={{ href: "/dashboard/settings", icon: Settings, label: "الإعدادات" }}
+                isCollapsed={isCollapsed}
+                isActive={pathname.startsWith("/dashboard/settings")}
+                onClick={onMobileClose}
+              />
+            )}
           </TooltipProvider>
         </div>
 
