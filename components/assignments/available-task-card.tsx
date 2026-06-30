@@ -1,70 +1,51 @@
 "use client";
 
 import { useTransition } from "react";
-import { Clock, AlertCircle, ChevronLeft, User } from "lucide-react";
+import {
+  Clock,
+  Calendar,
+  User,
+  Building2,
+  ChevronLeft,
+  AlertTriangle,
+} from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { claimTaskAction } from "@/app/(dashboard)/dashboard/assignments/actions";
 import type { TaskWithRelations } from "@/lib/data/assignments";
-import type { TaskPriority } from "@/types/database";
-
-// ─── Priority config ──────────────────────────────────────────────────────────
-
-const PRIORITY_CONFIG: Record<
-  TaskPriority,
-  { label: string; className: string }
-> = {
-  urgent: { label: "عاجل", className: "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400" },
-  high: { label: "عالية", className: "bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400" },
-  medium: { label: "متوسطة", className: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400" },
-  low: { label: "منخفضة", className: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400" },
-};
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} د`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m > 0 ? `${h} س ${m} د` : `${h} س`;
-}
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "الآن";
-  if (m < 60) return `منذ ${m} د`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `منذ ${h} س`;
-  const d = Math.floor(h / 24);
-  return `منذ ${d} يوم`;
-}
-
-// ─── Component ────────────────────────────────────────────────────────────────
+import {
+  PRIORITY_CONFIG,
+  STATUS_CONFIG,
+  formatDuration,
+  formatDueDate,
+  timeAgo,
+  progressBarColor,
+} from "./card-utils";
 
 interface Props {
   task: TaskWithRelations;
-  onClaimed?: () => void;
 }
 
-export function AvailableTaskCard({ task, onClaimed }: Props) {
+export function AvailableTaskCard({ task }: Props) {
   const [isPending, startTransition] = useTransition();
   const priority = PRIORITY_CONFIG[task.priority];
+  const status = STATUS_CONFIG[task.status];
+  const due = formatDueDate(task.due_date);
 
   function handleClaim() {
     startTransition(async () => {
-      const { error } = await claimTaskAction(task.id);
-      if (!error) onClaimed?.();
+      await claimTaskAction(task.id);
     });
   }
 
   return (
-    <Card className="flex flex-col">
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="font-semibold text-foreground leading-snug line-clamp-2">
+    <Card className="flex flex-col h-full">
+      {/* ── Header ── */}
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-semibold text-sm leading-snug line-clamp-2 flex-1">
             {task.title}
           </h3>
           <Badge
@@ -84,41 +65,113 @@ export function AvailableTaskCard({ task, onClaimed }: Props) {
         )}
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-3 pt-0 flex-1">
-        {/* Meta row */}
-        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          {task.estimated_minutes != null && (
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {formatDuration(task.estimated_minutes)}
+      <CardContent className="flex flex-col gap-4 pt-0 flex-1">
+        {/* ── Status + progress ── */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Badge
+              className={cn(
+                "text-xs font-medium border-0",
+                status.className
+              )}
+            >
+              {status.label}
+            </Badge>
+            <span className="text-xs text-muted-foreground">
+              {status.progress}%
             </span>
-          )}
-          {task.creator && (
-            <span className="flex items-center gap-1">
-              <User className="h-3 w-3" />
-              {task.creator.full_name}
-            </span>
-          )}
-          <span className="flex items-center gap-1 ms-auto">
-            <AlertCircle className="h-3 w-3" />
-            {timeAgo(task.created_at)}
-          </span>
+          </div>
+          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+            <div
+              className={cn("h-full rounded-full", progressBarColor(status.progress))}
+              style={{ width: `${status.progress}%` }}
+            />
+          </div>
         </div>
+
+        {/* ── Meta grid ── */}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-muted-foreground">
+          {/* Due date */}
+          <MetaItem
+            icon={Calendar}
+            text={due ? due.text : "لا يوجد موعد"}
+            urgent={due?.urgent}
+          />
+
+          {/* Estimated duration */}
+          <MetaItem
+            icon={Clock}
+            text={
+              task.estimated_minutes != null
+                ? formatDuration(task.estimated_minutes)
+                : "غير محدد"
+            }
+          />
+
+          {/* Team */}
+          <MetaItem
+            icon={Building2}
+            text={task.team?.name ?? "—"}
+          />
+
+          {/* Created by */}
+          <MetaItem
+            icon={User}
+            text={task.creator?.full_name ?? "—"}
+          />
+        </div>
+
+        {/* Created time — full width */}
+        <p className="text-[11px] text-muted-foreground/70">
+          أُنشئت {timeAgo(task.created_at)}
+        </p>
 
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Claim button */}
+        {/* ── Claim button ── */}
         <Button
           size="sm"
           className="w-full"
           onClick={handleClaim}
           disabled={isPending}
         >
-          {isPending ? "جاري الاستلام…" : "استلام المهمة"}
-          {!isPending && <ChevronLeft className="h-4 w-4 me-1" />}
+          {isPending ? (
+            "جاري الاستلام…"
+          ) : (
+            <>
+              استلام المهمة
+              <ChevronLeft className="h-4 w-4 me-1" />
+            </>
+          )}
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+function MetaItem({
+  icon: Icon,
+  text,
+  urgent,
+}: {
+  icon: React.ElementType;
+  text: string;
+  urgent?: boolean;
+}) {
+  return (
+    <span
+      className={cn(
+        "flex items-center gap-1 min-w-0",
+        urgent && "text-red-600 dark:text-red-400 font-medium"
+      )}
+    >
+      {urgent ? (
+        <AlertTriangle className="h-3 w-3 shrink-0" />
+      ) : (
+        <Icon className="h-3 w-3 shrink-0 text-muted-foreground" />
+      )}
+      <span className="truncate">{text}</span>
+    </span>
   );
 }

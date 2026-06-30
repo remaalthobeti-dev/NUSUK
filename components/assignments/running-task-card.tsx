@@ -1,103 +1,131 @@
 import Link from "next/link";
-import { User, Users, Clock, ChevronLeft } from "lucide-react";
+import {
+  Clock,
+  Calendar,
+  User,
+  Users,
+  Building2,
+  RefreshCw,
+  ChevronLeft,
+  AlertTriangle,
+} from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { TaskWithRelations } from "@/lib/data/assignments";
-import type { TaskStatus } from "@/types/database";
-
-// ─── Status config ────────────────────────────────────────────────────────────
-
-const STATUS_CONFIG: Record<
-  TaskStatus,
-  { label: string; className: string; progress: number }
-> = {
-  available: { label: "متاحة", className: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400", progress: 0 },
-  pending: { label: "قيد الانتظار", className: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400", progress: 10 },
-  in_progress: { label: "جارية", className: "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400", progress: 50 },
-  on_hold: { label: "متوقفة", className: "bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400", progress: 25 },
-  completed: { label: "مكتملة", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400", progress: 100 },
-  cancelled: { label: "ملغاة", className: "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400", progress: 0 },
-};
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "الآن";
-  if (m < 60) return `منذ ${m} د`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `منذ ${h} س`;
-  const d = Math.floor(h / 24);
-  return `منذ ${d} يوم`;
-}
-
-// ─── Component ────────────────────────────────────────────────────────────────
+import {
+  PRIORITY_CONFIG,
+  STATUS_CONFIG,
+  formatDuration,
+  formatDueDate,
+  timeAgo,
+  progressBarColor,
+} from "./card-utils";
 
 interface Props {
   task: TaskWithRelations;
 }
 
 export function RunningTaskCard({ task }: Props) {
+  const priority = PRIORITY_CONFIG[task.priority];
   const statusConf = STATUS_CONFIG[task.status] ?? STATUS_CONFIG.pending;
+  const due = formatDueDate(task.due_date);
 
   return (
-    <Card className="flex flex-col">
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="font-semibold text-foreground leading-snug line-clamp-2">
+    <Card className="flex flex-col h-full">
+      {/* ── Header ── */}
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-semibold text-sm leading-snug line-clamp-2 flex-1">
             {task.title}
           </h3>
           <Badge
             className={cn(
               "shrink-0 text-xs font-medium border-0",
-              statusConf.className
+              priority.className
             )}
           >
-            {statusConf.label}
+            {priority.label}
           </Badge>
         </div>
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-3 pt-0 flex-1">
-        {/* Progress bar */}
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>التقدم</span>
-            <span>{statusConf.progress}%</span>
+      <CardContent className="flex flex-col gap-4 pt-0 flex-1">
+        {/* ── Status + progress ── */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Badge
+              className={cn(
+                "text-xs font-medium border-0",
+                statusConf.className
+              )}
+            >
+              {statusConf.label}
+            </Badge>
+            <span className="text-xs text-muted-foreground">
+              {statusConf.progress}%
+            </span>
           </div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden">
             <div
               className={cn(
                 "h-full rounded-full transition-all",
-                statusConf.progress === 100
-                  ? "bg-emerald-500"
-                  : statusConf.progress === 0
-                    ? "bg-slate-300"
-                    : "bg-blue-500"
+                progressBarColor(statusConf.progress)
               )}
               style={{ width: `${statusConf.progress}%` }}
             />
           </div>
         </div>
 
-        {/* Meta */}
-        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          {task.assignee ? (
-            <span className="flex items-center gap-1">
-              <User className="h-3 w-3" />
-              {task.assignee.full_name}
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
-              <Users className="h-3 w-3" />
-              غير مسندة
-            </span>
-          )}
-          <span className="flex items-center gap-1 ms-auto">
-            <Clock className="h-3 w-3" />
+        {/* ── Assigned + participants ── */}
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <User className="h-3 w-3 shrink-0" />
+            {task.assignee?.full_name ?? (
+              <span className="text-amber-600 dark:text-amber-400">
+                غير مسندة
+              </span>
+            )}
+          </span>
+          {/* Participants — Phase 3 will populate this */}
+          <span className="flex items-center gap-1">
+            <Users className="h-3 w-3 shrink-0" />
+            0 مشاركين
+          </span>
+        </div>
+
+        {/* ── Meta grid ── */}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-muted-foreground">
+          {/* Due date */}
+          <MetaItem
+            icon={Calendar}
+            text={due ? due.text : "لا يوجد موعد"}
+            urgent={due?.urgent}
+          />
+
+          {/* Estimated duration */}
+          <MetaItem
+            icon={Clock}
+            text={
+              task.estimated_minutes != null
+                ? formatDuration(task.estimated_minutes)
+                : "غير محدد"
+            }
+          />
+
+          {/* Team */}
+          <MetaItem icon={Building2} text={task.team?.name ?? "—"} />
+
+          {/* Created by */}
+          <MetaItem icon={User} text={task.creator?.full_name ?? "—"} />
+        </div>
+
+        {/* Timestamps — full width */}
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground/70">
+          <span>أُنشئت {timeAgo(task.created_at)}</span>
+          <span className="flex items-center gap-1">
+            <RefreshCw className="h-2.5 w-2.5" />
             {timeAgo(task.updated_at)}
           </span>
         </div>
@@ -105,7 +133,7 @@ export function RunningTaskCard({ task }: Props) {
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Open button */}
+        {/* ── Open button ── */}
         <Button asChild variant="outline" size="sm" className="w-full">
           <Link href={`/dashboard/assignments/${task.id}`}>
             فتح المهمة
@@ -114,5 +142,31 @@ export function RunningTaskCard({ task }: Props) {
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+function MetaItem({
+  icon: Icon,
+  text,
+  urgent,
+}: {
+  icon: React.ElementType;
+  text: string;
+  urgent?: boolean;
+}) {
+  return (
+    <span
+      className={cn(
+        "flex items-center gap-1 min-w-0",
+        urgent && "text-red-600 dark:text-red-400 font-medium"
+      )}
+    >
+      {urgent ? (
+        <AlertTriangle className="h-3 w-3 shrink-0" />
+      ) : (
+        <Icon className="h-3 w-3 shrink-0 text-muted-foreground" />
+      )}
+      <span className="truncate">{text}</span>
+    </span>
   );
 }

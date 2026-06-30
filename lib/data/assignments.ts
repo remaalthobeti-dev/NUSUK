@@ -1,18 +1,26 @@
 import { requireAuthenticated } from "@/lib/auth/guards";
 import type { Task, TaskPriority, TaskStatus } from "@/types/database";
 
-// ─── Joined shape returned by both queries ────────────────────────────────────
+// ─── Joined shape ─────────────────────────────────────────────────────────────
 
 export interface TaskWithRelations extends Task {
   creator: { full_name: string } | null;
   assignee: { full_name: string } | null;
+  team: { name: string } | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function priorityOrder(p: TaskPriority): number {
+export function priorityOrder(p: TaskPriority): number {
   return { urgent: 0, high: 1, medium: 2, low: 3 }[p] ?? 4;
 }
+
+const SELECT = `
+  *,
+  creator:employees!tasks_created_by_fkey(full_name),
+  assignee:employees!tasks_assigned_to_fkey(full_name),
+  team:teams!tasks_team_id_fkey(name)
+`.trim();
 
 // ─── Available tasks (status = 'available', team-scoped) ─────────────────────
 
@@ -28,19 +36,14 @@ export async function getAvailableTasks(): Promise<{
 
   const { data, error: dbErr } = await supabase
     .from("tasks")
-    .select(
-      `*, creator:employees!tasks_created_by_fkey(full_name), assignee:employees!tasks_assigned_to_fkey(full_name)`
-    )
+    .select(SELECT)
     .eq("team_id", teamId)
     .eq("status", "available")
     .order("created_at", { ascending: false });
 
   if (dbErr) return { tasks: [], error: dbErr.message };
 
-  const tasks = (data ?? []) as unknown as TaskWithRelations[];
-  tasks.sort((a, b) => priorityOrder(a.priority) - priorityOrder(b.priority));
-
-  return { tasks, error: null };
+  return { tasks: (data ?? []) as unknown as TaskWithRelations[], error: null };
 }
 
 // ─── Running tasks (non-available, non-cancelled, team-scoped) ───────────────
@@ -64,9 +67,7 @@ export async function getRunningTasks(): Promise<{
 
   const { data, error: dbErr } = await supabase
     .from("tasks")
-    .select(
-      `*, creator:employees!tasks_created_by_fkey(full_name), assignee:employees!tasks_assigned_to_fkey(full_name)`
-    )
+    .select(SELECT)
     .eq("team_id", teamId)
     .in("status", RUNNING_STATUSES)
     .order("updated_at", { ascending: false });
