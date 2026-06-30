@@ -1,7 +1,7 @@
 import { forbidden } from "next/navigation";
-import type { User } from "@supabase/supabase-js";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
-import type { UserRole } from "@/types/database";
+import type { Database, UserRole } from "@/types/database";
 
 // ─── Permissions ──────────────────────────────────────────────────────────────
 
@@ -63,7 +63,7 @@ export interface EmployeeContext {
 const UNAUTHORIZED = "ليس لديك صلاحية لتنفيذ هذا الإجراء." as const;
 
 type GuardSuccess = {
-  supabase: Awaited<ReturnType<typeof createClient>>;
+  supabase: SupabaseClient<Database>;
   context: EmployeeContext;
   error: null;
 };

@@ -66,41 +66,49 @@ export interface Database {
         Row: Team;
         Insert: Omit<Team, "id" | "created_at" | "updated_at">;
         Update: Partial<Omit<Team, "id" | "created_at">>;
+        Relationships: [];
       };
       employees: {
         Row: Employee;
         Insert: Omit<Employee, "id" | "created_at" | "updated_at">;
         Update: Partial<Omit<Employee, "id" | "created_at">>;
+        Relationships: [];
       };
       tasks: {
         Row: Task;
         Insert: Omit<Task, "id" | "created_at" | "updated_at">;
         Update: Partial<Omit<Task, "id" | "created_at">>;
+        Relationships: [];
       };
       statuses: {
         Row: Status;
         Insert: Omit<Status, "id" | "created_at">;
         Update: Partial<Omit<Status, "id" | "created_at">>;
+        Relationships: [];
       };
       notifications: {
         Row: Notification;
         Insert: Omit<Notification, "id" | "created_at">;
         Update: Partial<Omit<Notification, "id" | "created_at">>;
+        Relationships: [];
       };
       activity_logs: {
         Row: ActivityLog;
         Insert: Omit<ActivityLog, "id" | "created_at">;
         Update: never;
+        Relationships: [];
       };
       employee_presence: {
         Row: EmployeePresence;
         Insert: Omit<EmployeePresence, "id" | "updated_at">;
         Update: Partial<Omit<EmployeePresence, "id">>;
+        Relationships: [];
       };
       registration_requests: {
         Row: RegistrationRequest;
         Insert: Omit<RegistrationRequest, "id" | "created_at">;
         Update: Partial<Omit<RegistrationRequest, "id" | "created_at">>;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
