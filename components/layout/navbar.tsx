@@ -3,7 +3,6 @@
 import { useTheme } from "next-themes";
 import { Menu, Moon, Sun, Bell, LogOut, User, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -28,10 +27,8 @@ export function Navbar({ onMobileMenuToggle, sidebarCollapsed }: NavbarProps) {
   const { user, employee } = useAuth();
   const router = useRouter();
 
-  async function handleSignOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    window.location.href = "/login";
+  function handleSignOut() {
+    window.location.href = "/api/auth/logout";
   }
 
   const initials = employee?.full_name
