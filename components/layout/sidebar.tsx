@@ -76,6 +76,14 @@ export function Sidebar({
     !loading &&
     (employee?.role === "super_admin" || employee?.role === "track_manager");
 
+  // Q5: does the sidebar receive the correct values, and does it compute correctly?
+  console.log(
+    `[Sidebar] render — loading=${loading}`,
+    `role="${employee?.role ?? "null"}"`,
+    `isSuperAdmin=${isSuperAdmin}`,
+    `canManage=${canManage}`
+  );
+
   function itemProps(item: NavItem) {
     return {
       item,
