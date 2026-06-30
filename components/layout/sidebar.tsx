@@ -13,6 +13,7 @@ import {
   CalendarDays,
   CircleUser,
   Settings,
+  ShieldCheck,
   ChevronLeft,
   Building2,
   X,
@@ -34,6 +35,25 @@ interface NavItem {
   label: string;
 }
 
+// Static items visible to all authenticated employees, in spec order.
+// Conditional items (الموظفون, الموافقات, الإعدادات) are rendered as
+// explicit JSX conditionals below so React reconciles them independently.
+const BASE_NAV_TOP: NavItem[] = [
+  { href: "/dashboard", icon: Home, label: "الرئيسية" },
+  { href: "/dashboard/assignments", icon: ClipboardList, label: "إسناد الأعمال" },
+  { href: "/dashboard/my-tasks", icon: ListTodo, label: "مهامي" },
+  { href: "/dashboard/operations", icon: LayoutDashboard, label: "مركز العمليات" },
+  { href: "/dashboard/teams", icon: Users, label: "الفرق" },
+  // ← slot 6: الموظفون (managers) injected here in JSX
+];
+
+const BASE_NAV_BOTTOM: NavItem[] = [
+  { href: "/dashboard/notifications", icon: Bell, label: "الإشعارات" },
+  { href: "/dashboard/meetings", icon: CalendarDays, label: "الاجتماعات" },
+  { href: "/dashboard/profile", icon: CircleUser, label: "الملف الشخصي" },
+  // ← slot 11: الموافقات (super_admin) injected here in JSX
+];
+
 interface SidebarProps {
   isCollapsed: boolean;
   onToggle: () => void;
@@ -48,25 +68,25 @@ export function Sidebar({
   onMobileClose,
 }: SidebarProps) {
   const pathname = usePathname();
-  const { employee } = useAuth();
+  const { employee, loading } = useAuth();
 
-  const role = employee?.role;
-  const isSuperAdmin = role === "super_admin";
-  const canManage = role === "super_admin" || role === "track_manager";
+  // Evaluate roles only after auth has resolved to avoid stale-false reads.
+  const isSuperAdmin = !loading && employee?.role === "super_admin";
+  const canManage =
+    !loading &&
+    (employee?.role === "super_admin" || employee?.role === "track_manager");
 
-  const navItems: NavItem[] = [
-    { href: "/dashboard", icon: Home, label: "الرئيسية" },
-    { href: "/dashboard/assignments", icon: ClipboardList, label: "إسناد الأعمال" },
-    { href: "/dashboard/my-tasks", icon: ListTodo, label: "مهامي" },
-    { href: "/dashboard/operations", icon: LayoutDashboard, label: "مركز العمليات" },
-    { href: "/dashboard/teams", icon: Users, label: "الفرق" },
-    ...(canManage
-      ? [{ href: "/dashboard/employees", icon: UserCheck, label: "الموظفون" }]
-      : []),
-    { href: "/dashboard/notifications", icon: Bell, label: "الإشعارات" },
-    { href: "/dashboard/meetings", icon: CalendarDays, label: "الاجتماعات" },
-    { href: "/dashboard/profile", icon: CircleUser, label: "الملف الشخصي" },
-  ];
+  function itemProps(item: NavItem) {
+    return {
+      item,
+      isCollapsed,
+      isActive:
+        item.href === "/dashboard"
+          ? pathname === "/dashboard"
+          : pathname.startsWith(item.href),
+      onClick: onMobileClose,
+    };
+  }
 
   return (
     <>
@@ -148,36 +168,53 @@ export function Sidebar({
         <ScrollArea className="flex-1 py-4">
           <TooltipProvider delayDuration={0}>
             <nav className="px-3 space-y-1">
-              {navItems.map((item) => (
-                <SidebarItem
-                  key={item.href}
-                  item={item}
-                  isCollapsed={isCollapsed}
-                  isActive={
-                    item.href === "/dashboard"
-                      ? pathname === "/dashboard"
-                      : pathname.startsWith(item.href)
-                  }
-                  onClick={onMobileClose}
-                />
+              {/* Items 1–5: always visible */}
+              {BASE_NAV_TOP.map((item) => (
+                <SidebarItem key={item.href} {...itemProps(item)} />
               ))}
+
+              {/* Item 6: الموظفون — managers only */}
+              {canManage && (
+                <SidebarItem
+                  key="/dashboard/employees"
+                  {...itemProps({
+                    href: "/dashboard/employees",
+                    icon: UserCheck,
+                    label: "الموظفون",
+                  })}
+                />
+              )}
+
+              {/* Items 7–9: always visible */}
+              {BASE_NAV_BOTTOM.map((item) => (
+                <SidebarItem key={item.href} {...itemProps(item)} />
+              ))}
+
+              {/* Item 11: الموافقات — super_admin only */}
+              {isSuperAdmin && (
+                <SidebarItem
+                  key="/dashboard/approvals"
+                  {...itemProps({
+                    href: "/dashboard/approvals",
+                    icon: ShieldCheck,
+                    label: "الموافقات",
+                  })}
+                />
+              )}
             </nav>
           </TooltipProvider>
         </ScrollArea>
 
-        {/* Bottom: Settings (super_admin only) */}
+        {/* Bottom: الإعدادات — super_admin only */}
         {isSuperAdmin && (
           <div className="p-3 border-t">
             <TooltipProvider delayDuration={0}>
               <SidebarItem
-                item={{
+                {...itemProps({
                   href: "/dashboard/settings",
                   icon: Settings,
                   label: "الإعدادات",
-                }}
-                isCollapsed={isCollapsed}
-                isActive={pathname.startsWith("/dashboard/settings")}
-                onClick={onMobileClose}
+                })}
               />
             </TooltipProvider>
           </div>
