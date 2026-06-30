@@ -3,20 +3,29 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Home,
+  ClipboardList,
+  ListTodo,
   LayoutDashboard,
-  BarChart3,
+  Users,
+  UserCheck,
   Bell,
-  Activity,
+  CalendarDays,
+  CircleUser,
   Settings,
   ChevronLeft,
   Building2,
   X,
-  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
 
 interface NavItem {
@@ -24,15 +33,6 @@ interface NavItem {
   icon: React.ElementType;
   label: string;
 }
-
-const navItems: NavItem[] = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "الرئيسية" },
-  { href: "/dashboard/analytics", icon: BarChart3, label: "التحليلات" },
-  { href: "/dashboard/notifications", icon: Bell, label: "الإشعارات" },
-  { href: "/dashboard/activity", icon: Activity, label: "سجل النشاط" },
-];
-
-const bottomItems: NavItem[] = [];
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -49,7 +49,26 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const { employee } = useAuth();
-  const isSuperAdmin = employee?.role === "super_admin";
+
+  const role = employee?.role;
+  const isSuperAdmin = role === "super_admin";
+  const canManage = role === "super_admin" || role === "track_manager";
+
+  const navItems: NavItem[] = [
+    { href: "/dashboard", icon: Home, label: "الرئيسية" },
+    ...(canManage
+      ? [{ href: "/dashboard/assignments", icon: ClipboardList, label: "إسناد الأعمال" }]
+      : []),
+    { href: "/dashboard/my-tasks", icon: ListTodo, label: "مهامي" },
+    { href: "/dashboard/operations", icon: LayoutDashboard, label: "مركز العمليات" },
+    { href: "/dashboard/teams", icon: Users, label: "الفرق" },
+    ...(canManage
+      ? [{ href: "/dashboard/employees", icon: UserCheck, label: "الموظفون" }]
+      : []),
+    { href: "/dashboard/notifications", icon: Bell, label: "الإشعارات" },
+    { href: "/dashboard/meetings", icon: CalendarDays, label: "الاجتماعات" },
+    { href: "/dashboard/profile", icon: CircleUser, label: "الملف الشخصي" },
+  ];
 
   return (
     <>
@@ -66,8 +85,9 @@ export function Sidebar({
       <aside
         className={cn(
           "fixed top-0 end-0 z-40 h-screen bg-card border-s flex flex-col transition-all duration-300 ease-in-out",
-          isCollapsed ? "w-[var(--sidebar-collapsed-width)]" : "w-[var(--sidebar-width)]",
-          // Mobile: hidden by default, shown when open
+          isCollapsed
+            ? "w-[var(--sidebar-collapsed-width)]"
+            : "w-[var(--sidebar-width)]",
           "hidden lg:flex",
           isMobileOpen && "!flex"
         )}
@@ -85,7 +105,9 @@ export function Sidebar({
                 <Building2 className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="font-bold text-foreground leading-tight text-sm">نسك</p>
+                <p className="font-bold text-foreground leading-tight text-sm">
+                  نسك
+                </p>
                 <p className="text-[10px] text-muted-foreground leading-tight">
                   إدارة البطاقات
                 </p>
@@ -99,7 +121,7 @@ export function Sidebar({
             </div>
           )}
 
-          {/* Mobile close button */}
+          {/* Mobile close */}
           <Button
             variant="ghost"
             size="icon"
@@ -141,40 +163,27 @@ export function Sidebar({
                   onClick={onMobileClose}
                 />
               ))}
-              {isSuperAdmin && (
-                <SidebarItem
-                  item={{ href: "/dashboard/approvals", icon: ShieldCheck, label: "الموافقات" }}
-                  isCollapsed={isCollapsed}
-                  isActive={pathname.startsWith("/dashboard/approvals")}
-                  onClick={onMobileClose}
-                />
-              )}
             </nav>
           </TooltipProvider>
         </ScrollArea>
 
-        {/* Bottom Items */}
-        <div className="p-3 border-t space-y-1">
-          <TooltipProvider delayDuration={0}>
-            {bottomItems.map((item) => (
+        {/* Bottom: Settings (super_admin only) */}
+        {isSuperAdmin && (
+          <div className="p-3 border-t">
+            <TooltipProvider delayDuration={0}>
               <SidebarItem
-                key={item.href}
-                item={item}
-                isCollapsed={isCollapsed}
-                isActive={pathname.startsWith(item.href)}
-                onClick={onMobileClose}
-              />
-            ))}
-            {isSuperAdmin && (
-              <SidebarItem
-                item={{ href: "/dashboard/settings", icon: Settings, label: "الإعدادات" }}
+                item={{
+                  href: "/dashboard/settings",
+                  icon: Settings,
+                  label: "الإعدادات",
+                }}
                 isCollapsed={isCollapsed}
                 isActive={pathname.startsWith("/dashboard/settings")}
                 onClick={onMobileClose}
               />
-            )}
-          </TooltipProvider>
-        </div>
+            </TooltipProvider>
+          </div>
+        )}
 
         {/* Expand button when collapsed (desktop) */}
         {isCollapsed && (
