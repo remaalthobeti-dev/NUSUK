@@ -36,6 +36,14 @@ export async function claimTaskAction(
 
   if (dbErr) return { error: dbErr.message };
 
+  await supabase.from("task_activity").insert({
+    task_id: taskId,
+    employee_id: context.employee.id,
+    event_type: "task_claimed",
+    description: `استلم ${context.employee.full_name} المهمة`,
+  });
+
   revalidatePath("/dashboard/assignments");
+  revalidatePath(`/dashboard/assignments/${taskId}`);
   return { error: null };
 }

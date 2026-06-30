@@ -448,6 +448,181 @@ export type Database = {
           },
         ]
       }
+      task_activity: {
+        Row: {
+          created_at: string
+          description: string
+          employee_id: string | null
+          event_type: string
+          id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          employee_id?: string | null
+          event_type: string
+          id?: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          employee_id?: string | null
+          event_type?: string
+          id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_activity_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_activity_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_comments: {
+        Row: {
+          comment: string
+          created_at: string
+          employee_id: string
+          id: string
+          task_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          employee_id: string
+          id?: string
+          task_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          employee_id?: string
+          id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_comments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_participants: {
+        Row: {
+          employee_id: string
+          id: string
+          joined_at: string
+          left_at: string | null
+          task_id: string
+        }
+        Insert: {
+          employee_id: string
+          id?: string
+          joined_at?: string
+          left_at?: string | null
+          task_id: string
+        }
+        Update: {
+          employee_id?: string
+          id?: string
+          joined_at?: string
+          left_at?: string | null
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_participants_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_participants_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_requests: {
+        Row: {
+          created_at: string
+          id: string
+          request_type: Database["public"]["Enums"]["task_request_type"]
+          requestee_id: string
+          requester_id: string
+          status: Database["public"]["Enums"]["task_request_status"]
+          task_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          request_type: Database["public"]["Enums"]["task_request_type"]
+          requestee_id: string
+          requester_id: string
+          status?: Database["public"]["Enums"]["task_request_status"]
+          task_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          request_type?: Database["public"]["Enums"]["task_request_type"]
+          requestee_id?: string
+          requester_id?: string
+          status?: Database["public"]["Enums"]["task_request_status"]
+          task_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_requests_requestee_id_fkey"
+            columns: ["requestee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_requests_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teams: {
         Row: {
           color: string
@@ -568,6 +743,8 @@ export type Database = {
         | "system"
       request_status: "pending" | "approved" | "rejected"
       task_priority: "low" | "medium" | "high" | "urgent"
+      task_request_status: "pending" | "accepted" | "rejected"
+      task_request_type: "collaboration" | "review"
       task_status:
         | "pending"
         | "in_progress"
@@ -721,6 +898,8 @@ export const Constants = {
       ],
       request_status: ["pending", "approved", "rejected"],
       task_priority: ["low", "medium", "high", "urgent"],
+      task_request_status: ["pending", "accepted", "rejected"],
+      task_request_type: ["collaboration", "review"],
       task_status: [
         "pending",
         "in_progress",
@@ -744,6 +923,8 @@ export type TaskPriority = Database["public"]["Enums"]["task_priority"]
 export type NotificationType = Database["public"]["Enums"]["notification_type"]
 export type RequestStatus = Database["public"]["Enums"]["request_status"]
 export type AvailabilityStatus = Database["public"]["Enums"]["availability_status"]
+export type TaskRequestType = Database["public"]["Enums"]["task_request_type"]
+export type TaskRequestStatus = Database["public"]["Enums"]["task_request_status"]
 
 // Row types — plain DB rows
 export type Team = Tables<"teams">
@@ -754,6 +935,10 @@ export type NotificationRow = Tables<"notifications">
 export type ActivityLogRow = Tables<"activity_logs">
 export type RegistrationRequest = Tables<"registration_requests">
 export type EmployeePresence = Tables<"employee_presence">
+export type TaskParticipantRow = Tables<"task_participants">
+export type TaskCommentRow = Tables<"task_comments">
+export type TaskActivityRow = Tables<"task_activity">
+export type TaskRequestRow = Tables<"task_requests">
 
 // Joined types — row + optional relational data populated by select queries
 export type Employee = EmployeeRow & {

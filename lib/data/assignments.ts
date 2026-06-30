@@ -7,6 +7,7 @@ export interface TaskWithRelations extends Task {
   creator: { full_name: string } | null;
   assignee: { full_name: string } | null;
   team: { name: string } | null;
+  participants: Array<{ id: string; left_at: string | null }>;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -19,7 +20,8 @@ const SELECT = `
   *,
   creator:employees!tasks_created_by_fkey(full_name),
   assignee:employees!tasks_assigned_to_fkey(full_name),
-  team:teams!tasks_team_id_fkey(name)
+  team:teams!tasks_team_id_fkey(name),
+  participants:task_participants(id, left_at)
 `.trim();
 
 // ─── Available tasks (status = 'available', team-scoped) ─────────────────────
