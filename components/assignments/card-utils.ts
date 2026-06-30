@@ -1,5 +1,11 @@
 import type { TaskPriority, TaskStatus } from "@/types/database";
 
+// ─── Sort helper (used client-side only) ─────────────────────────────────────
+
+export function priorityOrder(p: TaskPriority): number {
+  return { urgent: 0, high: 1, medium: 2, low: 3 }[p] ?? 4;
+}
+
 // ─── Priority ─────────────────────────────────────────────────────────────────
 
 export const PRIORITY_CONFIG: Record<

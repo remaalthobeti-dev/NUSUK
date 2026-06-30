@@ -11,7 +11,7 @@ export interface TaskWithRelations extends Task {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-export function priorityOrder(p: TaskPriority): number {
+function priorityOrder(p: TaskPriority): number {
   return { urgent: 0, high: 1, medium: 2, low: 3 }[p] ?? 4;
 }
 

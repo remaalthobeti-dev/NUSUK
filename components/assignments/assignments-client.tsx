@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 import { AvailableTaskCard } from "./available-task-card";
 import { RunningTaskCard } from "./running-task-card";
 import { FilterBar, DEFAULT_FILTERS } from "./filter-bar";
-import { priorityOrder } from "@/lib/data/assignments";
 import type { TaskWithRelations } from "@/lib/data/assignments";
+import { priorityOrder } from "./card-utils";
 import type { FilterState } from "./filter-bar";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
