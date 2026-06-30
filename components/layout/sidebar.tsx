@@ -56,9 +56,7 @@ export function Sidebar({
 
   const navItems: NavItem[] = [
     { href: "/dashboard", icon: Home, label: "الرئيسية" },
-    ...(canManage
-      ? [{ href: "/dashboard/assignments", icon: ClipboardList, label: "إسناد الأعمال" }]
-      : []),
+    { href: "/dashboard/assignments", icon: ClipboardList, label: "إسناد الأعمال" },
     { href: "/dashboard/my-tasks", icon: ListTodo, label: "مهامي" },
     { href: "/dashboard/operations", icon: LayoutDashboard, label: "مركز العمليات" },
     { href: "/dashboard/teams", icon: Users, label: "الفرق" },

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/shared/page-header";
-import { assertManager } from "@/lib/auth/guards";
+import { assertAuthenticated } from "@/lib/auth/guards";
 
 export const metadata: Metadata = { title: "إسناد الأعمال — نسك" };
 
 export default async function AssignmentsPage() {
-  await assertManager();
+  await assertAuthenticated();
 
   return (
     <>
