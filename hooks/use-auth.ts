@@ -20,8 +20,9 @@ export function useAuth(): AuthState {
 
   useEffect(() => {
     const supabase = createClient();
+    let cancelled = false;
 
-    async function fetchEmployee(userId: string) {
+    async function fetchEmployee(userId: string): Promise<Employee | null> {
       const { data } = await supabase
         .from("employees")
         .select("*, team:teams(*)")
@@ -30,27 +31,22 @@ export function useAuth(): AuthState {
       return data as Employee | null;
     }
 
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (user) {
-        const employee = await fetchEmployee(user.id);
-        setState({ user, employee, loading: false });
-      } else {
-        setState({ user: null, employee: null, loading: false });
-      }
-    });
-
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (cancelled) return;
       if (session?.user) {
         const employee = await fetchEmployee(session.user.id);
-        setState({ user: session.user, employee, loading: false });
+        if (!cancelled) setState({ user: session.user, employee, loading: false });
       } else {
         setState({ user: null, employee: null, loading: false });
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return state;
