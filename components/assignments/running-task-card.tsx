@@ -88,10 +88,9 @@ export function RunningTaskCard({ task }: Props) {
               </span>
             )}
           </span>
-          {/* Participants — Phase 3 will populate this */}
           <span className="flex items-center gap-1">
             <Users className="h-3 w-3 shrink-0" />
-            0 مشاركين
+            {task.participants.filter((p) => !p.left_at).length} مشاركين
           </span>
         </div>
 
