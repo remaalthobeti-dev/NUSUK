@@ -58,7 +58,7 @@ export async function approveRequest(
   // Confirm the email in auth.users so the user can sign in.
   // signUp() leaves email_confirmed_at = null; approval is the confirmation gate.
   const admin = createAdminClient();
-  const { error: confirmErr } = await admin.auth.admin.updateUser(
+  const { error: confirmErr } = await admin.auth.admin.updateUserById(
     auth_user_id,
     { email_confirm: true }
   );
