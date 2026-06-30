@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { assertSuperAdmin } from "@/lib/auth/guards";
 import { getTeamsForSettings, getEmployeesForSettings } from "@/lib/data/admin";
 import { SettingsDashboard } from "@/components/settings/settings-dashboard";
 import { PageHeader } from "@/components/shared/page-header";
@@ -8,21 +7,7 @@ import { PageHeader } from "@/components/shared/page-header";
 export const metadata: Metadata = { title: "الإعدادات — نسك" };
 
 export default async function SettingsPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const { data: emp } = await supabase
-    .from("employees")
-    .select("role")
-    .eq("user_id", user.id)
-    .single();
-
-  if ((emp as { role: string } | null)?.role !== "super_admin") {
-    redirect("/dashboard");
-  }
+  await assertSuperAdmin();
 
   let teams: Awaited<ReturnType<typeof getTeamsForSettings>> = [];
   let employees: Awaited<ReturnType<typeof getEmployeesForSettings>> = [];

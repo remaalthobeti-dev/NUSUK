@@ -1,27 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { requireSuperAdmin } from "@/lib/auth/guards";
 import type { UserRole } from "@/types/database";
-
-async function requireSuperAdmin() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { supabase: null, error: "غير مصرح" as const };
-
-  const { data: emp } = await supabase
-    .from("employees")
-    .select("role")
-    .eq("user_id", user.id)
-    .single();
-
-  if ((emp as { role: string } | null)?.role !== "super_admin")
-    return { supabase: null, error: "غير مصرح" as const };
-
-  return { supabase, error: null };
-}
 
 // ─── Teams ────────────────────────────────────────────────────────────────────
 
@@ -33,7 +14,7 @@ export async function createTeamAction(form: {
   icon: string;
 }): Promise<{ error: string | null }> {
   const { supabase, error } = await requireSuperAdmin();
-  if (!supabase) return { error: error ?? "غير مصرح" };
+  if (!supabase) return { error };
 
   const { error: dbErr } = await supabase.from("teams").insert({
     name: form.name,
@@ -60,7 +41,7 @@ export async function updateTeamAction(
   }
 ): Promise<{ error: string | null }> {
   const { supabase, error } = await requireSuperAdmin();
-  if (!supabase) return { error: error ?? "غير مصرح" };
+  if (!supabase) return { error };
 
   const { error: dbErr } = await supabase
     .from("teams")
@@ -83,7 +64,7 @@ export async function setTeamActiveAction(
   isActive: boolean
 ): Promise<{ error: string | null }> {
   const { supabase, error } = await requireSuperAdmin();
-  if (!supabase) return { error: error ?? "غير مصرح" };
+  if (!supabase) return { error };
 
   const { error: dbErr } = await supabase
     .from("teams")
@@ -105,7 +86,7 @@ export async function createEmployeeAction(form: {
   team_id: string | null;
 }): Promise<{ error: string | null }> {
   const { supabase, error } = await requireSuperAdmin();
-  if (!supabase) return { error: error ?? "غير مصرح" };
+  if (!supabase) return { error };
 
   const { error: dbErr } = await supabase.from("employees").insert({
     full_name: form.full_name,
@@ -133,7 +114,7 @@ export async function updateEmployeeAction(
   }
 ): Promise<{ error: string | null }> {
   const { supabase, error } = await requireSuperAdmin();
-  if (!supabase) return { error: error ?? "غير مصرح" };
+  if (!supabase) return { error };
 
   const { error: dbErr } = await supabase
     .from("employees")
@@ -157,7 +138,7 @@ export async function setEmployeeActiveAction(
   isActive: boolean
 ): Promise<{ error: string | null }> {
   const { supabase, error } = await requireSuperAdmin();
-  if (!supabase) return { error: error ?? "غير مصرح" };
+  if (!supabase) return { error };
 
   const { error: dbErr } = await supabase
     .from("employees")
