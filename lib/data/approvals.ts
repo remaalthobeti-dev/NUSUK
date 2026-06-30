@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { RegistrationRequest, UserRole, Team } from "@/types/database";
 
 export async function getPendingRequests(): Promise<RegistrationRequest[]> {
@@ -53,6 +54,15 @@ export async function approveRequest(
   });
 
   if (empErr) return { error: (empErr as any).message };
+
+  // Confirm the email in auth.users so the user can sign in.
+  // signUp() leaves email_confirmed_at = null; approval is the confirmation gate.
+  const admin = createAdminClient();
+  const { error: confirmErr } = await admin.auth.admin.updateUser(
+    auth_user_id,
+    { email_confirm: true }
+  );
+  if (confirmErr) return { error: confirmErr.message };
 
   const { error: updateErr } = await (supabase as any)
     .from("registration_requests")
