@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/shared/page-header";
+import { AssignmentsClient } from "@/components/assignments/assignments-client";
+import { getAvailableTasks, getRunningTasks } from "@/lib/data/assignments";
 import { assertAuthenticated } from "@/lib/auth/guards";
 
 export const metadata: Metadata = { title: "إسناد الأعمال — نسك" };
@@ -7,21 +9,25 @@ export const metadata: Metadata = { title: "إسناد الأعمال — نسك
 export default async function AssignmentsPage() {
   await assertAuthenticated();
 
+  const [available, running] = await Promise.all([
+    getAvailableTasks(),
+    getRunningTasks(),
+  ]);
+
   return (
     <>
       <PageHeader
         title="إسناد الأعمال"
-        description="إسناد المهام وإدارة العمل بين الفريق"
+        description="أعمال فريقك المتاحة والجارية"
         breadcrumbs={[
           { label: "الرئيسية", href: "/dashboard" },
           { label: "إسناد الأعمال" },
         ]}
       />
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-muted-foreground text-sm">
-          سيتوفر هذا القسم في الإصدار القادم
-        </p>
-      </div>
+      <AssignmentsClient
+        availableTasks={available.tasks}
+        runningTasks={running.tasks}
+      />
     </>
   );
 }
