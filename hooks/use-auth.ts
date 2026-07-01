@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { getAuthStateAction } from "@/lib/auth/actions";
 import type { User } from "@supabase/supabase-js";
 import type { Employee } from "@/types/database";
 
@@ -9,6 +10,31 @@ interface AuthState {
   user: User | null;
   employee: Employee | null;
   loading: boolean;
+}
+
+// Fetches the employee record using the JWT from the auth-state-change callback
+// rather than letting _getAccessToken() re-read document.cookie. This prevents
+// the anon-key fallback that occurs when cookie chunks are transiently inconsistent.
+async function fetchEmployeeWithToken(
+  userId: string,
+  accessToken: string
+): Promise<Employee | null> {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!base || !anon) return null;
+  const res = await fetch(
+    `${base}/rest/v1/employees?select=*,team:teams(*)&user_id=eq.${encodeURIComponent(userId)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        apikey: anon,
+        Accept: "application/json",
+      },
+    }
+  );
+  if (!res.ok) return null;
+  const rows = await res.json();
+  return ((rows as Employee[])[0]) ?? null;
 }
 
 export function useAuth(): AuthState {
@@ -22,47 +48,32 @@ export function useAuth(): AuthState {
     const supabase = createClient();
     let cancelled = false;
 
-    async function fetchEmployee(userId: string): Promise<Employee | null> {
-      const { data, error } = await supabase
-        .from("employees")
-        .select("*, team:teams(*)")
-        .eq("user_id", userId)
-        .single();
-      // Q3 + Q4: did the query succeed, and is role present?
-      console.log(
-        `[useAuth] employees query — userId="${userId}"`,
-        `id="${(data as Record<string, unknown> | null)?.id ?? "null"}"`,
-        `role="${(data as Record<string, unknown> | null)?.role ?? "null"}"`,
-        `error="${error?.message ?? "none"}" code="${error?.code ?? "none"}"`
-      );
-      return data as Employee | null;
-    }
+    // Resolve the initial auth state via a server action. The server action reads
+    // HTTP request cookies (set by the middleware, always consistent) rather than
+    // document.cookie, so it is immune to the chunk-race that can leave the browser
+    // client with a null session at startup. This is the sole handler for the
+    // INITIAL_SESSION case.
+    getAuthStateAction().then(({ user, employee }) => {
+      if (!cancelled) setState({ user, employee, loading: false });
+    });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (cancelled) return;
-
-      // Q1 + Q2: what event fired, and does getUser() agree on the user?
-      console.log(
-        `[useAuth] onAuthStateChange — event="${event}"`,
-        `session.user.id="${session?.user?.id ?? "null"}"`
-      );
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        console.log(`[useAuth] getUser() cross-check — user.id="${user?.id ?? "null"}"`);
-      });
+      // INITIAL_SESSION is handled by getAuthStateAction above.
+      if (event === "INITIAL_SESSION") return;
 
       if (session?.user) {
-        const employee = await fetchEmployee(session.user.id);
-        // Q4: what role is being written into state?
-        console.log(
-          `[useAuth] setState — role="${employee?.role ?? "null"}"`,
-          `id="${employee?.id ?? "null"}" loading=false`
+        // Use the access token supplied by the auth event directly — this avoids
+        // _getAccessToken() re-reading cookies for each PostgREST request.
+        const employee = await fetchEmployeeWithToken(
+          session.user.id,
+          session.access_token
         );
         if (!cancelled) setState({ user: session.user, employee, loading: false });
       } else {
-        console.log(`[useAuth] setState — null session, clearing state`);
-        setState({ user: null, employee: null, loading: false });
+        if (!cancelled) setState({ user: null, employee: null, loading: false });
       }
     });
 
