@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { HomeClient } from "@/components/home/home-client";
+import { getTodaysMeetings } from "@/lib/data/meetings";
 import type { AvailabilityStatus, UserRole } from "@/types/database";
 
 export const metadata: Metadata = { title: "الرئيسية — نسك" };
@@ -51,11 +52,14 @@ export default async function HomePage() {
     ).length,
   };
 
-  const { count: unreadCount } = await supabase
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("recipient_id", emp.id)
-    .eq("is_read", false);
+  const [{ count: unreadCount }, todaysMeetings] = await Promise.all([
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("recipient_id", emp.id)
+      .eq("is_read", false),
+    getTodaysMeetings(),
+  ]);
 
   return (
     <HomeClient
@@ -66,6 +70,7 @@ export default async function HomePage() {
       }
       taskCounts={taskCounts}
       unreadNotifications={unreadCount ?? 0}
+      todaysMeetings={todaysMeetings}
     />
   );
 }

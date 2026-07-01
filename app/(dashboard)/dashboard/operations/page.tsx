@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
 import { getAdminOverview } from "@/lib/data/admin";
+import { getMeetingsHappeningNow, getUpcomingMeetings } from "@/lib/data/meetings";
 import { AdminOverview } from "@/components/admin/admin-overview";
+import { MeetingsNowSection } from "@/components/meetings/meetings-now-section";
 import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata: Metadata = { title: "مركز العمليات — نسك" };
 
 export default async function OperationsPage() {
-  let data;
-  try {
-    data = await getAdminOverview();
-  } catch {
-    data = {
+  const [data, meetingsNow, upcomingMeetings] = await Promise.all([
+    getAdminOverview().catch(() => ({
       teams: [],
       globalStats: {
         totalEmployees: 0,
@@ -24,8 +23,10 @@ export default async function OperationsPage() {
           offline: 0,
         },
       },
-    };
-  }
+    })),
+    getMeetingsHappeningNow(),
+    getUpcomingMeetings(5),
+  ]);
 
   return (
     <>
@@ -37,6 +38,7 @@ export default async function OperationsPage() {
           { label: "مركز العمليات" },
         ]}
       />
+      <MeetingsNowSection meetingsNow={meetingsNow} upcomingMeetings={upcomingMeetings} />
       <AdminOverview data={data} />
     </>
   );

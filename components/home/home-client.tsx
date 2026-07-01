@@ -15,13 +15,20 @@ import {
   FileCheck,
   ListTodo,
   AlertCircle,
+  Link2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { updateMyStatusAction } from "@/app/(dashboard)/dashboard/actions";
-import type { AvailabilityStatus, UserRole } from "@/types/database";
+import {
+  MeetingTypeBadge,
+  MeetingStatusBadge,
+  MeetingPriorityBadge,
+} from "@/components/meetings/meeting-badge";
+import { MeetingShortTime } from "@/components/meetings/meeting-time";
+import type { AvailabilityStatus, UserRole, MeetingWithDetails } from "@/types/database";
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
@@ -81,6 +88,7 @@ interface HomeClientProps {
     completedToday: number;
   };
   unreadNotifications: number;
+  todaysMeetings: MeetingWithDetails[];
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -91,6 +99,7 @@ export function HomeClient({
   currentStatus,
   taskCounts,
   unreadNotifications,
+  todaysMeetings,
 }: HomeClientProps) {
   const [greeting, setGreeting] = useState<string>("");
   const [status, setStatus] = useState<AvailabilityStatus>(currentStatus);
@@ -313,31 +322,85 @@ export function HomeClient({
         </Card>
       </div>
 
-      {/* ── Upcoming Meetings ───────────────────────────────────────────── */}
+      {/* ── Today's Meetings ────────────────────────────────────────────── */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            الاجتماعات القادمة اليوم
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              اجتماعات اليوم
+              {todaysMeetings.length > 0 && (
+                <Badge variant="secondary" className="text-xs h-5 px-1.5">
+                  {todaysMeetings.length}
+                </Badge>
+              )}
+            </CardTitle>
+            <Button asChild variant="ghost" size="sm" className="text-xs h-7 px-2">
+              <Link href="/dashboard/meetings">عرض الكل</Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col items-center justify-center py-10 text-center">
-            <Calendar className="h-10 w-10 text-muted-foreground/20 mb-3" />
-            <p className="text-sm text-muted-foreground">
-              لا توجد اجتماعات مجدولة اليوم
-            </p>
-            {canManage && (
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className="mt-3 text-xs"
-              >
-                <Link href="/dashboard/meetings">جدولة اجتماع</Link>
-              </Button>
-            )}
-          </div>
+          {todaysMeetings.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <Calendar className="h-10 w-10 text-muted-foreground/20 mb-3" />
+              <p className="text-sm text-muted-foreground">لا توجد اجتماعات مجدولة اليوم</p>
+              {canManage && (
+                <Button asChild variant="ghost" size="sm" className="mt-3 text-xs">
+                  <Link href="/dashboard/meetings">جدولة اجتماع</Link>
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {todaysMeetings.map((m) => (
+                <div
+                  key={m.id}
+                  className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex-1 min-w-0">
+                    {/* Priority + Status row */}
+                    <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                      <MeetingPriorityBadge priority={m.priority} />
+                      <MeetingStatusBadge displayStatus={m.status} />
+                    </div>
+
+                    {/* Title */}
+                    <p className="text-sm font-semibold text-foreground truncate mb-1">
+                      {m.title}
+                    </p>
+
+                    {/* Time + Type */}
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <MeetingShortTime startTime={m.start_time} endTime={m.end_time} />
+                      <MeetingTypeBadge type={m.meeting_type} />
+                    </div>
+
+                    {m.location && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <MapPin className="h-3 w-3" />
+                        {m.location}
+                      </p>
+                    )}
+                    {m.meeting_link && !m.location && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <Link2 className="h-3 w-3" />
+                        رابط اجتماع
+                      </p>
+                    )}
+                  </div>
+
+                  {/* View Details button */}
+                  <Link
+                    href={`/dashboard/meetings/${m.id}`}
+                    className="shrink-0 text-xs text-primary hover:underline px-2 py-1 rounded border border-primary/30 hover:bg-primary/5 transition-colors whitespace-nowrap"
+                  >
+                    عرض التفاصيل
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

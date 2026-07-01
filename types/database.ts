@@ -176,6 +176,158 @@ export type Database = {
           },
         ]
       }
+      meeting_rsvps: {
+        Row: {
+          employee_id: string
+          meeting_id: string
+          responded_at: string
+          response: Database["public"]["Enums"]["rsvp_response"]
+        }
+        Insert: {
+          employee_id: string
+          meeting_id: string
+          responded_at?: string
+          response?: Database["public"]["Enums"]["rsvp_response"]
+        }
+        Update: {
+          employee_id?: string
+          meeting_id?: string
+          responded_at?: string
+          response?: Database["public"]["Enums"]["rsvp_response"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_rsvps_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_rsvps_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_teams: {
+        Row: {
+          meeting_id: string
+          organizer_id: string
+          team_id: string
+        }
+        Insert: {
+          meeting_id: string
+          organizer_id: string
+          team_id: string
+        }
+        Update: {
+          meeting_id?: string
+          organizer_id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_teams_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_teams_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_teams_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          end_time: string
+          id: string
+          location: string | null
+          meeting_link: string | null
+          meeting_type: Database["public"]["Enums"]["meeting_type"]
+          organizer_id: string
+          priority: Database["public"]["Enums"]["meeting_priority"]
+          start_time: string
+          status: Database["public"]["Enums"]["meeting_status"]
+          team_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_time: string
+          id?: string
+          location?: string | null
+          meeting_link?: string | null
+          meeting_type: Database["public"]["Enums"]["meeting_type"]
+          organizer_id: string
+          priority?: Database["public"]["Enums"]["meeting_priority"]
+          start_time: string
+          status?: Database["public"]["Enums"]["meeting_status"]
+          team_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_time?: string
+          id?: string
+          location?: string | null
+          meeting_link?: string | null
+          meeting_type?: Database["public"]["Enums"]["meeting_type"]
+          organizer_id?: string
+          priority?: Database["public"]["Enums"]["meeting_priority"]
+          start_time?: string
+          status?: Database["public"]["Enums"]["meeting_status"]
+          team_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meetings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetings_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetings_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -734,6 +886,9 @@ export type Database = {
         | "field_work"
         | "remote"
         | "offline"
+      meeting_priority: "urgent" | "high" | "normal"
+      meeting_status: "scheduled" | "in_progress" | "completed" | "cancelled"
+      meeting_type: "team" | "cross_team" | "organization"
       notification_type:
         | "task_assigned"
         | "task_updated"
@@ -742,6 +897,7 @@ export type Database = {
         | "mention"
         | "system"
       request_status: "pending" | "approved" | "rejected"
+      rsvp_response: "attending" | "maybe" | "not_attending"
       task_priority: "low" | "medium" | "high" | "urgent"
       task_request_status: "pending" | "accepted" | "rejected"
       task_request_type: "collaboration" | "review"
@@ -888,6 +1044,9 @@ export const Constants = {
         "remote",
         "offline",
       ],
+      meeting_priority: ["urgent", "high", "normal"],
+      meeting_status: ["scheduled", "in_progress", "completed", "cancelled"],
+      meeting_type: ["team", "cross_team", "organization"],
       notification_type: [
         "task_assigned",
         "task_updated",
@@ -897,6 +1056,7 @@ export const Constants = {
         "system",
       ],
       request_status: ["pending", "approved", "rejected"],
+      rsvp_response: ["attending", "maybe", "not_attending"],
       task_priority: ["low", "medium", "high", "urgent"],
       task_request_status: ["pending", "accepted", "rejected"],
       task_request_type: ["collaboration", "review"],
@@ -925,6 +1085,10 @@ export type RequestStatus = Database["public"]["Enums"]["request_status"]
 export type AvailabilityStatus = Database["public"]["Enums"]["availability_status"]
 export type TaskRequestType = Database["public"]["Enums"]["task_request_type"]
 export type TaskRequestStatus = Database["public"]["Enums"]["task_request_status"]
+export type MeetingType = Database["public"]["Enums"]["meeting_type"]
+export type MeetingStatus = Database["public"]["Enums"]["meeting_status"]
+export type MeetingPriority = Database["public"]["Enums"]["meeting_priority"]
+export type RsvpResponse = Database["public"]["Enums"]["rsvp_response"]
 
 // Row types — plain DB rows
 export type Team = Tables<"teams">
@@ -939,6 +1103,9 @@ export type TaskParticipantRow = Tables<"task_participants">
 export type TaskCommentRow = Tables<"task_comments">
 export type TaskActivityRow = Tables<"task_activity">
 export type TaskRequestRow = Tables<"task_requests">
+export type MeetingRow = Tables<"meetings">
+export type MeetingTeamRow = Tables<"meeting_teams">
+export type MeetingRsvpRow = Tables<"meeting_rsvps">
 
 // Joined types — row + optional relational data populated by select queries
 export type Employee = EmployeeRow & {
@@ -981,4 +1148,51 @@ export type EmployeeWithPresence = Employee & {
 export type TeamWithStats = Team & {
   employee_count: number
   presence_summary: Record<AvailabilityStatus, number>
+}
+
+// Meeting joined types
+export type MeetingTeamEntry = {
+  team_id: string
+  organizer_id: string
+  team: { id: string; name: string; color: string } | null
+}
+
+export type MeetingRsvpEntry = {
+  employee_id: string
+  response: RsvpResponse
+  responded_at: string
+}
+
+export type MeetingWithDetails = MeetingRow & {
+  organizer: {
+    id: string
+    full_name: string
+    role: UserRole
+    team: { name: string } | null
+  } | null
+  team: { id: string; name: string; color: string } | null
+  meeting_teams: MeetingTeamEntry[]
+  rsvps: MeetingRsvpEntry[]
+}
+
+// Display status is the stored status — transitions are explicit (organizer-driven)
+export type MeetingDisplayStatus = MeetingStatus
+
+export function computeMeetingDisplayStatus(status: MeetingStatus): MeetingDisplayStatus {
+  return status
+}
+
+export const PRIORITY_ORDER: Record<MeetingPriority, number> = {
+  urgent: 0,
+  high: 1,
+  normal: 2,
+}
+
+export function sortMeetingsByPriority(meetings: MeetingWithDetails[]): MeetingWithDetails[] {
+  return [...meetings].sort((a, b) => {
+    const pa = PRIORITY_ORDER[a.priority] ?? 3
+    const pb = PRIORITY_ORDER[b.priority] ?? 3
+    if (pa !== pb) return pa - pb
+    return new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+  })
 }
