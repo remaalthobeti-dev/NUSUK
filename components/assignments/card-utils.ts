@@ -59,10 +59,10 @@ export const STATUS_CONFIG: Record<
     progress: 50,
   },
   on_hold: {
-    label: "متوقفة",
+    label: "بانتظار المراجعة",
     className:
-      "bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400",
-    progress: 25,
+      "bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400",
+    progress: 80,
   },
   completed: {
     label: "مكتملة",

@@ -173,11 +173,151 @@ export async function updateTaskAttachmentsAction(
   return { error: null };
 }
 
+// ─── Approve task (on_hold → completed) — managers only ─────────────────────
+
+export async function approveTaskAction(
+  taskId: string
+): Promise<{ error: string | null }> {
+  const { supabase, context, error } = await requireAuthenticated();
+  if (error) return { error };
+
+  const role = context.employee.role;
+  if (role !== "super_admin" && role !== "track_manager")
+    return { error: "ليس لديك صلاحية اعتماد المهام" };
+
+  const { data: task } = await supabase
+    .from("tasks")
+    .select("id, title, status, assigned_to, team_id")
+    .eq("id", taskId)
+    .single();
+
+  if (!task) return { error: "المهمة غير موجودة" };
+  if (task.status !== "on_hold")
+    return { error: "المهمة ليست بانتظار المراجعة" };
+
+  const now = new Date().toISOString();
+  const { error: updateErr } = await supabase
+    .from("tasks")
+    .update({ status: "completed", updated_at: now, completed_at: now })
+    .eq("id", taskId);
+
+  if (updateErr) return { error: updateErr.message };
+
+  await supabase.from("task_activity").insert({
+    task_id: taskId,
+    employee_id: context.employee.id,
+    event_type: "task_approved",
+    description: `اعتمد ${context.employee.full_name} المهمة وأغلقها`,
+  });
+
+  // Collect recipients: assignee + active participants
+  const recipientSet = new Set<string>();
+  if (task.assigned_to) recipientSet.add(task.assigned_to);
+  const { data: parts } = await supabase
+    .from("task_participants")
+    .select("employee_id")
+    .eq("task_id", taskId)
+    .is("left_at", null);
+  ((parts ?? []) as Array<{ employee_id: string }>).forEach((p) =>
+    recipientSet.add(p.employee_id)
+  );
+  recipientSet.delete(context.employee.id);
+
+  notifyTaskStatusChanged(supabase, {
+    taskId,
+    taskTitle: task.title,
+    newStatus: "completed",
+    actorId: context.employee.id,
+    actorName: context.employee.full_name,
+    recipientIds: Array.from(recipientSet),
+  }).catch(() => {});
+
+  revalidatePath("/dashboard/assignments");
+  revalidatePath(`/dashboard/assignments/${taskId}`);
+  revalidatePath("/dashboard");
+  return { error: null };
+}
+
+// ─── Return task (on_hold → in_progress) — managers only ─────────────────────
+
+export async function returnTaskAction(
+  taskId: string,
+  reason: string
+): Promise<{ error: string | null }> {
+  const { supabase, context, error } = await requireAuthenticated();
+  if (error) return { error };
+
+  const role = context.employee.role;
+  if (role !== "super_admin" && role !== "track_manager")
+    return { error: "ليس لديك صلاحية إرجاع المهام" };
+
+  if (!reason.trim()) return { error: "سبب الإرجاع مطلوب" };
+
+  const { data: task } = await supabase
+    .from("tasks")
+    .select("id, title, status, assigned_to, team_id")
+    .eq("id", taskId)
+    .single();
+
+  if (!task) return { error: "المهمة غير موجودة" };
+  if (task.status !== "on_hold")
+    return { error: "المهمة ليست بانتظار المراجعة" };
+
+  const now = new Date().toISOString();
+  const { error: updateErr } = await supabase
+    .from("tasks")
+    .update({ status: "in_progress", updated_at: now })
+    .eq("id", taskId);
+
+  if (updateErr) return { error: updateErr.message };
+
+  await supabase.from("task_activity").insert({
+    task_id: taskId,
+    employee_id: context.employee.id,
+    event_type: "task_returned",
+    description: `أعاد ${context.employee.full_name} المهمة للتنفيذ — السبب: ${reason.trim()}`,
+  });
+
+  // Collect recipients: assignee + active participants
+  const recipientSet = new Set<string>();
+  if (task.assigned_to) recipientSet.add(task.assigned_to);
+  const { data: parts } = await supabase
+    .from("task_participants")
+    .select("employee_id")
+    .eq("task_id", taskId)
+    .is("left_at", null);
+  ((parts ?? []) as Array<{ employee_id: string }>).forEach((p) =>
+    recipientSet.add(p.employee_id)
+  );
+  recipientSet.delete(context.employee.id);
+
+  const targets = Array.from(recipientSet);
+  if (targets.length > 0) {
+    await supabase.from("notifications").insert(
+      targets.map((id) => ({
+        recipient_id: id,
+        type: "task_updated" as const,
+        title: "تم إرجاع المهمة للتنفيذ",
+        body: `أعاد ${context.employee.full_name} مهمة "${task.title}" للتنفيذ — السبب: ${reason.trim()}`,
+        sender_id: context.employee.id,
+        data: { task_id: taskId },
+      }))
+    );
+  }
+
+  revalidatePath("/dashboard/assignments");
+  revalidatePath(`/dashboard/assignments/${taskId}`);
+  revalidatePath("/dashboard/my-tasks");
+  revalidatePath("/dashboard");
+  return { error: null };
+}
+
 // ─── Allowed status transitions for the assignee ──────────────────────────────
+// on_hold is now "awaiting review" — only managers can move tasks out of it
 const ALLOWED_TRANSITIONS: Partial<Record<TaskStatus, TaskStatus[]>> = {
-  in_progress: ["completed", "on_hold", "pending"],
+  in_progress: ["on_hold", "pending"],
   pending: ["in_progress", "on_hold"],
-  on_hold: ["in_progress", "pending"],
+  on_hold: [],
 };
 
 export async function updateMyTaskStatusAction(
