@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireAuthenticated } from "@/lib/auth/guards";
+import { notifyCommentAdded } from "@/lib/services/notifications";
 import type { Database, TaskRequestType } from "@/types/database";
 
 // ─── Security helper ──────────────────────────────────────────────────────────
@@ -161,6 +162,37 @@ export async function addCommentAction(
   });
 
   if (insertErr) return { error: insertErr.message };
+
+  // Notify task owner and participants about the new comment
+  const { data: taskDetail } = await supabase
+    .from("tasks")
+    .select("title, created_by, assigned_to")
+    .eq("id", taskId)
+    .single();
+
+  if (taskDetail) {
+    const { data: participants } = await supabase
+      .from("task_participants")
+      .select("employee_id")
+      .eq("task_id", taskId);
+
+    const participantIds = ((participants ?? []) as Array<{ employee_id: string }>).map(
+      (p) => p.employee_id
+    );
+
+    const recipientSet = new Set<string>(participantIds);
+    if (taskDetail.created_by) recipientSet.add(taskDetail.created_by);
+    if (taskDetail.assigned_to) recipientSet.add(taskDetail.assigned_to);
+
+    notifyCommentAdded(supabase, {
+      taskId,
+      taskTitle: taskDetail.title,
+      commenterId: context.employee.id,
+      commenterName: context.employee.full_name,
+      recipientIds: Array.from(recipientSet),
+      commentPreview: comment.trim(),
+    }).catch(() => {});
+  }
 
   revalidate(taskId);
   return { error: null };

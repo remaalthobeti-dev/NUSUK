@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAuthenticated } from "@/lib/auth/guards";
+import { notifyTaskCreated, notifyTaskClaimed } from "@/lib/services/notifications";
 import type { TaskPriority, TaskStatus } from "@/types/database";
 
 export interface CreateTaskPayload {
@@ -52,6 +53,15 @@ export async function createTaskAction(
 
   if (insertErr || !task) return { error: insertErr?.message ?? "فشل إنشاء المهمة" };
 
+  // Fire-and-forget notifications (do not block the response)
+  notifyTaskCreated(supabase, {
+    taskId: task.id,
+    taskTitle: payload.title.trim(),
+    teamId: payload.team_id,
+    creatorId: context.employee.id,
+    creatorName: context.employee.full_name,
+  }).catch(() => {});
+
   revalidatePath("/dashboard/assignments");
   revalidatePath("/dashboard");
   return { error: null, id: task.id };
@@ -70,7 +80,7 @@ export async function claimTaskAction(
   // This check is the enforcement boundary for team isolation.
   const { data: task } = await supabase
     .from("tasks")
-    .select("id")
+    .select("id, title, created_by")
     .eq("id", taskId)
     .eq("team_id", teamId)
     .eq("status", "available")
@@ -96,6 +106,14 @@ export async function claimTaskAction(
     event_type: "task_claimed",
     description: `استلم ${context.employee.full_name} المهمة`,
   });
+
+  notifyTaskClaimed(supabase, {
+    taskId,
+    taskTitle: task.title,
+    assigneeId: context.employee.id,
+    assigneeName: context.employee.full_name,
+    createdById: task.created_by,
+  }).catch(() => {});
 
   revalidatePath("/dashboard/assignments");
   revalidatePath(`/dashboard/assignments/${taskId}`);

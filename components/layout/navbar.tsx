@@ -1,11 +1,10 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { Menu, Moon, Sun, Bell, LogOut, User, ChevronDown } from "lucide-react";
+import { Menu, Moon, Sun, LogOut, User, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/use-auth";
 import { getRoleLabel } from "@/lib/utils";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 interface NavbarProps {
   onMobileMenuToggle: () => void;
@@ -77,18 +77,7 @@ export function Navbar({ onMobileMenuToggle, sidebarCollapsed }: NavbarProps) {
         </Button>
 
         {/* Notifications */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative"
-          aria-label="الإشعارات"
-          onClick={() => router.push("/dashboard/notifications")}
-        >
-          <Bell className="h-5 w-5" />
-          <Badge className="absolute -top-0.5 -end-0.5 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
-            3
-          </Badge>
-        </Button>
+        <NotificationBell employeeId={employee?.id ?? null} />
 
         {/* User menu */}
         <DropdownMenu>

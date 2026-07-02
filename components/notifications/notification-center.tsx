@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Bell,
   BellOff,
@@ -60,10 +60,12 @@ const FILTER_OPTIONS = [
 
 interface NotificationCenterProps {
   initialNotifications: Notification[];
+  employeeId: string;
 }
 
 export function NotificationCenter({
   initialNotifications,
+  employeeId,
 }: NotificationCenterProps) {
   const [notifications, setNotifications] = useState(initialNotifications);
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
@@ -76,30 +78,72 @@ export function NotificationCenter({
     return true;
   });
 
-  async function markRead(id: string) {
+  // Realtime subscription — merge new/updated notifications in
+  useEffect(() => {
     const supabase = createClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase.from("notifications") as any)
-      .update({ is_read: true, read_at: new Date().toISOString() })
-      .eq("id", id);
+    const channel = supabase
+      .channel(`notif-center:${employeeId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${employeeId}`,
+        },
+        (payload) => {
+          setNotifications((prev) => [payload.new as Notification, ...prev]);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${employeeId}`,
+        },
+        (payload) => {
+          setNotifications((prev) =>
+            prev.map((n) =>
+              n.id === (payload.new as Notification).id
+                ? (payload.new as Notification)
+                : n
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [employeeId]);
+
+  async function markRead(id: string) {
     setNotifications((prev) =>
       prev.map((n) =>
         n.id === id ? { ...n, is_read: true, read_at: new Date().toISOString() } : n
       )
     );
+    const supabase = createClient();
+    await supabase
+      .from("notifications")
+      .update({ is_read: true, read_at: new Date().toISOString() })
+      .eq("id", id);
   }
 
   async function markAllRead() {
-    const supabase = createClient();
     const unreadIds = notifications.filter((n) => !n.is_read).map((n) => n.id);
     if (unreadIds.length === 0) return;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase.from("notifications") as any)
-      .update({ is_read: true, read_at: new Date().toISOString() })
-      .in("id", unreadIds);
     setNotifications((prev) =>
       prev.map((n) => ({ ...n, is_read: true, read_at: new Date().toISOString() }))
     );
+    const supabase = createClient();
+    await supabase
+      .from("notifications")
+      .update({ is_read: true, read_at: new Date().toISOString() })
+      .in("id", unreadIds);
   }
 
   async function handleExcelExport() {
@@ -173,7 +217,11 @@ export function NotificationCenter({
         <EmptyState
           icon={<BellOff />}
           title="لا توجد إشعارات"
-          description={filter === "unread" ? "جميع الإشعارات مقروءة" : "لا توجد إشعارات بعد"}
+          description={
+            filter === "unread"
+              ? "جميع الإشعارات مقروءة"
+              : "لا توجد إشعارات بعد"
+          }
         />
       ) : (
         <div className="space-y-2">
@@ -223,7 +271,12 @@ function NotificationItem({
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className={cn("font-semibold text-sm", !notification.is_read && "text-foreground")}>
+            <p
+              className={cn(
+                "font-semibold text-sm",
+                !notification.is_read && "text-foreground"
+              )}
+            >
               {notification.title}
             </p>
             <Badge
@@ -234,7 +287,9 @@ function NotificationItem({
             </Badge>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[11px] text-muted-foreground font-mono">{timeAgo}</span>
+            <span className="text-[11px] text-muted-foreground font-mono">
+              {timeAgo}
+            </span>
             {!notification.is_read && (
               <button
                 type="button"
