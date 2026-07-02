@@ -108,7 +108,7 @@ export async function claimTaskAction(
 
   if (!task) return { error: "المهمة غير متاحة أو لا تنتمي إلى فريقك" };
 
-  const { error: dbErr } = await supabase
+  const { data: updated, error: dbErr } = await supabase
     .from("tasks")
     .update({
       assigned_to: context.employee.id,
@@ -116,9 +116,12 @@ export async function claimTaskAction(
       started_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
-    .eq("id", taskId);
+    .eq("id", taskId)
+    .select("id")
+    .maybeSingle();
 
   if (dbErr) return { error: dbErr.message };
+  if (!updated) return { error: "فشل استلام المهمة — ربما تم استلامها مسبقاً أو لا تملك الصلاحية" };
 
   await supabase.from("task_activity").insert({
     task_id: taskId,
