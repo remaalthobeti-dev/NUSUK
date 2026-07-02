@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { HomeClient } from "@/components/home/home-client";
 import { getTodaysMeetings } from "@/lib/data/meetings";
-import type { AvailabilityStatus, UserRole } from "@/types/database";
+import type { AvailabilityStatus, UserRole, Team } from "@/types/database";
 
 export const metadata: Metadata = { title: "الرئيسية — نسك" };
 
@@ -52,19 +52,24 @@ export default async function HomePage() {
     ).length,
   };
 
-  const [{ count: unreadCount }, todaysMeetings] = await Promise.all([
+  const [{ count: unreadCount }, todaysMeetings, teamsRes] = await Promise.all([
     supabase
       .from("notifications")
       .select("id", { count: "exact", head: true })
       .eq("recipient_id", emp.id)
       .eq("is_read", false),
     getTodaysMeetings(),
+    supabase.from("teams").select("*").eq("is_active", true).order("name"),
   ]);
+
+  const teams = (teamsRes.data as Team[] | null) ?? [];
 
   return (
     <HomeClient
       employeeName={emp.full_name}
       role={emp.role as UserRole}
+      employeeTeamId={emp.team_id}
+      teams={teams}
       currentStatus={
         (presence?.availability_status ?? "available") as AvailabilityStatus
       }

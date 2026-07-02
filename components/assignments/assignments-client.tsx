@@ -6,9 +6,11 @@ import { cn } from "@/lib/utils";
 import { AvailableTaskCard } from "./available-task-card";
 import { RunningTaskCard } from "./running-task-card";
 import { FilterBar, DEFAULT_FILTERS } from "./filter-bar";
+import { CreateTaskDialog } from "./create-task-dialog";
 import type { TaskWithRelations } from "@/lib/data/assignments";
 import { priorityOrder } from "./card-utils";
 import type { FilterState } from "./filter-bar";
+import type { UserRole, Team } from "@/types/database";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -17,6 +19,10 @@ type Tab = "available" | "running";
 interface Props {
   availableTasks: TaskWithRelations[];
   runningTasks: TaskWithRelations[];
+  role: UserRole;
+  teams: Team[];
+  employeeTeamId: string | null;
+  canCreate: boolean;
 }
 
 // ─── Filter + sort logic ──────────────────────────────────────────────────────
@@ -92,7 +98,14 @@ function applyFilters(
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function AssignmentsClient({ availableTasks, runningTasks }: Props) {
+export function AssignmentsClient({
+  availableTasks,
+  runningTasks,
+  role,
+  teams,
+  employeeTeamId,
+  canCreate,
+}: Props) {
   const [tab, setTab] = useState<Tab>("available");
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
 
@@ -142,7 +155,8 @@ export function AssignmentsClient({ availableTasks, runningTasks }: Props) {
 
   return (
     <div className="space-y-5">
-      {/* ── Tabs ── */}
+      {/* ── Tabs + Create button ── */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
       <div className="flex gap-1 bg-muted/50 rounded-lg p-1 w-fit">
         {tabs.map((t) => {
           const Icon = t.icon;
@@ -173,6 +187,14 @@ export function AssignmentsClient({ availableTasks, runningTasks }: Props) {
             </button>
           );
         })}
+      </div>
+        {canCreate && (
+          <CreateTaskDialog
+            role={role}
+            teams={teams}
+            employeeTeamId={employeeTeamId}
+          />
+        )}
       </div>
 
       {/* ── Filters ── */}

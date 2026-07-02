@@ -11,7 +11,6 @@ import {
   Bell,
   Calendar,
   LayoutDashboard,
-  Plus,
   FileCheck,
   ListTodo,
   AlertCircle,
@@ -28,7 +27,8 @@ import {
   MeetingPriorityBadge,
 } from "@/components/meetings/meeting-badge";
 import { MeetingShortTime } from "@/components/meetings/meeting-time";
-import type { AvailabilityStatus, UserRole, MeetingWithDetails } from "@/types/database";
+import { CreateTaskDialog } from "@/components/assignments/create-task-dialog";
+import type { AvailabilityStatus, UserRole, MeetingWithDetails, Team } from "@/types/database";
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
@@ -81,6 +81,8 @@ const STATUS_OPTIONS: Array<{
 interface HomeClientProps {
   employeeName: string;
   role: UserRole;
+  employeeTeamId: string | null;
+  teams: Team[];
   currentStatus: AvailabilityStatus;
   taskCounts: {
     assigned: number;
@@ -96,6 +98,8 @@ interface HomeClientProps {
 export function HomeClient({
   employeeName,
   role,
+  employeeTeamId,
+  teams,
   currentStatus,
   taskCounts,
   unreadNotifications,
@@ -203,12 +207,11 @@ export function HomeClient({
         <div className="flex flex-wrap gap-3">
           {canManage ? (
             <>
-              <Button asChild size="sm">
-                <Link href="/dashboard/assignments">
-                  <Plus className="h-4 w-4 ms-1" />
-                  إضافة مهمة
-                </Link>
-              </Button>
+              <CreateTaskDialog
+                role={role}
+                teams={teams}
+                employeeTeamId={employeeTeamId}
+              />
               <Button asChild variant="outline" size="sm">
                 <Link href="/dashboard/meetings">
                   <Calendar className="h-4 w-4 ms-1" />
