@@ -7,9 +7,6 @@ import {
   ClipboardList,
   ListTodo,
   LayoutDashboard,
-  Users,
-  UserCheck,
-  Bell,
   CalendarDays,
   CircleUser,
   Settings,
@@ -17,6 +14,7 @@ import {
   ChevronLeft,
   Building2,
   X,
+  BarChart2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -35,23 +33,18 @@ interface NavItem {
   label: string;
 }
 
-// Static items visible to all authenticated employees, in spec order.
-// Conditional items (الموظفون, الموافقات, الإعدادات) are rendered as
-// explicit JSX conditionals below so React reconciles them independently.
-const BASE_NAV_TOP: NavItem[] = [
-  { href: "/dashboard", icon: Home, label: "الرئيسية" },
-  { href: "/dashboard/assignments", icon: ClipboardList, label: "إسناد الأعمال" },
-  { href: "/dashboard/my-tasks", icon: ListTodo, label: "مهامي" },
+// Core nav — visible to all authenticated employees, in display order.
+const BASE_NAV: NavItem[] = [
+  { href: "/dashboard",            icon: Home,            label: "الرئيسية" },
   { href: "/dashboard/operations", icon: LayoutDashboard, label: "مركز العمليات" },
-  { href: "/dashboard/teams", icon: Users, label: "الفرق" },
-  // ← slot 6: الموظفون (managers) injected here in JSX
+  { href: "/dashboard/assignments",icon: ClipboardList,   label: "إسناد الأعمال" },
+  { href: "/dashboard/my-tasks",   icon: ListTodo,        label: "مهامي" },
 ];
 
-const BASE_NAV_BOTTOM: NavItem[] = [
-  { href: "/dashboard/notifications", icon: Bell, label: "الإشعارات" },
+// Bottom nav — always visible
+const BOTTOM_NAV: NavItem[] = [
   { href: "/dashboard/meetings", icon: CalendarDays, label: "الاجتماعات" },
-  { href: "/dashboard/profile", icon: CircleUser, label: "الملف الشخصي" },
-  // ← slot 11: الموافقات (super_admin) injected here in JSX
+  { href: "/dashboard/profile",  icon: CircleUser,   label: "الملف الشخصي" },
 ];
 
 interface SidebarProps {
@@ -122,12 +115,8 @@ export function Sidebar({
                 <Building2 className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="font-bold text-foreground leading-tight text-sm">
-                  نسك
-                </p>
-                <p className="text-[10px] text-muted-foreground leading-tight">
-                  إدارة البطاقات
-                </p>
+                <p className="font-bold text-foreground leading-tight text-sm">نسك</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">إدارة البطاقات</p>
               </div>
             </Link>
           )}
@@ -167,32 +156,30 @@ export function Sidebar({
         <ScrollArea className="flex-1 py-4">
           <TooltipProvider delayDuration={0}>
             <nav className="px-3 space-y-1">
-              {/* Items 1–5: always visible */}
-              {BASE_NAV_TOP.map((item) => (
+              {/* Core items: الرئيسية → مركز العمليات → إسناد الأعمال → مهامي */}
+              {BASE_NAV.map((item) => (
                 <SidebarItem key={item.href} {...itemProps(item)} />
               ))}
 
-              {/* Item 6: الموظفون — managers only */}
+              {/* التقارير — managers only */}
               {canManage && (
                 <SidebarItem
-                  key="/dashboard/employees"
                   {...itemProps({
-                    href: "/dashboard/employees",
-                    icon: UserCheck,
-                    label: "الموظفون",
+                    href: "/dashboard/analytics",
+                    icon: BarChart2,
+                    label: "التقارير",
                   })}
                 />
               )}
 
-              {/* Items 7–9: always visible */}
-              {BASE_NAV_BOTTOM.map((item) => (
+              {/* Bottom items: الاجتماعات → الملف الشخصي */}
+              {BOTTOM_NAV.map((item) => (
                 <SidebarItem key={item.href} {...itemProps(item)} />
               ))}
 
-              {/* Item 11: الموافقات — super_admin only */}
+              {/* الموافقات — super_admin only */}
               {isSuperAdmin && (
                 <SidebarItem
-                  key="/dashboard/approvals"
                   {...itemProps({
                     href: "/dashboard/approvals",
                     icon: ShieldCheck,
@@ -204,7 +191,7 @@ export function Sidebar({
           </TooltipProvider>
         </ScrollArea>
 
-        {/* Bottom: الإعدادات — super_admin only */}
+        {/* Bottom pinned: الإعدادات — super_admin only */}
         {isSuperAdmin && (
           <div className="p-3 border-t">
             <TooltipProvider delayDuration={0}>
