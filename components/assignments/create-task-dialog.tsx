@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Paperclip, FileText, ChevronDown, Pin } from "lucide-react";
+import { Plus, Paperclip, FileText, ChevronDown, Pin, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { createTaskAction } from "@/app/(dashboard)/dashboard/assignments/actions";
+import { createClient } from "@/lib/supabase/client";
+import {
+  createTaskAction,
+  updateTaskAttachmentsAction,
+} from "@/app/(dashboard)/dashboard/assignments/actions";
+import type { TaskAttachment } from "@/app/(dashboard)/dashboard/assignments/actions";
 import { PRIORITY_CONFIG, STATUS_CONFIG, formatDuration } from "./card-utils";
 import type { TaskPriority, TaskStatus, UserRole, Team } from "@/types/database";
 
@@ -30,8 +35,95 @@ const CREATABLE_STATUSES: TaskStatus[] = [
   "on_hold",
 ];
 
-const HOUR_OPTIONS = Array.from({ length: 13 }, (_, i) => i); // 0–12
+const HOUR_OPTIONS = Array.from({ length: 13 }, (_, i) => i);
 const MINUTE_OPTIONS = [0, 15, 30, 45];
+
+const ARABIC_MONTHS = [
+  "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+  "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر",
+];
+
+const SELECT_CLASS =
+  "w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm pe-8 ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+
+// ─── Arabic Date Picker ───────────────────────────────────────────────────────
+// Replaces <input type="date"> which reverses Arabic characters in RTL context.
+
+function ArabicDatePicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => currentYear + i);
+
+  const parsed = value ? value.split("-").map(Number) : null;
+  const selYear = parsed?.[0] ?? 0;
+  const selMonth = parsed?.[1] ?? 0;
+  const selDay = parsed?.[2] ?? 0;
+
+  const daysInMonth =
+    selYear && selMonth ? new Date(selYear, selMonth, 0).getDate() : 31;
+
+  function emit(y: number, m: number, d: number) {
+    if (!y || !m || !d) { onChange(""); return; }
+    const clampedD = Math.min(d, new Date(y, m, 0).getDate());
+    onChange(
+      `${y}-${String(m).padStart(2, "0")}-${String(clampedD).padStart(2, "0")}`
+    );
+  }
+
+  return (
+    <div className="flex gap-2">
+      {/* Day */}
+      <div className="relative flex-1">
+        <select
+          value={selDay || ""}
+          onChange={(e) => emit(selYear, selMonth, Number(e.target.value))}
+          className={SELECT_CLASS}
+        >
+          <option value="">اليوم</option>
+          {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => (
+            <option key={d} value={d}>{d}</option>
+          ))}
+        </select>
+        <ChevronDown className="absolute inset-y-0 end-2.5 my-auto h-4 w-4 text-muted-foreground pointer-events-none" />
+      </div>
+
+      {/* Month */}
+      <div className="relative flex-[2]">
+        <select
+          value={selMonth || ""}
+          onChange={(e) => emit(selYear, Number(e.target.value), selDay)}
+          className={SELECT_CLASS}
+        >
+          <option value="">الشهر</option>
+          {ARABIC_MONTHS.map((name, i) => (
+            <option key={i + 1} value={i + 1}>{name}</option>
+          ))}
+        </select>
+        <ChevronDown className="absolute inset-y-0 end-2.5 my-auto h-4 w-4 text-muted-foreground pointer-events-none" />
+      </div>
+
+      {/* Year */}
+      <div className="relative flex-1">
+        <select
+          value={selYear || ""}
+          onChange={(e) => emit(Number(e.target.value), selMonth, selDay)}
+          className={SELECT_CLASS}
+        >
+          <option value="">السنة</option>
+          {years.map((y) => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
+        <ChevronDown className="absolute inset-y-0 end-2.5 my-auto h-4 w-4 text-muted-foreground pointer-events-none" />
+      </div>
+    </div>
+  );
+}
 
 // ─── Form state ───────────────────────────────────────────────────────────────
 
@@ -60,8 +152,6 @@ function defaultForm(employeeTeamId: string | null): FormState {
     notes: "",
   };
 }
-
-// ─── Validation ───────────────────────────────────────────────────────────────
 
 function validate(f: FormState): string | null {
   if (!f.title.trim()) return "العنوان مطلوب";
@@ -93,21 +183,16 @@ function PreviewCard({
       <div
         className={cn(
           "flex-1 rounded-xl border-2 border-dashed p-4 transition-all duration-200",
-          hasContent
-            ? "border-border bg-card"
-            : "border-muted bg-muted/20"
+          hasContent ? "border-border bg-card" : "border-muted bg-muted/20"
         )}
       >
         {!hasContent ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-8 gap-2">
             <Pin className="h-8 w-8 text-muted-foreground/30" />
-            <p className="text-sm text-muted-foreground">
-              ستظهر معاينة المهمة هنا
-            </p>
+            <p className="text-sm text-muted-foreground">ستظهر معاينة المهمة هنا</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {/* Header */}
             <div className="flex items-start gap-2 justify-between">
               <span
                 className={cn(
@@ -127,7 +212,6 @@ function PreviewCard({
               </span>
             </div>
 
-            {/* Title */}
             <div>
               <p className="text-sm font-bold text-foreground leading-snug">
                 {form.title || (
@@ -152,7 +236,7 @@ function PreviewCard({
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
                   <span>
-                    {new Date(form.due_date).toLocaleDateString("ar-SA", {
+                    {new Date(form.due_date + "T12:00:00").toLocaleDateString("ar-SA", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -198,6 +282,8 @@ export function CreateTaskDialog({
   const [isPending, startTransition] = useTransition();
   const [form, setForm] = useState<FormState>(() => defaultForm(employeeTeamId));
   const [error, setError] = useState<string | null>(null);
+  const [stagedFiles, setStagedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isTrackManager = role === "track_manager";
   const selectedTeam = teams.find((t) => t.id === form.team_id) ?? null;
@@ -210,23 +296,33 @@ export function CreateTaskDialog({
     if (!next) {
       setForm(defaultForm(employeeTeamId));
       setError(null);
+      setStagedFiles([]);
     }
     setOpen(next);
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const newFiles = Array.from(e.target.files ?? []);
+    if (newFiles.length > 0) setStagedFiles((prev) => [...prev, ...newFiles]);
+    e.target.value = "";
+  }
+
+  function removeFile(index: number) {
+    setStagedFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const validationError = validate(form);
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
+    if (validationError) { setError(validationError); return; }
     setError(null);
 
     const estimatedMinutes = form.hours * 60 + form.minutes;
+    const titleSnapshot = form.title;
+    const filesSnapshot = [...stagedFiles];
 
     startTransition(async () => {
-      const { error: serverError } = await createTaskAction({
+      const { error: serverError, id: taskId } = await createTaskAction({
         title: form.title,
         description: form.description,
         team_id: form.team_id,
@@ -237,15 +333,58 @@ export function CreateTaskDialog({
         notes: form.notes || undefined,
       });
 
-      if (serverError) {
-        setError(serverError);
-        return;
+      if (serverError) { setError(serverError); return; }
+
+      // Upload staged files and link them to the created task
+      let attachmentCount = 0;
+      if (filesSnapshot.length > 0 && taskId) {
+        try {
+          const supabase = createClient();
+          const uploaded: TaskAttachment[] = [];
+
+          for (const file of filesSnapshot) {
+            const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+            const path = `${taskId}/${crypto.randomUUID()}-${safeName}`;
+            const { data: uploadData, error: uploadErr } = await supabase.storage
+              .from("task-attachments")
+              .upload(path, file);
+
+            if (!uploadErr && uploadData) {
+              const { data: urlData } = supabase.storage
+                .from("task-attachments")
+                .getPublicUrl(uploadData.path);
+              uploaded.push({
+                name: file.name,
+                url: urlData.publicUrl,
+                size: file.size,
+                type: file.type,
+              });
+            }
+          }
+
+          if (uploaded.length > 0) {
+            await updateTaskAttachmentsAction(taskId, uploaded);
+            attachmentCount = uploaded.length;
+          }
+
+          if (uploaded.length < filesSnapshot.length) {
+            toast.warning(
+              `تم رفع ${uploaded.length} من أصل ${filesSnapshot.length} ملفات فقط`
+            );
+          }
+        } catch {
+          toast.warning("تم إنشاء المهمة لكن فشل رفع المرفقات");
+        }
       }
 
       setOpen(false);
       setForm(defaultForm(employeeTeamId));
+      setStagedFiles([]);
       toast.success("تم إنشاء المهمة بنجاح", {
-        description: `"${form.title}" متاحة الآن للمطالبة بها`,
+        description:
+          attachmentCount > 0
+            ? `"${titleSnapshot}" مع ${attachmentCount} مرفق`
+            : `"${titleSnapshot}" متاحة الآن للمطالبة بها`,
       });
       router.refresh();
     });
@@ -257,6 +396,16 @@ export function CreateTaskDialog({
         <Plus className="h-4 w-4 ms-1" />
         إضافة مهمة
       </Button>
+
+      {/* Hidden file input — outside Dialog to avoid portal issues */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.txt,.csv"
+        className="hidden"
+        onChange={handleFileChange}
+      />
 
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent
@@ -270,12 +419,12 @@ export function CreateTaskDialog({
 
           {/* Body */}
           <div className="flex flex-1 min-h-0 overflow-hidden">
-            {/* ── Form (left) ── */}
+            {/* ── Form ── */}
             <form
               onSubmit={handleSubmit}
               className="flex flex-col flex-1 min-w-0 overflow-y-auto px-6 py-5 space-y-6"
             >
-              {/* ── Section 1: Basic info ── */}
+              {/* Section 1: Basic info */}
               <fieldset className="space-y-4">
                 <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                   المعلومات الأساسية
@@ -306,13 +455,12 @@ export function CreateTaskDialog({
                 </div>
               </fieldset>
 
-              {/* ── Section 2: Assignment ── */}
+              {/* Section 2: Assignment */}
               <fieldset className="space-y-4">
                 <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                   التخصيص
                 </legend>
 
-                {/* Team */}
                 <div className="space-y-1.5">
                   <Label htmlFor="task-team">
                     الفريق <span className="text-destructive">*</span>
@@ -323,22 +471,21 @@ export function CreateTaskDialog({
                       value={form.team_id}
                       onChange={(e) => set("team_id", e.target.value)}
                       disabled={isTrackManager}
-                      className="w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm pe-8 ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      className={SELECT_CLASS}
                     >
                       <option value="">اختر الفريق</option>
                       {teams.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.name}
-                        </option>
+                        <option key={t.id} value={t.id}>{t.name}</option>
                       ))}
                     </select>
                     <ChevronDown className="absolute inset-y-0 end-2.5 my-auto h-4 w-4 text-muted-foreground pointer-events-none" />
                   </div>
                 </div>
 
-                {/* Priority */}
                 <div className="space-y-1.5">
-                  <Label>الأولوية <span className="text-destructive">*</span></Label>
+                  <Label>
+                    الأولوية <span className="text-destructive">*</span>
+                  </Label>
                   <div className="flex gap-2 flex-wrap">
                     {PRIORITY_OPTIONS.map((p) => {
                       const cfg = PRIORITY_CONFIG[p];
@@ -350,7 +497,8 @@ export function CreateTaskDialog({
                           className={cn(
                             "px-3 py-1.5 rounded-full text-xs font-semibold border transition-all",
                             form.priority === p
-                              ? cfg.className + " border-current shadow-sm ring-1 ring-current/30"
+                              ? cfg.className +
+                                  " border-current shadow-sm ring-1 ring-current/30"
                               : "border-border text-muted-foreground hover:bg-accent"
                           )}
                         >
@@ -362,28 +510,24 @@ export function CreateTaskDialog({
                 </div>
               </fieldset>
 
-              {/* ── Section 3: Scheduling ── */}
+              {/* Section 3: Scheduling */}
               <fieldset className="space-y-4">
                 <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                   الجدولة
                 </legend>
 
                 <div className="grid grid-cols-2 gap-4">
-                  {/* Due date */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="task-due">
-                      تاريخ الاستحقاق <span className="text-destructive">*</span>
+                    <Label>
+                      تاريخ الاستحقاق{" "}
+                      <span className="text-destructive">*</span>
                     </Label>
-                    <Input
-                      id="task-due"
-                      type="date"
+                    <ArabicDatePicker
                       value={form.due_date}
-                      onChange={(e) => set("due_date", e.target.value)}
-                      min={new Date().toISOString().split("T")[0]}
+                      onChange={(v) => set("due_date", v)}
                     />
                   </div>
 
-                  {/* Status */}
                   <div className="space-y-1.5">
                     <Label htmlFor="task-status">الحالة</Label>
                     <div className="relative">
@@ -393,7 +537,7 @@ export function CreateTaskDialog({
                         onChange={(e) =>
                           set("status", e.target.value as TaskStatus)
                         }
-                        className="w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm pe-8 ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                        className={SELECT_CLASS}
                       >
                         {CREATABLE_STATUSES.map((s) => (
                           <option key={s} value={s}>
@@ -406,7 +550,6 @@ export function CreateTaskDialog({
                   </div>
                 </div>
 
-                {/* Estimated duration */}
                 <div className="space-y-1.5">
                   <Label>المدة التقديرية</Label>
                   <div className="flex items-center gap-2">
@@ -416,12 +559,10 @@ export function CreateTaskDialog({
                         onChange={(e) =>
                           set("hours", parseInt(e.target.value, 10))
                         }
-                        className="w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm pe-8 ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                        className={SELECT_CLASS}
                       >
                         {HOUR_OPTIONS.map((h) => (
-                          <option key={h} value={h}>
-                            {h} ساعة
-                          </option>
+                          <option key={h} value={h}>{h} ساعة</option>
                         ))}
                       </select>
                       <ChevronDown className="absolute inset-y-0 end-2.5 my-auto h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -432,12 +573,10 @@ export function CreateTaskDialog({
                         onChange={(e) =>
                           set("minutes", parseInt(e.target.value, 10))
                         }
-                        className="w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm pe-8 ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                        className={SELECT_CLASS}
                       >
                         {MINUTE_OPTIONS.map((m) => (
-                          <option key={m} value={m}>
-                            {m} دقيقة
-                          </option>
+                          <option key={m} value={m}>{m} دقيقة</option>
                         ))}
                       </select>
                       <ChevronDown className="absolute inset-y-0 end-2.5 my-auto h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -451,13 +590,12 @@ export function CreateTaskDialog({
                 </div>
               </fieldset>
 
-              {/* ── Section 4: Optional ── */}
+              {/* Section 4: Optional */}
               <fieldset className="space-y-4">
                 <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                   إضافات اختيارية
                 </legend>
 
-                {/* Notes */}
                 <div className="space-y-1.5">
                   <Label htmlFor="task-notes">ملاحظات</Label>
                   <Textarea
@@ -469,21 +607,46 @@ export function CreateTaskDialog({
                   />
                 </div>
 
-                {/* Attachments — UI prepared, not functional yet */}
-                <div className="space-y-1.5">
+                {/* Attachments */}
+                <div className="space-y-2">
                   <Label>المرفقات</Label>
                   <button
                     type="button"
-                    disabled
-                    className="w-full flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-muted-foreground/20 py-4 text-sm text-muted-foreground/50 cursor-not-allowed select-none"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-muted-foreground/30 py-4 text-sm text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
                   >
                     <Paperclip className="h-4 w-4" />
-                    رفع ملفات — قريباً
+                    اضغط لإضافة مرفقات
                   </button>
+
+                  {stagedFiles.length > 0 && (
+                    <div className="space-y-1.5">
+                      {stagedFiles.map((file, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center justify-between gap-2 rounded-md bg-muted/40 px-3 py-2 text-sm"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span className="truncate">{file.name}</span>
+                            <span className="text-xs text-muted-foreground shrink-0">
+                              ({Math.round(file.size / 1024)} KB)
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(i)}
+                            className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </fieldset>
 
-              {/* Error */}
               {error && (
                 <p className="text-sm text-destructive rounded-md bg-destructive/10 px-3 py-2">
                   {error}
@@ -491,12 +654,9 @@ export function CreateTaskDialog({
               )}
             </form>
 
-            {/* ── Preview (right) ── */}
+            {/* ── Preview (desktop only) ── */}
             <div className="hidden lg:flex flex-col w-72 shrink-0 border-s bg-muted/20 px-5 py-5">
-              <PreviewCard
-                form={form}
-                teamName={selectedTeam?.name ?? null}
-              />
+              <PreviewCard form={form} teamName={selectedTeam?.name ?? null} />
             </div>
           </div>
 

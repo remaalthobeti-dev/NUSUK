@@ -1,4 +1,4 @@
-import { Calendar, Clock, Building2, User, FileText } from "lucide-react";
+import { Calendar, Clock, Building2, User, FileText, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STATUS_CONFIG, formatDuration, formatDueDate, progressBarColor } from "@/components/assignments/card-utils";
 import type { TaskDetailTask } from "@/lib/data/task-detail";
@@ -7,9 +7,24 @@ interface Props {
   task: TaskDetailTask;
 }
 
+type AttachmentEntry = { name: string; url: string; size: number; type: string };
+
+function parseAttachments(metadata: unknown): AttachmentEntry[] {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return [];
+  const raw = (metadata as Record<string, unknown>).attachments;
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(
+    (a): a is AttachmentEntry =>
+      typeof a === "object" && a !== null &&
+      typeof (a as AttachmentEntry).name === "string" &&
+      typeof (a as AttachmentEntry).url === "string"
+  );
+}
+
 export function OverviewTab({ task }: Props) {
   const statusConf = STATUS_CONFIG[task.status] ?? STATUS_CONFIG.pending;
   const due = formatDueDate(task.due_date);
+  const attachments = parseAttachments(task.metadata);
 
   return (
     <div className="space-y-6">
@@ -82,6 +97,34 @@ export function OverviewTab({ task }: Props) {
           />
         )}
       </div>
+      {/* ── Attachments ── */}
+      {attachments.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Paperclip className="h-4 w-4 text-muted-foreground" />
+            المرفقات ({attachments.length})
+          </h2>
+          <div className="space-y-1.5">
+            {attachments.map((att, i) => (
+              <a
+                key={i}
+                href={att.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-md bg-muted/40 px-3 py-2 text-sm hover:bg-muted/60 transition-colors group"
+              >
+                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="flex-1 truncate group-hover:text-primary transition-colors">
+                  {att.name}
+                </span>
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {Math.round(att.size / 1024)} KB
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

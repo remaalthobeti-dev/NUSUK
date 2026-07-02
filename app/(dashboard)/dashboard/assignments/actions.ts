@@ -18,6 +18,13 @@ const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
   cancelled: "ملغاة",
 };
 
+export interface TaskAttachment {
+  name: string;
+  url: string;
+  size: number;
+  type: string;
+}
+
 export interface CreateTaskPayload {
   title: string;
   description: string;
@@ -129,6 +136,36 @@ export async function claimTaskAction(
   }).catch(() => {});
 
   revalidatePath("/dashboard/assignments");
+  revalidatePath(`/dashboard/assignments/${taskId}`);
+  return { error: null };
+}
+
+export async function updateTaskAttachmentsAction(
+  taskId: string,
+  attachments: TaskAttachment[]
+): Promise<{ error: string | null }> {
+  const { supabase, context, error } = await requireAuthenticated();
+  if (error) return { error };
+
+  const { data: task } = await supabase
+    .from("tasks")
+    .select("id, created_by, metadata")
+    .eq("id", taskId)
+    .single();
+
+  if (!task) return { error: "المهمة غير موجودة" };
+  if (task.created_by !== context.employee.id)
+    return { error: "ليس لديك صلاحية تعديل هذه المهمة" };
+
+  const existingMeta = (task.metadata as Record<string, unknown>) ?? {};
+  const newMetadata = JSON.parse(JSON.stringify({ ...existingMeta, attachments }));
+  const { error: updateErr } = await supabase
+    .from("tasks")
+    .update({ metadata: newMetadata })
+    .eq("id", taskId);
+
+  if (updateErr) return { error: updateErr.message };
+
   revalidatePath(`/dashboard/assignments/${taskId}`);
   return { error: null };
 }
