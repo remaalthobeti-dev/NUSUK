@@ -230,7 +230,7 @@ export function HomeClient({
           ) : (
             <>
               <Button asChild size="sm">
-                <Link href="/dashboard/my-tasks">
+                <Link href="/dashboard/assignments">
                   <FileCheck className="h-4 w-4 ms-1" />
                   استلام مهمة
                 </Link>
