@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   Clock,
   Calendar,
@@ -9,6 +10,7 @@ import {
   ChevronLeft,
   AlertTriangle,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,13 +32,20 @@ interface Props {
 
 export function AvailableTaskCard({ task }: Props) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const priority = PRIORITY_CONFIG[task.priority];
   const status = STATUS_CONFIG[task.status];
   const due = formatDueDate(task.due_date);
 
   function handleClaim() {
     startTransition(async () => {
-      await claimTaskAction(task.id);
+      const result = await claimTaskAction(task.id);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("تم استلام المهمة بنجاح");
+        router.refresh();
+      }
     });
   }
 
