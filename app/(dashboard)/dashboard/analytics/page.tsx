@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { assertManager } from "@/lib/auth/guards";
 import { getAnalyticsData } from "@/lib/data/admin";
 import { AnalyticsDashboard } from "@/components/analytics/analytics-dashboard";
 import { PageHeader } from "@/components/shared/page-header";
@@ -6,6 +7,7 @@ import { PageHeader } from "@/components/shared/page-header";
 export const metadata: Metadata = { title: "التحليلات — نسك" };
 
 export default async function AnalyticsPage() {
+  await assertManager();
   let data;
   try {
     data = await getAnalyticsData();

@@ -8,6 +8,7 @@ import {
   Users,
   MapPin,
   WifiOff,
+  Wifi,
   Bell,
   Calendar,
   LayoutDashboard,
@@ -66,6 +67,13 @@ const STATUS_OPTIONS: Array<{
     Icon: MapPin,
     dot: "bg-purple-500",
     activeClass: "bg-purple-600 text-white border-purple-600",
+  },
+  {
+    value: "remote",
+    label: "عن بعد",
+    Icon: Wifi,
+    dot: "bg-cyan-500",
+    activeClass: "bg-cyan-600 text-white border-cyan-600",
   },
   {
     value: "offline",

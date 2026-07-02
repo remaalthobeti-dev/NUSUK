@@ -1,16 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, Star, Trophy, Users, Zap } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import type { Database } from "@/types/database";
-
-type TaskInsert = Database["public"]["Tables"]["tasks"]["Insert"];
-type PresenceInsert = Database["public"]["Tables"]["employee_presence"]["Insert"];
-type ActivityInsert = Database["public"]["Tables"]["activity_logs"]["Insert"];
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { getRoleLabel } from "@/lib/utils";
 import type { EmployeeWithPresence } from "@/types/database";
 import { STATUS_CONFIG } from "./status-config";
+import { assignQuickTaskAction } from "@/app/(dashboard)/dashboard/actions";
 
 const schema = z.object({
   title: z.string().min(1, "عنوان المهمة مطلوب"),
@@ -53,10 +49,7 @@ function rankEmployees(employees: EmployeeWithPresence[]) {
     .filter((emp) => {
       if (!emp.is_active) return false;
       const s = emp.presence?.availability_status;
-      return (
-        s === "available" ||
-        s === "remote"
-      );
+      return s === "available" || s === "remote";
     })
     .sort(
       (a, b) =>
@@ -78,9 +71,8 @@ export function AssignTaskDialog({
   open,
   onOpenChange,
 }: AssignTaskDialogProps) {
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(
-    null
-  );
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const ranked = rankEmployees(employees);
 
@@ -89,68 +81,33 @@ export function AssignTaskDialog({
     handleSubmit,
     setValue,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { priority: "medium", estimated_hours: 2 },
   });
 
-  async function onSubmit(data: FormData) {
+  function onSubmit(data: FormData) {
     if (!selectedEmployeeId) return;
-    const supabase = createClient();
+    startTransition(async () => {
+      const { error } = await assignQuickTaskAction({
+        title: data.title,
+        description: data.description || null,
+        priority: data.priority,
+        estimatedHours: data.estimated_hours,
+        teamId,
+        assigneeId: selectedEmployeeId,
+      });
 
-    const dueDate = new Date(
-      Date.now() + data.estimated_hours * 3_600_000
-    ).toISOString();
-
-    // Create task
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: taskError } = await (supabase.from("tasks") as any).insert({
-      title: data.title,
-      description: data.description || null,
-      status: "in_progress",
-      priority: data.priority,
-      team_id: teamId,
-      assigned_to: selectedEmployeeId,
-      started_at: new Date().toISOString(),
-      due_date: dueDate,
+      if (error) {
+        toast.error(error);
+      } else {
+        toast.success("تم تكليف المهمة بنجاح");
+        reset();
+        setSelectedEmployeeId(null);
+        onOpenChange(false);
+      }
     });
-
-    if (taskError) {
-      console.error("Task creation failed:", taskError);
-      return;
-    }
-
-    // Update employee presence to busy
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase.from("employee_presence") as any).upsert(
-      {
-        employee_id: selectedEmployeeId,
-        availability_status: "busy",
-        workload_percent: Math.min(
-          100,
-          (employees.find((e) => e.id === selectedEmployeeId)?.presence
-            ?.workload_percent ?? 0) + 30
-        ),
-        notes: `مكلف بمهمة: ${data.title}`,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "employee_id" }
-    );
-
-    // Activity log
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase.from("activity_logs") as any).insert({
-      actor_id: selectedEmployeeId,
-      action: "task_assigned",
-      entity_type: "task",
-      entity_id: selectedEmployeeId,
-      new_values: { task: data.title, assigned_to: selectedEmployeeId },
-    });
-
-    reset();
-    setSelectedEmployeeId(null);
-    onOpenChange(false);
   }
 
   return (
@@ -354,9 +311,9 @@ export function AssignTaskDialog({
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting || !selectedEmployeeId}
+              disabled={isPending || !selectedEmployeeId}
             >
-              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               تكليف المهمة
             </Button>
           </DialogFooter>

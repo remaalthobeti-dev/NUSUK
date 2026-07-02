@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { assertManager } from "@/lib/auth/guards";
 import { getAuditLogs } from "@/lib/data/admin";
 import { AuditLogView } from "@/components/audit/audit-log-view";
 import { PageHeader } from "@/components/shared/page-header";
@@ -8,6 +9,7 @@ export const metadata: Metadata = { title: "سجل النشاط — نسك" };
 const PAGE_SIZE = 25;
 
 export default async function ActivityPage() {
+  await assertManager();
   let logs: Awaited<ReturnType<typeof getAuditLogs>>["logs"] = [];
   let total = 0;
   try { ({ logs, total } = await getAuditLogs(1, PAGE_SIZE)); } catch { /* stays empty */ }

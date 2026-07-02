@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { RegistrationRequest, UserRole, Team } from "@/types/database";
 
 export async function getPendingRequests(): Promise<RegistrationRequest[]> {
   const supabase = await createClient();
-  const { data } = await (supabase as any)
+  const { data } = await supabase
     .from("registration_requests")
     .select("*")
     .eq("status", "pending")
@@ -15,7 +14,7 @@ export async function getPendingRequests(): Promise<RegistrationRequest[]> {
 
 export async function getAllRequests(): Promise<RegistrationRequest[]> {
   const supabase = await createClient();
-  const { data } = await (supabase as any)
+  const { data } = await supabase
     .from("registration_requests")
     .select("*")
     .order("created_at", { ascending: false });
@@ -29,7 +28,7 @@ export async function approveRequest(
 ): Promise<{ error: string | null }> {
   const supabase = await createClient();
 
-  const { data: req, error: fetchErr } = await (supabase as any)
+  const { data: req, error: fetchErr } = await supabase
     .from("registration_requests")
     .select("auth_user_id, full_name, email")
     .eq("id", requestId)
@@ -43,7 +42,7 @@ export async function approveRequest(
     email: string;
   };
 
-  const { error: empErr } = await (supabase as any).from("employees").insert({
+  const { error: empErr } = await supabase.from("employees").insert({
     user_id: auth_user_id,
     full_name,
     email,
@@ -53,7 +52,7 @@ export async function approveRequest(
     is_active: true,
   });
 
-  if (empErr) return { error: (empErr as any).message };
+  if (empErr) return { error: empErr.message };
 
   // Confirm the email in auth.users so the user can sign in.
   // signUp() leaves email_confirmed_at = null; approval is the confirmation gate.
@@ -64,7 +63,7 @@ export async function approveRequest(
   );
   if (confirmErr) return { error: confirmErr.message };
 
-  const { error: updateErr } = await (supabase as any)
+  const { error: updateErr } = await supabase
     .from("registration_requests")
     .update({
       status: "approved",
@@ -76,7 +75,7 @@ export async function approveRequest(
     })
     .eq("id", requestId);
 
-  if (updateErr) return { error: (updateErr as any).message };
+  if (updateErr) return { error: updateErr.message };
   return { error: null };
 }
 
@@ -86,7 +85,7 @@ export async function rejectRequest(
   reason: string
 ): Promise<{ error: string | null }> {
   const supabase = await createClient();
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("registration_requests")
     .update({
       status: "rejected",
@@ -95,7 +94,7 @@ export async function rejectRequest(
       reviewed_at: new Date().toISOString(),
     })
     .eq("id", requestId);
-  return { error: error ? (error as any).message : null };
+  return { error: error ? error.message : null };
 }
 
 export async function getTeamsForApprovals(): Promise<Team[]> {
