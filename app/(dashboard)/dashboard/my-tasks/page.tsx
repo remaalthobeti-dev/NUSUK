@@ -1,27 +1,30 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/shared/page-header";
-import { assertAuthenticated } from "@/lib/auth/guards";
+import { MyTasksClient } from "@/components/my-tasks/my-tasks-client";
+import { getMyTasks } from "@/lib/data/my-tasks";
 
 export const metadata: Metadata = { title: "مهامي — نسك" };
 
 export default async function MyTasksPage() {
-  await assertAuthenticated();
+  const { tasks, employeeId, error } = await getMyTasks();
 
   return (
     <>
       <PageHeader
         title="مهامي"
-        description="المهام المسندة إليك ومتابعة تقدمها"
+        description="المهام المسندة إليك وتتبع حالتها"
         breadcrumbs={[
           { label: "الرئيسية", href: "/dashboard" },
           { label: "مهامي" },
         ]}
       />
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-muted-foreground text-sm">
-          سيتوفر هذا القسم في الإصدار القادم
-        </p>
-      </div>
+      {error ? (
+        <div className="flex items-center justify-center py-24 text-sm text-muted-foreground">
+          تعذّر تحميل المهام — حاول تحديث الصفحة
+        </div>
+      ) : (
+        <MyTasksClient initialTasks={tasks} employeeId={employeeId} />
+      )}
     </>
   );
 }
