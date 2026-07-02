@@ -126,6 +126,12 @@ export const TEAM_EMOJI: Record<string, string> = {
   truck: "📦",
   cpu: "💻",
   settings: "⚙️",
+  users: "👥",
+  shield: "🛡️",
+  star: "⭐",
+  chart: "📊",
+  target: "🎯",
+  globe: "🌐",
 };
 
 export function formatRemaining(dueDate: string | null): string {

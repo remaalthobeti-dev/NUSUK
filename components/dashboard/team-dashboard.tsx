@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { ArrowRight, ClipboardList, Plus } from "lucide-react";
+import { ArrowRight, ClipboardList, Plus, Pencil } from "lucide-react";
 import Link from "next/link";
 import type { EmployeeWithPresence, Team } from "@/types/database";
 import type { AvailabilityStatus } from "@/types/database";
@@ -16,12 +16,15 @@ import { TEAM_EMOJI } from "./status-config";
 import { useRealtimeTeam } from "@/hooks/use-realtime-team";
 import { useAlertChecker } from "@/hooks/use-alert-checker";
 import { Button } from "@/components/ui/button";
+import { TeamFormDialog } from "@/components/teams/team-form-dialog";
+import type { TeamWithStats } from "@/lib/data/teams-management";
 
 interface TeamDashboardProps {
   team: Team;
   employees: EmployeeWithPresence[];
   presenceSummary: Record<AvailabilityStatus, number>;
   totalPresent: number;
+  isSuperAdmin?: boolean;
 }
 
 export function TeamDashboard({
@@ -29,6 +32,7 @@ export function TeamDashboard({
   employees: initialEmployees,
   presenceSummary: initialSummary,
   totalPresent: initialTotal,
+  isSuperAdmin = false,
 }: TeamDashboardProps) {
   const { employees } = useRealtimeTeam(team.id, initialEmployees);
   const { alerts, dismiss, dismissAll } = useAlertChecker(employees);
@@ -37,6 +41,7 @@ export function TeamDashboard({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [updateStatusEmployee, setUpdateStatusEmployee] = useState<EmployeeWithPresence | null>(null);
   const [assignTaskOpen, setAssignTaskOpen] = useState(false);
+  const [editTeamOpen, setEditTeamOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<AvailabilityStatus[]>([]);
 
@@ -125,14 +130,27 @@ export function TeamDashboard({
             />
           </div>
 
-          <Button
-            onClick={() => setAssignTaskOpen(true)}
-            className="gap-2 shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            <ClipboardList className="h-4 w-4" />
-            تكليف مهمة جديدة
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            {isSuperAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditTeamOpen(true)}
+                className="gap-1.5"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                تعديل الفريق
+              </Button>
+            )}
+            <Button
+              onClick={() => setAssignTaskOpen(true)}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              <ClipboardList className="h-4 w-4" />
+              تكليف مهمة جديدة
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -222,6 +240,15 @@ export function TeamDashboard({
         open={assignTaskOpen}
         onOpenChange={setAssignTaskOpen}
       />
+
+      {/* Edit Team Dialog (super_admin only) */}
+      {isSuperAdmin && (
+        <TeamFormDialog
+          open={editTeamOpen}
+          onOpenChange={setEditTeamOpen}
+          team={team as unknown as TeamWithStats}
+        />
+      )}
     </>
   );
 }
