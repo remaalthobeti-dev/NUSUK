@@ -26,30 +26,22 @@ interface Props {
   role: UserRole;
   teams: Team[];
   employeeTeamId: string | null;
+  currentEmployeeId: string;
   canCreate: boolean;
-  canManage: boolean;
+  isManager: boolean;
 }
 
 // ─── Filter + sort logic ──────────────────────────────────────────────────────
 
-function applyFilters(
-  tasks: TaskWithRelations[],
-  filters: FilterState
-): TaskWithRelations[] {
+function applyFilters(tasks: TaskWithRelations[], filters: FilterState): TaskWithRelations[] {
   let result = tasks;
 
   if (filters.search.trim()) {
     const q = filters.search.toLowerCase();
     result = result.filter((t) => t.title.toLowerCase().includes(q));
   }
-
-  if (filters.priority !== "all") {
-    result = result.filter((t) => t.priority === filters.priority);
-  }
-
-  if (filters.status !== "all") {
-    result = result.filter((t) => t.status === filters.status);
-  }
+  if (filters.priority !== "all") result = result.filter((t) => t.priority === filters.priority);
+  if (filters.status !== "all") result = result.filter((t) => t.status === filters.status);
 
   if (filters.dueDate !== "all") {
     const now = new Date();
@@ -62,9 +54,7 @@ function applyFilters(
       if (t.due_date == null) return false;
       const d = new Date(t.due_date);
       if (filters.dueDate === "overdue") return d < today;
-      if (filters.dueDate === "today") {
-        return d >= today && d < new Date(today.getTime() + 86400000);
-      }
+      if (filters.dueDate === "today") return d >= today && d < new Date(today.getTime() + 86400000);
       if (filters.dueDate === "this_week") return d >= today && d <= weekEnd;
       return true;
     });
@@ -72,12 +62,9 @@ function applyFilters(
 
   result = [...result].sort((a, b) => {
     switch (filters.sortBy) {
-      case "newest":
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      case "oldest":
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      case "priority":
-        return priorityOrder(a.priority) - priorityOrder(b.priority);
+      case "newest": return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      case "oldest": return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      case "priority": return priorityOrder(a.priority) - priorityOrder(b.priority);
       case "due_date": {
         if (a.due_date == null && b.due_date == null) return 0;
         if (a.due_date == null) return 1;
@@ -99,96 +86,69 @@ export function AssignmentsClient({
   role,
   teams,
   employeeTeamId,
+  currentEmployeeId,
   canCreate,
-  canManage,
+  isManager,
 }: Props) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("available");
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
-  const [reviewTasks, setReviewTasks] =
-    useState<TaskWithReviewRelations[]>(initialReviewTasks);
+  const [reviewTasks, setReviewTasks] = useState<TaskWithReviewRelations[]>(initialReviewTasks);
 
-  // Sync review tasks when server re-renders (after router.refresh())
-  useEffect(() => {
-    setReviewTasks(initialReviewTasks);
-  }, [initialReviewTasks]);
+  // Sync when server re-renders
+  useEffect(() => { setReviewTasks(initialReviewTasks); }, [initialReviewTasks]);
 
-  // Realtime: watch tasks table and trigger refresh when review-relevant changes occur
+  // Realtime: watch tasks + task_reviewers for review tab changes
   useEffect(() => {
-    if (!canManage || !employeeTeamId) return;
+    if (!employeeTeamId) return;
 
     const supabase = createClient();
 
-    const channel = supabase
-      .channel("assignments-review-rt")
+    const taskChannel = supabase
+      .channel("assignments-tasks-rt")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "tasks",
-          filter: `team_id=eq.${employeeTeamId}`,
-        },
+        { event: "*", schema: "public", table: "tasks", filter: `team_id=eq.${employeeTeamId}` },
         (payload) => {
           const next = payload.new as { status?: string } | null;
           const prev = payload.old as { status?: string } | null;
-          const affectsReview =
-            next?.status === "on_hold" || prev?.status === "on_hold";
-          if (affectsReview) {
+          if (next?.status === "on_hold" || prev?.status === "on_hold") {
             router.refresh();
           }
         }
       )
       .subscribe();
 
+    const reviewerChannel = supabase
+      .channel("assignments-reviewers-rt")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "task_reviewers" },
+        () => { router.refresh(); }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(taskChannel);
+      supabase.removeChannel(reviewerChannel);
     };
-  }, [canManage, employeeTeamId, router]);
+  }, [employeeTeamId, router]);
 
   function handleTabChange(next: Tab) {
     setTab(next);
     setFilters((f) => ({ ...f, status: "all" }));
   }
 
-  const filteredAvailable = useMemo(
-    () => applyFilters(availableTasks, filters),
-    [availableTasks, filters]
-  );
+  const filteredAvailable = useMemo(() => applyFilters(availableTasks, filters), [availableTasks, filters]);
+  const filteredRunning = useMemo(() => applyFilters(runningTasks, filters), [runningTasks, filters]);
 
-  const filteredRunning = useMemo(
-    () => applyFilters(runningTasks, filters),
-    [runningTasks, filters]
-  );
+  // Show review tab if: manager always, or team members with related on_hold tasks
+  const showReviewTab = isManager || reviewTasks.length > 0;
 
-  const tabs: Array<{
-    id: Tab;
-    label: string;
-    icon: React.ElementType;
-    count: number;
-    show: boolean;
-  }> = [
-    {
-      id: "available",
-      label: "الأعمال المتاحة",
-      icon: Inbox,
-      count: availableTasks.length,
-      show: true,
-    },
-    {
-      id: "running",
-      label: "الأعمال الجارية",
-      icon: Cog,
-      count: runningTasks.length,
-      show: true,
-    },
-    {
-      id: "review",
-      label: "بحاجة لمراجعة",
-      icon: ClipboardCheck,
-      count: reviewTasks.length,
-      show: canManage,
-    },
+  const tabs = [
+    { id: "available" as Tab, label: "الأعمال المتاحة", icon: Inbox, count: availableTasks.length, show: true },
+    { id: "running" as Tab, label: "الأعمال الجارية", icon: Cog, count: runningTasks.length, show: true },
+    { id: "review" as Tab, label: "بحاجة لمراجعة", icon: ClipboardCheck, count: reviewTasks.length, show: showReviewTab },
   ];
 
   const visibleTabs = tabs.filter((t) => t.show);
@@ -207,23 +167,19 @@ export function AssignmentsClient({
                 onClick={() => handleTabChange(t.id)}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
-                  isActive
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                  isActive ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Icon className="h-4 w-4" />
                 {t.label}
-                <span
-                  className={cn(
-                    "text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center tabular-nums",
-                    isActive && t.id === "review"
-                      ? "bg-purple-600 text-white"
-                      : isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  )}
-                >
+                <span className={cn(
+                  "text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center tabular-nums",
+                  isActive && t.id === "review"
+                    ? "bg-purple-600 text-white"
+                    : isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
+                )}>
                   {t.count}
                 </span>
               </button>
@@ -231,24 +187,16 @@ export function AssignmentsClient({
           })}
         </div>
         {canCreate && (
-          <CreateTaskDialog
-            role={role}
-            teams={teams}
-            employeeTeamId={employeeTeamId}
-          />
+          <CreateTaskDialog role={role} teams={teams} employeeTeamId={employeeTeamId} />
         )}
       </div>
 
-      {/* ── Filters (not shown for review tab) ── */}
+      {/* ── Filters ── */}
       {tab !== "review" && (
-        <FilterBar
-          filters={filters}
-          showStatusFilter={tab === "running"}
-          onChange={setFilters}
-        />
+        <FilterBar filters={filters} showStatusFilter={tab === "running"} onChange={setFilters} />
       )}
 
-      {/* ── Review tab content ── */}
+      {/* ── Review tab ── */}
       {tab === "review" ? (
         reviewTasks.length === 0 ? (
           <EmptyState
@@ -259,45 +207,31 @@ export function AssignmentsClient({
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {reviewTasks.map((task) => (
-              <ReviewTaskCard key={task.id} task={task} />
+              <ReviewTaskCard
+                key={task.id}
+                task={task}
+                currentEmployeeId={currentEmployeeId}
+                isManager={isManager}
+              />
             ))}
           </div>
         )
       ) : (
-        /* ── Available / Running tab content ── */
+        /* ── Available / Running ── */
         (() => {
-          const currentTasks =
-            tab === "available" ? filteredAvailable : filteredRunning;
-          const totalForTab =
-            tab === "available" ? availableTasks.length : runningTasks.length;
-
-          return currentTasks.length === 0 ? (
+          const current = tab === "available" ? filteredAvailable : filteredRunning;
+          const total = tab === "available" ? availableTasks.length : runningTasks.length;
+          return current.length === 0 ? (
             <EmptyState
-              icon={
-                totalForTab === 0
-                  ? tab === "available"
-                    ? Inbox
-                    : Cog
-                  : ClipboardX
-              }
-              title={
-                totalForTab === 0
-                  ? tab === "available"
-                    ? "لا توجد أعمال متاحة"
-                    : "لا توجد أعمال جارية"
-                  : "لا توجد نتائج"
-              }
-              description={
-                totalForTab === 0
-                  ? tab === "available"
-                    ? "لم يُضف أحد أعمالاً متاحة لفريقك بعد."
-                    : "لا يوجد أي عمل جارٍ في فريقك حالياً."
-                  : "جرّب تغيير معايير البحث أو الفلترة."
-              }
+              icon={total === 0 ? (tab === "available" ? Inbox : Cog) : ClipboardX}
+              title={total === 0 ? (tab === "available" ? "لا توجد أعمال متاحة" : "لا توجد أعمال جارية") : "لا توجد نتائج"}
+              description={total === 0
+                ? (tab === "available" ? "لم يُضف أحد أعمالاً متاحة لفريقك بعد." : "لا يوجد أي عمل جارٍ في فريقك حالياً.")
+                : "جرّب تغيير معايير البحث أو الفلترة."}
             />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {currentTasks.map((task) =>
+              {current.map((task) =>
                 tab === "available" ? (
                   <AvailableTaskCard key={task.id} task={task} />
                 ) : (
@@ -312,16 +246,8 @@ export function AssignmentsClient({
   );
 }
 
-// ─── Empty state ──────────────────────────────────────────────────────────────
-
-function EmptyState({
-  icon: Icon,
-  title,
-  description,
-}: {
-  icon: React.ElementType;
-  title: string;
-  description: string;
+function EmptyState({ icon: Icon, title, description }: {
+  icon: React.ElementType; title: string; description: string;
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center gap-3">

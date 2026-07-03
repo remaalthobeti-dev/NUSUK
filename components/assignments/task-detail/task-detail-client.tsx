@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Users, MessageSquare, Activity, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ import { ParticipantsTab } from "./participants-tab";
 import { CommentsTab } from "./comments-tab";
 import { ActivityTab } from "./activity-tab";
 import { RequestDialog } from "./request-dialog";
+import { createClient } from "@/lib/supabase/client";
 
 type Tab = "overview" | "participants" | "comments" | "activity";
 
@@ -21,7 +23,12 @@ interface Props {
 }
 
 export function TaskDetailClient({ data }: Props) {
-  const { task, participants, comments, activity, pendingRequests, teamMembers, currentEmployeeId } = data;
+  const router = useRouter();
+  const {
+    task, participants, comments, activity, pendingRequests,
+    reviewers, teamMembers, currentEmployeeId, currentEmployeeRole,
+  } = data;
+
   const [tab, setTab] = useState<Tab>("overview");
   const [requestDialogType, setRequestDialogType] = useState<"collaboration" | "review" | null>(null);
 
@@ -32,16 +39,58 @@ export function TaskDetailClient({ data }: Props) {
   const activeParticipants = participants.filter((p) => !p.left_at);
   const myPendingRequests = pendingRequests.filter((r) => r.requestee?.id === currentEmployeeId);
 
+  // Realtime: refresh on any change to this task's related tables
+  useEffect(() => {
+    const supabase = createClient();
+    const taskId = task.id;
+
+    const channel = supabase
+      .channel(`task-detail:${taskId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tasks", filter: `id=eq.${taskId}` },
+        () => { router.refresh(); }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "task_participants", filter: `task_id=eq.${taskId}` },
+        () => { router.refresh(); }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "task_reviewers", filter: `task_id=eq.${taskId}` },
+        () => { router.refresh(); }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "task_comments", filter: `task_id=eq.${taskId}` },
+        () => { router.refresh(); }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "task_activity", filter: `task_id=eq.${taskId}` },
+        () => { router.refresh(); }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "task_requests", filter: `task_id=eq.${taskId}` },
+        () => { router.refresh(); }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [task.id, router]);
+
   const tabs: Array<{ id: Tab; label: string; icon: React.ElementType; badge?: number }> = [
     { id: "overview", label: "نظرة عامة", icon: Eye },
     {
       id: "participants",
-      label: "المشاركون",
+      label: "الفريق",
       icon: Users,
-      badge: activeParticipants.length + pendingRequests.length,
+      badge: activeParticipants.length + reviewers.length + pendingRequests.length,
     },
     { id: "comments", label: "التعليقات", icon: MessageSquare, badge: comments.length },
-    { id: "activity", label: "النشاط", icon: Activity, badge: activity.length },
+    { id: "activity", label: "السجل", icon: Activity, badge: activity.length },
   ];
 
   return (
@@ -73,19 +122,11 @@ export function TaskDetailClient({ data }: Props) {
         {/* ── Action buttons ── */}
         {isActive && (
           <div className="flex gap-2 flex-wrap">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setRequestDialogType("collaboration")}
-            >
+            <Button size="sm" variant="outline" onClick={() => setRequestDialogType("collaboration")}>
               <Users className="h-4 w-4 me-1.5" />
               طلب مشاركة
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setRequestDialogType("review")}
-            >
+            <Button size="sm" variant="outline" onClick={() => setRequestDialogType("review")}>
               <Eye className="h-4 w-4 me-1.5" />
               طلب مراجعة
             </Button>
@@ -96,11 +137,8 @@ export function TaskDetailClient({ data }: Props) {
         {myPendingRequests.length > 0 && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
             لديك {myPendingRequests.length === 1 ? "طلب" : `${myPendingRequests.length} طلبات`} بانتظار ردك —
-            <button
-              className="underline ms-1 font-medium"
-              onClick={() => setTab("participants")}
-            >
-              انظر المشاركون
+            <button className="underline ms-1 font-medium" onClick={() => setTab("participants")}>
+              انظر الفريق
             </button>
           </div>
         )}
@@ -117,22 +155,16 @@ export function TaskDetailClient({ data }: Props) {
               onClick={() => setTab(t.id)}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
-                isActiveTab
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                isActiveTab ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <Icon className="h-3.5 w-3.5" />
               {t.label}
               {t.badge != null && t.badge > 0 && (
-                <span
-                  className={cn(
-                    "text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center tabular-nums",
-                    isActiveTab
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  )}
-                >
+                <span className={cn(
+                  "text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center tabular-nums",
+                  isActiveTab ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                )}>
                   {t.badge}
                 </span>
               )}
@@ -149,16 +181,14 @@ export function TaskDetailClient({ data }: Props) {
             taskId={task.id}
             participants={activeParticipants}
             pendingRequests={pendingRequests}
+            reviewers={reviewers}
             currentEmployeeId={currentEmployeeId}
+            currentEmployeeRole={currentEmployeeRole}
             assigneeId={task.assigned_to}
           />
         )}
         {tab === "comments" && (
-          <CommentsTab
-            taskId={task.id}
-            comments={comments}
-            currentEmployeeId={currentEmployeeId}
-          />
+          <CommentsTab taskId={task.id} comments={comments} currentEmployeeId={currentEmployeeId} />
         )}
         {tab === "activity" && <ActivityTab entries={activity} />}
       </div>

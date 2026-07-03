@@ -1,18 +1,21 @@
 "use client";
 
 import { useTransition } from "react";
-import { User, Crown, Check, X, Clock } from "lucide-react";
+import { User, Crown, Check, X, Clock, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { respondToRequestAction } from "@/app/(dashboard)/dashboard/assignments/[taskId]/actions";
-import type { TaskParticipantEntry, TaskRequestEntry } from "@/lib/data/task-detail";
+import type { TaskParticipantEntry, TaskRequestEntry, TaskReviewerEntry } from "@/lib/data/task-detail";
+import { timeAgo } from "@/components/assignments/card-utils";
 
 interface Props {
   taskId: string;
   participants: TaskParticipantEntry[];
   pendingRequests: TaskRequestEntry[];
+  reviewers: TaskReviewerEntry[];
   currentEmployeeId: string;
+  currentEmployeeRole: string;
   assigneeId: string | null;
 }
 
@@ -20,16 +23,22 @@ export function ParticipantsTab({
   taskId,
   participants,
   pendingRequests,
+  reviewers,
   currentEmployeeId,
+  currentEmployeeRole,
   assigneeId,
 }: Props) {
-  const hasAnything = participants.length > 0 || pendingRequests.length > 0;
+  const hasContent = participants.length > 0 || pendingRequests.length > 0 || reviewers.length > 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+
       {/* ── Active participants ── */}
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-foreground">المشاركون الحاليون</h2>
+        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <User className="h-4 w-4 text-muted-foreground" />
+          المشاركون الحاليون
+        </h2>
 
         {participants.length === 0 ? (
           <p className="text-sm text-muted-foreground">لا يوجد مشاركون حتى الآن.</p>
@@ -43,7 +52,29 @@ export function ParticipantsTab({
                 joinedAt={p.joined_at}
                 isCurrentUser={p.employee_id === currentEmployeeId}
                 isAssignee={p.employee_id === assigneeId}
+                statusIcon="🟢"
               />
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* ── Reviewers ── */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Eye className="h-4 w-4 text-muted-foreground" />
+          المراجعون
+        </h2>
+
+        {reviewers.length === 0 ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="h-4 w-4" />
+            لم يتم تعيين مراجع بعد
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {reviewers.map((r) => (
+              <ReviewerRow key={r.id} reviewer={r} isCurrentUser={r.employee_id === currentEmployeeId} />
             ))}
           </ul>
         )}
@@ -68,43 +99,36 @@ export function ParticipantsTab({
         </section>
       )}
 
-      {!hasAnything && (
+      {!hasContent && (
         <p className="text-sm text-muted-foreground py-8 text-center">
-          لا يوجد مشاركون أو طلبات معلقة.
+          لا يوجد مشاركون أو مراجعون أو طلبات معلقة.
         </p>
       )}
     </div>
   );
 }
 
+// ─── Participant row ───────────────────────────────────────────────────────────
+
 function ParticipantRow({
-  name,
-  jobTitle,
-  joinedAt,
-  isCurrentUser,
-  isAssignee,
+  name, jobTitle, joinedAt, isCurrentUser, isAssignee, statusIcon,
 }: {
   name: string;
   jobTitle: string | null;
   joinedAt: string;
   isCurrentUser: boolean;
   isAssignee: boolean;
+  statusIcon: string;
 }) {
   return (
     <li className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3">
-      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-        {isAssignee ? (
-          <Crown className="h-4 w-4 text-amber-500" />
-        ) : (
-          <User className="h-4 w-4 text-muted-foreground" />
-        )}
+      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 text-base">
+        {isAssignee ? <Crown className="h-4 w-4 text-amber-500" /> : statusIcon}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium">
           {name}
-          {isCurrentUser && (
-            <span className="text-xs text-muted-foreground ms-1">(أنت)</span>
-          )}
+          {isCurrentUser && <span className="text-xs text-muted-foreground ms-1">(أنت)</span>}
         </p>
         {jobTitle && <p className="text-xs text-muted-foreground truncate">{jobTitle}</p>}
       </div>
@@ -122,9 +146,53 @@ function ParticipantRow({
   );
 }
 
+// ─── Reviewer row ─────────────────────────────────────────────────────────────
+
+function ReviewerRow({
+  reviewer, isCurrentUser,
+}: {
+  reviewer: TaskReviewerEntry;
+  isCurrentUser: boolean;
+}) {
+  const STATUS_CONFIG: Record<string, { icon: string; label: string; className: string }> = {
+    reviewing: { icon: "🟣", label: "قيد المراجعة", className: "bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400" },
+    approved:  { icon: "✅", label: "اعتمد المهمة",  className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" },
+    returned:  { icon: "↩️", label: "أرجع المهمة",   className: "bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400" },
+  };
+
+  const conf = STATUS_CONFIG[reviewer.status] ?? STATUS_CONFIG.reviewing;
+
+  return (
+    <li className="flex items-start gap-3 rounded-lg border bg-card px-4 py-3">
+      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 text-base mt-0.5">
+        {conf.icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium">
+          {reviewer.employee?.full_name ?? "—"}
+          {isCurrentUser && <span className="text-xs text-muted-foreground ms-1">(أنت)</span>}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          بدأ {new Date(reviewer.started_at).toLocaleDateString("ar-SA")}
+          {reviewer.completed_at && ` · انتهى ${timeAgo(reviewer.completed_at)}`}
+        </p>
+        {reviewer.notes && (
+          <p className="text-xs text-muted-foreground mt-1 italic">
+            "{reviewer.notes}"
+          </p>
+        )}
+      </div>
+      <Badge className={cn("text-xs border-0 shrink-0", conf.className)}>
+        {conf.label}
+      </Badge>
+    </li>
+  );
+}
+
+// ─── Request row ──────────────────────────────────────────────────────────────
+
 function RequestRow({
-  request,
-  isMyRequest,
+  request, isMyRequest,
 }: {
   request: TaskRequestEntry;
   isMyRequest: boolean;

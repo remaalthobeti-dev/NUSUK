@@ -42,6 +42,16 @@ export interface TaskRequestEntry {
   requestee: { id: string; full_name: string } | null;
 }
 
+export interface TaskReviewerEntry {
+  id: string;
+  employee_id: string;
+  status: "reviewing" | "approved" | "returned";
+  started_at: string;
+  completed_at: string | null;
+  notes: string | null;
+  employee: { full_name: string; job_title?: string | null } | null;
+}
+
 export interface TeamMemberSummary {
   id: string;
   full_name: string;
@@ -54,8 +64,10 @@ export interface TaskDetailData {
   comments: TaskCommentEntry[];
   activity: TaskActivityEntry[];
   pendingRequests: TaskRequestEntry[];
+  reviewers: TaskReviewerEntry[];
   teamMembers: TeamMemberSummary[];
   currentEmployeeId: string;
+  currentEmployeeRole: string;
 }
 
 // ─── Fetch ────────────────────────────────────────────────────────────────────
@@ -82,7 +94,7 @@ export async function getTaskDetail(
   if (taskErr || !task) return { data: null, error: "المهمة غير موجودة أو لا تنتمي إلى فريقك" };
 
   // Fetch all remaining data in parallel
-  const [participantsRes, commentsRes, activityRes, requestsRes, membersRes] =
+  const [participantsRes, commentsRes, activityRes, requestsRes, reviewersRes, membersRes] =
     await Promise.all([
       supabase
         .from("task_participants")
@@ -118,6 +130,14 @@ export async function getTaskDetail(
         .eq("status", "pending"),
 
       supabase
+        .from("task_reviewers")
+        .select(
+          `id, employee_id, status, started_at, completed_at, notes, employee:employees!task_reviewers_employee_id_fkey(full_name, job_title)`
+        )
+        .eq("task_id", taskId)
+        .order("started_at", { ascending: false }),
+
+      supabase
         .from("employees")
         .select("id, full_name, job_title")
         .eq("team_id", teamId)
@@ -132,8 +152,10 @@ export async function getTaskDetail(
       comments: (commentsRes.data ?? []) as unknown as TaskCommentEntry[],
       activity: (activityRes.data ?? []) as unknown as TaskActivityEntry[],
       pendingRequests: (requestsRes.data ?? []) as unknown as TaskRequestEntry[],
+      reviewers: (reviewersRes.data ?? []) as unknown as TaskReviewerEntry[],
       teamMembers: (membersRes.data ?? []) as TeamMemberSummary[],
       currentEmployeeId: context.employee.id,
+      currentEmployeeRole: context.employee.role,
     },
     error: null,
   };

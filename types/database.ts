@@ -775,6 +775,54 @@ export type Database = {
           },
         ]
       }
+      task_reviewers: {
+        Row: {
+          id: string
+          task_id: string
+          employee_id: string
+          status: 'reviewing' | 'approved' | 'returned'
+          started_at: string
+          completed_at: string | null
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          task_id: string
+          employee_id: string
+          status?: 'reviewing' | 'approved' | 'returned'
+          started_at?: string
+          completed_at?: string | null
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          employee_id?: string
+          status?: 'reviewing' | 'approved' | 'returned'
+          started_at?: string
+          completed_at?: string | null
+          notes?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_reviewers_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_reviewers_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teams: {
         Row: {
           color: string
@@ -1103,6 +1151,7 @@ export type TaskParticipantRow = Tables<"task_participants">
 export type TaskCommentRow = Tables<"task_comments">
 export type TaskActivityRow = Tables<"task_activity">
 export type TaskRequestRow = Tables<"task_requests">
+export type TaskReviewerRow = Tables<"task_reviewers">
 export type MeetingRow = Tables<"meetings">
 export type MeetingTeamRow = Tables<"meeting_teams">
 export type MeetingRsvpRow = Tables<"meeting_rsvps">

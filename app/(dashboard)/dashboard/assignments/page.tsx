@@ -17,12 +17,12 @@ export default async function AssignmentsPage() {
 
   const role = context.employee.role as UserRole;
   const canCreate = role === "super_admin" || role === "track_manager";
-  const canManage = role === "super_admin" || role === "track_manager";
+  const isManager = role === "super_admin" || role === "track_manager";
 
-  const [available, running, review, teamsRes] = await Promise.all([
+  const [available, running, reviewResult, teamsRes] = await Promise.all([
     getAvailableTasks(),
     getRunningTasks(),
-    canManage ? getReviewTasks() : Promise.resolve({ tasks: [], error: null }),
+    getReviewTasks(),
     supabase.from("teams").select("*").eq("is_active", true).order("name"),
   ]);
 
@@ -41,12 +41,13 @@ export default async function AssignmentsPage() {
       <AssignmentsClient
         availableTasks={available.tasks}
         runningTasks={running.tasks}
-        reviewTasks={review.tasks}
+        reviewTasks={reviewResult.tasks}
         role={role}
         teams={teams}
         employeeTeamId={context.employee.team_id}
+        currentEmployeeId={reviewResult.currentEmployeeId}
         canCreate={canCreate}
-        canManage={canManage}
+        isManager={isManager}
       />
     </>
   );
