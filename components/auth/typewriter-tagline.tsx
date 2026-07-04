@@ -50,31 +50,28 @@ export function TypewriterTagline({
   const showCursor = phase !== "done";
 
   return (
-    /*
-      Sits directly below the card with modest breathing room.
-      Text is intentionally subordinate — the card is the hero.
-    */
     <div
       style={{
         direction:  "rtl",
         textAlign:  "center",
-        marginTop:  24,
-        lineHeight: 1.55,
+        /* Comfortable gap below the card — not too far, not too close */
+        marginTop:  32,
+        lineHeight: 1.6,
         opacity:    phase === "waiting" ? 0 : 1,
         transition: "opacity 300ms ease",
       }}
       aria-label={`${LINE_1} ${LINE_2}`}
       aria-live="polite"
     >
-      {/* Line 1 — smaller, lighter, dark green */}
+      {/* Line 1 — supporting, lighter weight, muted green */}
       <p
         style={{
-          fontSize:      13,
+          fontSize:      15,     /* up from 13px */
           fontWeight:    400,
-          color:         "#1E3D28",      /* muted dark green, not full-brand */
-          letterSpacing: ".05px",
-          marginBottom:  3,
-          minHeight:     "1.55em",
+          color:         "#1E3D28",
+          letterSpacing: ".1px",
+          marginBottom:  5,
+          minHeight:     "1.6em",
         }}
       >
         {line1}
@@ -82,27 +79,26 @@ export function TypewriterTagline({
           <span
             aria-hidden
             style={{
-              display:        "inline-block",
-              width:          1.5,
-              height:         "0.9em",
-              background:     "#1E3D28",
-              marginRight:    2,
-              verticalAlign:  "text-bottom",
-              opacity:        0.55,
+              display:       "inline-block",
+              width:         1.5,
+              height:        "0.9em",
+              background:    "#1E3D28",
+              marginRight:   2,
+              verticalAlign: "text-bottom",
+              opacity:       0.5,
             }}
           />
         )}
       </p>
 
-      {/* Line 2 — slightly larger, quieter gold */}
+      {/* Line 2 — slightly larger, quiet warm gold */}
       <p
         style={{
-          fontSize:      17,
+          fontSize:      20,     /* up from 17px */
           fontWeight:    600,
-          /* Muted warm gold — present but not shouting */
-          color:         "rgba(180,130,45,.78)",
-          letterSpacing: "-.15px",
-          minHeight:     "1.55em",
+          color:         "rgba(178,128,42,.80)",
+          letterSpacing: "-.2px",
+          minHeight:     "1.6em",
           opacity:
             phase === "waiting" || phase === "line1" || phase === "pause"
               ? 0
@@ -118,7 +114,7 @@ export function TypewriterTagline({
               display:       "inline-block",
               width:         1.5,
               height:        "0.85em",
-              background:    "rgba(180,130,45,.65)",
+              background:    "rgba(178,128,42,.65)",
               marginRight:   2,
               verticalAlign: "text-bottom",
             }}

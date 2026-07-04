@@ -175,7 +175,7 @@ export function LoginForm() {
           <Field
             id="email"
             type="email"
-            placeholder="your@email.com"
+            placeholder="example@email.com"
             autoComplete="email"
             hasError={!!errors.email}
             endIcon={<Mail size={15} />}
