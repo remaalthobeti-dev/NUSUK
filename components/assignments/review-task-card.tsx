@@ -5,14 +5,13 @@ import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
   RotateCcw,
-  User,
-  Users,
   Calendar,
   RefreshCw,
   ChevronLeft,
   AlertTriangle,
   Eye,
   Clock,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -35,6 +34,121 @@ interface Props {
   isManager: boolean;
 }
 
+// ─── Execution chain ──────────────────────────────────────────────────────────
+
+function ExecutionChain({
+  task,
+  currentEmployeeId,
+}: {
+  task: TaskWithReviewRelations;
+  currentEmployeeId: string;
+}) {
+  const activeParticipants = task.participants.filter((p) => !p.left_at);
+  const activeReviewer = task.reviewers.find((r) => r.status === "reviewing");
+  const progress = 80;
+
+  return (
+    <div className="rounded-lg border border-muted/60 bg-muted/20 overflow-hidden">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-muted/60 bg-muted/40">
+        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+          سلسلة التنفيذ
+        </span>
+      </div>
+
+      <div className="divide-y divide-muted/40">
+        {/* Assignee */}
+        <ChainRow icon="👤" label="المستلم الرئيسي">
+          <span className="font-medium text-foreground">
+            {task.assignee?.full_name ?? "—"}
+            {task.assigned_to === currentEmployeeId && (
+              <span className="ms-1 text-muted-foreground font-normal">(أنت)</span>
+            )}
+          </span>
+        </ChainRow>
+
+        {/* Participants */}
+        <ChainRow icon="🤝" label="المشاركون">
+          {activeParticipants.length === 0 ? (
+            <span className="text-muted-foreground">لا يوجد</span>
+          ) : (
+            <span className="flex flex-wrap gap-1">
+              {activeParticipants.map((p) => (
+                <span
+                  key={p.id}
+                  className="rounded-full bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 text-[10px]"
+                >
+                  {p.employee?.full_name ?? "—"}
+                  {p.employee?.id === currentEmployeeId && " (أنت)"}
+                </span>
+              ))}
+            </span>
+          )}
+        </ChainRow>
+
+        {/* Reviewer */}
+        <ChainRow icon="🔍" label="المراجع الحالي">
+          {activeReviewer ? (
+            <span className="flex items-center gap-1 flex-wrap">
+              <span className="font-medium text-purple-700 dark:text-purple-400">
+                {activeReviewer.employee?.full_name ?? "—"}
+                {activeReviewer.employee?.id === currentEmployeeId && " (أنت)"}
+              </span>
+              <Badge className="text-[10px] border-0 bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 py-0 h-4">
+                قيد المراجعة
+              </Badge>
+            </span>
+          ) : (
+            <span className="text-muted-foreground flex items-center gap-1">
+              <Clock className="h-3 w-3" /> لم يتم تعيين مراجع بعد
+            </span>
+          )}
+        </ChainRow>
+
+        {/* Status */}
+        <ChainRow icon="📊" label="الحالة">
+          <Badge className="text-[10px] border-0 bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 h-4 py-0">
+            بانتظار المراجعة
+          </Badge>
+        </ChainRow>
+
+        {/* Progress */}
+        <ChainRow icon="📈" label="نسبة الإنجاز">
+          <span className="flex items-center gap-2">
+            <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+              <div
+                className={cn("h-full rounded-full", progressBarColor(progress))}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <span className="font-medium tabular-nums text-foreground">{progress}%</span>
+          </span>
+        </ChainRow>
+      </div>
+    </div>
+  );
+}
+
+function ChainRow({
+  icon,
+  label,
+  children,
+}: {
+  icon: string;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-2 px-3 py-2 text-xs">
+      <span className="text-sm w-5 shrink-0 mt-0.5">{icon}</span>
+      <span className="text-muted-foreground shrink-0 w-[84px]">{label}:</span>
+      <span className="flex-1 min-w-0">{children}</span>
+    </div>
+  );
+}
+
+// ─── Main card ────────────────────────────────────────────────────────────────
+
 export function ReviewTaskCard({ task, currentEmployeeId, isManager }: Props) {
   const router = useRouter();
   const [isPendingApprove, startApprove] = useTransition();
@@ -45,16 +159,11 @@ export function ReviewTaskCard({ task, currentEmployeeId, isManager }: Props) {
 
   const priority = PRIORITY_CONFIG[task.priority];
   const due = formatDueDate(task.due_date);
-  const progress = 80;
-
-  const activeParticipants = task.participants.filter((p) => !p.left_at);
   const activeReviewer = task.reviewers.find((r) => r.status === "reviewing");
   const pastReviewers = task.reviewers.filter((r) => r.status !== "reviewing");
 
   const isAssignee = task.assigned_to === currentEmployeeId;
-  const isActiveReviewer = activeReviewer?.employee?.id === currentEmployeeId ||
-    task.reviewers.some(r => r.status === "reviewing" &&
-      (r.employee?.id ?? "") === currentEmployeeId);
+  const isActiveReviewer = activeReviewer?.employee?.id === currentEmployeeId;
   const canReview = !isAssignee && !activeReviewer;
   const canApproveReturn = isActiveReviewer || (isManager && !activeReviewer);
   const isAnyPending = isPendingApprove || isPendingReturn || isPendingStart;
@@ -104,90 +213,36 @@ export function ReviewTaskCard({ task, currentEmployeeId, isManager }: Props) {
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3 pt-0 flex-1">
-        {/* ── Progress bar ── */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Badge className="text-xs font-medium border-0 bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400">
-              بانتظار المراجعة
-            </Badge>
-            <span className="text-xs text-muted-foreground">{progress}%</span>
-          </div>
-          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-            <div
-              className={cn("h-full rounded-full transition-all", progressBarColor(progress))}
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
+        {/* ── Execution chain ── */}
+        <ExecutionChain task={task} currentEmployeeId={currentEmployeeId} />
 
-        {/* ── People section ── */}
-        <div className="space-y-2 text-xs">
-          {/* Assignee */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-base">👤</span>
-            <span className="text-muted-foreground">المستلم:</span>
-            <span className="font-medium text-foreground">
-              {task.assignee?.full_name ?? "—"}
-              {isAssignee && " (أنت)"}
-            </span>
-          </div>
-
-          {/* Participants */}
-          {activeParticipants.length > 0 && (
-            <div className="space-y-1">
-              <p className="text-muted-foreground flex items-center gap-1">
-                <Users className="h-3 w-3" /> المشاركون:
-              </p>
-              <div className="flex flex-wrap gap-1 ps-4">
-                {activeParticipants.map((p) => (
-                  <span
-                    key={p.id}
-                    className="flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5"
-                  >
-                    <span>🟢</span>
-                    {p.employee?.full_name ?? "—"}
-                    {p.employee?.id === currentEmployeeId && " (أنت)"}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Reviewers */}
+        {/* ── Past review history ── */}
+        {pastReviewers.length > 0 && (
           <div className="space-y-1">
-            <p className="text-muted-foreground flex items-center gap-1">
-              <Eye className="h-3 w-3" /> المراجع:
-            </p>
-            <div className="ps-4 space-y-0.5">
-              {activeReviewer ? (
-                <span className="flex items-center gap-1 text-purple-700 dark:text-purple-400">
-                  <span>🟣</span>
-                  {activeReviewer.employee?.full_name ?? "—"}
-                  {activeReviewer.employee?.id === currentEmployeeId && " (أنت)"}
-                  <span className="text-muted-foreground font-normal">(قيد المراجعة)</span>
-                </span>
-              ) : (
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <Clock className="h-3 w-3" /> لم يتم تعيين مراجع بعد
-                </span>
-              )}
+            <p className="text-xs font-medium text-muted-foreground">سجل المراجعة السابق:</p>
+            <div className="space-y-0.5 text-xs text-muted-foreground">
               {pastReviewers.slice(0, 2).map((r) => (
-                <span key={r.id} className="flex items-center gap-1">
+                <p key={r.id} className="flex items-start gap-1 flex-wrap">
                   <span>{r.status === "approved" ? "✅" : "↩️"}</span>
-                  <span className="text-muted-foreground">
-                    {r.employee?.full_name ?? "—"}{" "}
+                  <span className="font-medium text-foreground">{r.employee?.full_name ?? "—"}</span>
+                  <span className="text-muted-foreground/70">
                     ({r.status === "approved" ? "اعتمد" : "أرجع"} {timeAgo(r.completed_at ?? r.started_at)})
                   </span>
-                </span>
+                  {r.notes && (
+                    <span className="italic text-muted-foreground/60 w-full ps-4 truncate">
+                      السبب: {r.notes}
+                    </span>
+                  )}
+                </p>
               ))}
             </div>
           </div>
-        </div>
+        )}
 
         {/* ── Meta ── */}
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           {due && (
-            <span className={cn("flex items-center gap-1", due.urgent && "text-red-600 dark:text-red-400")}>
+            <span className={cn("flex items-center gap-1", due.urgent && "text-red-600 dark:text-red-400 font-medium")}>
               {due.urgent ? <AlertTriangle className="h-3 w-3" /> : <Calendar className="h-3 w-3" />}
               {due.text}
             </span>
@@ -236,7 +291,6 @@ export function ReviewTaskCard({ task, currentEmployeeId, isManager }: Props) {
         {/* ── Action buttons ── */}
         {!showReturnForm && (
           <div className="flex flex-col gap-2">
-            {/* Start review button — shown when no active reviewer and employee is eligible */}
             {canReview && (
               <Button
                 size="sm"
@@ -251,7 +305,6 @@ export function ReviewTaskCard({ task, currentEmployeeId, isManager }: Props) {
               </Button>
             )}
 
-            {/* Approve / Return — only for active reviewer or manager */}
             {canApproveReturn && (
               <>
                 <Button
@@ -276,16 +329,15 @@ export function ReviewTaskCard({ task, currentEmployeeId, isManager }: Props) {
               </>
             )}
 
-            {/* If reviewer is someone else */}
-            {activeReviewer && !isActiveReviewer && !canApproveReturn && (
-              <p className="text-xs text-center text-muted-foreground py-1">
-                قيد المراجعة من قِبل {activeReviewer.employee?.full_name ?? "موظف آخر"}
+            {activeReviewer && !isActiveReviewer && !isManager && (
+              <p className="text-xs text-center text-purple-700 dark:text-purple-400 py-1.5 bg-purple-50 dark:bg-purple-950/20 rounded-md">
+                🟣 قيد المراجعة من قِبل {activeReviewer.employee?.full_name ?? "موظف آخر"}
               </p>
             )}
 
             <Button asChild variant="ghost" size="sm" className="w-full text-xs text-muted-foreground">
               <Link href={`/dashboard/assignments/${task.id}`}>
-                فتح المهمة <ChevronLeft className="h-3.5 w-3.5 me-1" />
+                فتح التفاصيل <ChevronLeft className="h-3.5 w-3.5 me-1" />
               </Link>
             </Button>
           </div>

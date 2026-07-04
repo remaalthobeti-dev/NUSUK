@@ -73,6 +73,14 @@ export async function createTaskAction(
 
   if (insertErr || !task) return { error: insertErr?.message ?? "فشل إنشاء المهمة" };
 
+  // Log creation event
+  await supabase.from("task_activity").insert({
+    task_id: task.id,
+    employee_id: context.employee.id,
+    event_type: "task_created",
+    description: `أنشأ ${context.employee.full_name} المهمة`,
+  });
+
   // Fire-and-forget notifications (do not block the response)
   notifyTaskCreated(supabase, {
     taskId: task.id,
@@ -168,6 +176,13 @@ export async function updateTaskAttachmentsAction(
     .eq("id", taskId);
 
   if (updateErr) return { error: updateErr.message };
+
+  await supabase.from("task_activity").insert({
+    task_id: taskId,
+    employee_id: context.employee.id,
+    event_type: "attachment_added",
+    description: `أضاف ${context.employee.full_name} مرفقات إلى المهمة`,
+  });
 
   revalidatePath(`/dashboard/assignments/${taskId}`);
   return { error: null };

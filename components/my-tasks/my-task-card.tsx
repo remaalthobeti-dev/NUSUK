@@ -45,10 +45,7 @@ const TRANSITIONS: Record<
     { to: "on_hold", label: "انتظار مراجعة", icon: PauseCircle, variant: "outline" },
     { to: "pending", label: "إعادة إلى جديدة", icon: RotateCcw, variant: "secondary" },
   ],
-  on_hold: [
-    { to: "in_progress", label: "استأنف", icon: PlayCircle, variant: "default" },
-    { to: "pending", label: "إعادة إلى جديدة", icon: RotateCcw, variant: "secondary" },
-  ],
+  on_hold: [],
   completed: [],
   available: [],
   cancelled: [],

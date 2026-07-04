@@ -163,6 +163,13 @@ export async function addCommentAction(
 
   if (insertErr) return { error: insertErr.message };
 
+  await supabase.from("task_activity").insert({
+    task_id: taskId,
+    employee_id: context.employee.id,
+    event_type: "comment_added",
+    description: `أضاف ${context.employee.full_name} تعليقاً`,
+  });
+
   // Notify task owner and participants about the new comment
   const { data: taskDetail } = await supabase
     .from("tasks")
