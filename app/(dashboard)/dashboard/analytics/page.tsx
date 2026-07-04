@@ -1,31 +1,27 @@
 import type { Metadata } from "next";
 import { assertManager } from "@/lib/auth/guards";
-import { getAnalyticsData } from "@/lib/data/admin";
-import { AnalyticsDashboard } from "@/components/analytics/analytics-dashboard";
+import { getExecutiveAnalyticsData } from "@/lib/data/analytics-executive";
+import { ExecutiveClient } from "@/components/analytics/executive-client";
 import { PageHeader } from "@/components/shared/page-header";
 
-export const metadata: Metadata = { title: "التحليلات — نسك" };
+export const metadata: Metadata = { title: "التحليلات التنفيذية — نسك" };
 
 export default async function AnalyticsPage() {
   await assertManager();
-  let data;
-  try {
-    data = await getAnalyticsData();
-  } catch {
-    data = { completedToday: 0, activeTasksCount: 0, avgTaskDurationHours: 0, mostActiveEmployee: null, employeeWorkloads: [], teamWorkloads: [], taskStatusCounts: [], completionsByTeam: [] };
-  }
+
+  const data = await getExecutiveAnalyticsData();
 
   return (
     <>
       <PageHeader
-        title="التحليلات والتقارير"
-        description="مؤشرات الأداء الرئيسية وتحليل عبء العمل وإنجاز المهام"
+        title="التحليلات التنفيذية"
+        description="لوحة أداء حية — KPIs · عبء العمل · توزيع المهام · تنبيهات فورية"
         breadcrumbs={[
           { label: "الرئيسية", href: "/dashboard" },
           { label: "التحليلات" },
         ]}
       />
-      <AnalyticsDashboard data={data} />
+      <ExecutiveClient data={data} />
     </>
   );
 }
