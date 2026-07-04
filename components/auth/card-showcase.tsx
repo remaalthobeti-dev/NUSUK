@@ -3,15 +3,20 @@
 import Image from "next/image";
 import { useEffect, useRef, useCallback } from "react";
 
+/* ─────────────────────────────────────────────────────────────
+   Official images — verified at 469×675 (card) and 152×159 (logo)
+───────────────────────────────────────────────────────────── */
+const CARD_SRC = "/images/nusuk-card.png";
+
 /*
-  Official card image path.
-  Drop  /public/nusuk-card.png  into the repo and this component
-  will render it automatically.  No other change needed.
+  Display size: preserve the 469:675 aspect ratio (~0.695).
+  Target display width 210px → height = 210 / 0.695 ≈ 302px.
 */
-const CARD_IMAGE_SRC = "/images/nusuk-card.png";
+const CARD_DISPLAY_W = 210;
+const CARD_DISPLAY_H = 302;
 
 /* ─────────────────────────────────────────────────────────────
-   Islamic geometric corner pattern (canvas, fade toward center)
+   Islamic geometric corner pattern
 ───────────────────────────────────────────────────────────── */
 function useCornerCanvas(ref: React.RefObject<HTMLCanvasElement | null>) {
   const draw = useCallback(() => {
@@ -43,55 +48,51 @@ function useCornerCanvas(ref: React.RefObject<HTMLCanvasElement | null>) {
 function drawStar8(
   ctx: CanvasRenderingContext2D,
   cx: number, cy: number,
-  R: number,  r: number,
+  R: number, r: number,
 ) {
   ctx.beginPath();
   for (let i = 0; i < 16; i++) {
     const a   = (i * Math.PI) / 8 - Math.PI / 2;
     const rad = i % 2 === 0 ? R : r;
-    const x   = cx + Math.cos(a) * rad;
-    const y   = cy + Math.sin(a) * rad;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    i === 0
+      ? ctx.moveTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad)
+      : ctx.lineTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad);
   }
   ctx.closePath();
   ctx.stroke();
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Official card with lanyard — image-based
-   Scale ≈ 85% of original mockup card size for a more elegant look
+   Official card — unmodified image, correct aspect ratio
 ───────────────────────────────────────────────────────────── */
-const CARD_W = 212; // px — ~85% of 248
-const CARD_H = 298; // px — ~85% of 350
-
-function OfficialCard({
-  cardRef,
-}: {
-  cardRef: React.Ref<HTMLDivElement>;
-}) {
+function OfficialCard({ cardRef }: { cardRef: React.Ref<HTMLDivElement> }) {
   return (
     <div
       ref={cardRef}
       style={{
-        position: "relative",
-        width:    CARD_W,
-        height:   CARD_H,
-        /* Subtle natural hanging shadow — no harsh outlines */
+        width:     CARD_DISPLAY_W,
+        height:    CARD_DISPLAY_H,
+        position:  "relative",
+        flexShrink: 0,
+        /* Natural hanging shadow — light and soft */
         filter:
-          "drop-shadow(0 6px 16px rgba(0,0,0,.18)) " +
-          "drop-shadow(0 18px 40px rgba(0,0,0,.14)) " +
-          "drop-shadow(0 2px 4px rgba(0,0,0,.08))",
-        animation:    "n-float 5.8s ease-in-out infinite",
-        borderRadius: 14,
-        overflow:     "hidden",
+          "drop-shadow(0 4px 8px rgba(0,0,0,.12)) " +
+          "drop-shadow(0 12px 28px rgba(0,0,0,.13)) " +
+          "drop-shadow(0 28px 52px rgba(0,0,0,.10))",
+        animation: "n-float 5.8s ease-in-out infinite",
       }}
     >
       <Image
-        src={CARD_IMAGE_SRC}
+        src={CARD_SRC}
         alt="بطاقة نُسك الرسمية"
-        fill
-        sizes={`${CARD_W}px`}
-        style={{ objectFit: "contain" }}
+        width={469}
+        height={675}
+        style={{
+          width:     "100%",
+          height:    "100%",
+          objectFit: "contain",
+          display:   "block",
+        }}
         priority
       />
     </div>
@@ -99,14 +100,14 @@ function OfficialCard({
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Main export
+   CardShowcase — full brand panel content
 ───────────────────────────────────────────────────────────── */
 export function CardShowcase({ children }: { children?: React.ReactNode }) {
   const tlRef    = useRef<HTMLCanvasElement>(null);
   const trRef    = useRef<HTMLCanvasElement>(null);
   const blRef    = useRef<HTMLCanvasElement>(null);
   const brRef    = useRef<HTMLCanvasElement>(null);
-  const cardFRef = useRef<HTMLDivElement>(null);
+  const cardRef  = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useCornerCanvas(tlRef);
@@ -114,26 +115,27 @@ export function CardShowcase({ children }: { children?: React.ReactNode }) {
   useCornerCanvas(blRef);
   useCornerCanvas(brRef);
 
-  /* Parallax */
+  /* Subtle parallax tilt on mouse move */
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mq.matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const panel = panelRef.current;
-    const card  = cardFRef.current;
+    const card  = cardRef.current;
     if (!panel || !card) return;
+
     let active = false;
     const onEnter = () => (active = true);
     const onLeave = () => {
       active = false;
-      card.style.filter = "";
+      card.style.transform = "";
     };
     const onMove = (e: MouseEvent) => {
       if (!active) return;
-      const rect = panel.getBoundingClientRect();
-      const nx   = (e.clientX - rect.left) / rect.width  - 0.5;
-      const ny   = (e.clientY - rect.top)  / rect.height - 0.5;
-      card.style.transform = `rotateY(${nx * 10}deg) rotateX(${-ny * 7}deg)`;
+      const r  = panel.getBoundingClientRect();
+      const nx = (e.clientX - r.left) / r.width  - 0.5;
+      const ny = (e.clientY - r.top)  / r.height - 0.5;
+      card.style.transform = `rotateY(${nx * 8}deg) rotateX(${-ny * 6}deg)`;
     };
+
     panel.addEventListener("mouseenter", onEnter);
     panel.addEventListener("mouseleave", onLeave);
     panel.addEventListener("mousemove",  onMove);
@@ -144,97 +146,82 @@ export function CardShowcase({ children }: { children?: React.ReactNode }) {
     };
   }, []);
 
-  const cornerBase: React.CSSProperties = {
-    position:      "absolute",
-    width:         220,
-    height:        220,
-    pointerEvents: "none",
-    zIndex:        0,
+  const corner: React.CSSProperties = {
+    position: "absolute", width: 220, height: 220, pointerEvents: "none", zIndex: 0,
   };
 
   return (
     <div
       ref={panelRef}
       style={{
-        position:       "relative",
-        display:        "flex",
-        flexDirection:  "column",
-        alignItems:     "center",
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
         justifyContent: "center",
-        width:          "100%",
-        height:         "100%",
+        width: "100%",
+        height: "100%",
       }}
     >
       {/* Corner Islamic patterns */}
-      <canvas ref={tlRef} style={{ ...cornerBase, top: 0,    left:  0 }} />
-      <canvas ref={trRef} style={{ ...cornerBase, top: 0,    right: 0, transform: "scaleX(-1)" }} />
-      <canvas ref={blRef} style={{ ...cornerBase, bottom: 0, left:  0, transform: "scaleY(-1)" }} />
-      <canvas ref={brRef} style={{ ...cornerBase, bottom: 0, right: 0, transform: "scale(-1)"  }} />
+      <canvas ref={tlRef} style={{ ...corner, top: 0,    left:  0 }} />
+      <canvas ref={trRef} style={{ ...corner, top: 0,    right: 0, transform: "scaleX(-1)" }} />
+      <canvas ref={blRef} style={{ ...corner, bottom: 0, left:  0, transform: "scaleY(-1)" }} />
+      <canvas ref={brRef} style={{ ...corner, bottom: 0, right: 0, transform: "scale(-1)"  }} />
 
-      {/* Card + lanyard */}
-      <div
-        style={{
-          position:  "relative",
-          zIndex:    10,
-          width:     CARD_W,
-          /* extra top space = lanyard visible height above card */
-          marginTop: 0,
-        }}
-      >
-        {/* Lanyard — from outside top of viewport */}
+      {/* Card + lanyard wrapper */}
+      <div style={{ position: "relative", zIndex: 10, width: CARD_DISPLAY_W }}>
+
+        {/* Lanyard — starts outside top of viewport, ends at card top */}
         <div
+          aria-hidden
           style={{
-            position:       "absolute",
-            top:            -9999,
-            left:           "50%",
-            transform:      "translateX(-50%)",
-            display:        "flex",
-            flexDirection:  "column",
-            alignItems:     "center",
-            height:         9999 + 24, /* reaches the card top */
-            zIndex:         5,
-            pointerEvents:  "none",
+            position:      "absolute",
+            top:           -9999,
+            left:          "50%",
+            transform:     "translateX(-50%)",
+            display:       "flex",
+            flexDirection: "column",
+            alignItems:    "center",
+            height:        9999 + 16,
+            zIndex:        5,
+            pointerEvents: "none",
           }}
         >
-          {/* Metal clip */}
+          {/* Metal clip at top */}
           <div style={{
-            width:        22,
-            height:       7,
+            width: 22, height: 7, flexShrink: 0,
             background:   "linear-gradient(180deg,#8a6a2e,#b8882e)",
             borderRadius: "3px 3px 2px 2px",
-            boxShadow:    "0 2px 5px rgba(0,0,0,.3)",
-            flexShrink:   0,
+            boxShadow:    "0 2px 5px rgba(0,0,0,.28)",
           }} />
           {/* Fabric strap */}
           <div style={{
-            flex:         1,
-            width:        3.5,
+            flex: 1, width: 3.5,
             background:
               "linear-gradient(180deg," +
-              "rgba(201,150,62,.25) 0%," +
-              "rgba(201,150,62,.58) 28%," +
-              "rgba(201,150,62,.44) 65%," +
-              "rgba(201,150,62,.76) 100%)",
+              "rgba(201,150,62,.22) 0%," +
+              "rgba(201,150,62,.55) 30%," +
+              "rgba(201,150,62,.42) 65%," +
+              "rgba(201,150,62,.72) 100%)",
             borderRadius: 2,
-            animation:    "n-strap-sway 6s ease-in-out infinite",
+            animation: "n-strap-sway 6s ease-in-out infinite",
           }} />
           {/* Ring connector */}
           <div style={{
-            width:        13,
-            height:       13,
+            width: 12, height: 12, flexShrink: 0,
             border:       "2.5px solid #b8882e",
             borderRadius: "50%",
-            marginBottom: -3,
-            flexShrink:   0,
-            boxShadow:    "0 2px 5px rgba(0,0,0,.28)",
+            marginBottom: -2,
+            boxShadow:    "0 2px 5px rgba(0,0,0,.25)",
           }} />
         </div>
 
-        {/* Official card image */}
-        <OfficialCard cardRef={cardFRef} />
+        {/* Official card image — unmodified */}
+        <OfficialCard cardRef={cardRef} />
       </div>
 
-      {/* Tagline — directly below the card, part of the same visual unit */}
+      {/* Tagline sits directly below the card */}
       {children}
     </div>
   );

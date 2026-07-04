@@ -47,14 +47,19 @@ export default function LoginPage() {
           {/* ── Logo area — official image, no frame ── */}
           <div className="mb-8" style={{ direction: "rtl" }}>
 
-            {/* Official nusuk-logo.png above system name */}
+            {/* Official nusuk-logo.png — 152×159 source, displayed at 64px height */}
             <div className="mb-4">
               <Image
                 src="/images/nusuk-logo.png"
                 alt="بطاقة نُسك"
-                width={120}
-                height={48}
-                style={{ objectFit: "contain", objectPosition: "right center" }}
+                width={152}
+                height={159}
+                style={{
+                  height:    64,
+                  width:     "auto",
+                  objectFit: "contain",
+                  display:   "block",
+                }}
                 priority
               />
             </div>
