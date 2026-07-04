@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { CalendarDays } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import { MeetingCard } from "./meeting-card";
 import { CreateMeetingDialog } from "./create-meeting-dialog";
 import { sortMeetingsByPriority } from "@/types/database";
@@ -33,7 +35,26 @@ export function MeetingsClient({
   teams,
   canCreate,
 }: MeetingsClientProps) {
+  const router = useRouter();
   const [tab, setTab] = useState<TabKey>("upcoming");
+
+  // Realtime: refresh when any meeting changes
+  useEffect(() => {
+    const supabase = createClient();
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const trigger = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => router.refresh(), 600);
+    };
+    const channel = supabase
+      .channel("meetings-list-rt")
+      .on("postgres_changes", { event: "*", schema: "public", table: "meetings" }, trigger)
+      .subscribe();
+    return () => {
+      if (timer) clearTimeout(timer);
+      supabase.removeChannel(channel);
+    };
+  }, [router]);
 
   const now = new Date();
   const todayStr = now.toLocaleDateString("en-CA", { timeZone: "Asia/Riyadh" });

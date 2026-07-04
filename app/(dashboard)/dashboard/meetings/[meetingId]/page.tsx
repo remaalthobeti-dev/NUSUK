@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { MapPin, Link2, CalendarDays, User, Users, ArrowLeft, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -46,14 +46,14 @@ export default async function MeetingDetailPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const { data: emp } = await supabase
     .from("employees")
     .select("id, role, team_id")
     .eq("user_id", user.id)
     .single();
-  if (!emp) return null;
+  if (!emp) redirect("/login");
 
   const meeting = await getMeetingById(meetingId);
   if (!meeting) notFound();

@@ -2,11 +2,13 @@ import { createClient } from "@/lib/supabase/server";
 import { sortMeetingsByPriority } from "@/types/database";
 import type { MeetingWithDetails } from "@/types/database";
 
+// FK hints are required: meetings reaches teams via both direct team_id and
+// through meeting_teams, causing PostgREST to return HTTP 300 without hints.
 const MEETING_SELECT = `
   *,
-  organizer:employees!meetings_organizer_id_fkey(id, full_name, role, team:teams(name)),
-  team:teams(id, name, color),
-  meeting_teams(team_id, organizer_id, team:teams(id, name, color)),
+  organizer:employees!meetings_organizer_id_fkey(id, full_name, role, team:teams!employees_team_id_fkey(name)),
+  team:teams!meetings_team_id_fkey(id, name, color),
+  meeting_teams(team_id, organizer_id, team:teams!meeting_teams_team_id_fkey(id, name, color)),
   rsvps:meeting_rsvps(employee_id, response, responded_at)
 ` as const;
 
@@ -48,11 +50,12 @@ export async function getTodaysMeetings(): Promise<MeetingWithDetails[]> {
 
 export async function getMeetingById(id: string): Promise<MeetingWithDetails | null> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("meetings")
     .select(MEETING_SELECT)
     .eq("id", id)
     .single();
+  if (error) return null;
   return (data as MeetingWithDetails | null) ?? null;
 }
 
