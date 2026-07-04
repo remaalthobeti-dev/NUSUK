@@ -132,22 +132,27 @@ export default function LoginPage() {
 
       {/* ════ BRAND PANEL — left in RTL (col 2) ════ */}
       <div
-        className="nusuk-brand-panel relative flex flex-col items-center justify-center overflow-visible"
+        className="nusuk-brand-panel relative overflow-visible"
         style={{
-          /* Ivory/cream background with subtle radial warmth */
           background:
             "radial-gradient(ellipse 85% 75% at 55% 45%," +
             "hsl(45 35% 97%) 0%," +
             "hsl(44 28% 95%) 55%," +
             "hsl(43 22% 92%) 100%)",
           animation: "n-rise .9s var(--n-ease-out) both",
+          display:   "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        {/* Card + lanyard + corner patterns */}
-        <CardShowcase />
-
-        {/* Typewriter tagline */}
-        <TypewriterTagline />
+        {/*
+          CardShowcase renders corner canvases absolutely + the card.
+          TypewriterTagline sits directly below the card inside
+          CardShowcase's flex-column flow.
+        */}
+        <CardShowcase>
+          <TypewriterTagline />
+        </CardShowcase>
       </div>
     </div>
   );
