@@ -2,123 +2,259 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════
+   NUSUK DESIGN LANGUAGE — Single source of truth for all tokens
+   All visual decisions live here and propagate to Tailwind +
+   every component. To change the brand: edit this file only.
+═══════════════════════════════════════════════════════════════ */
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 201 96% 32%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 201 96% 32%;
-    --radius: 0.5rem;
-    --sidebar-width: 260px;
+    /* ── shadcn/ui semantic tokens (light mode) ── */
+    --background:   0 0% 100%;
+    --foreground:   60 5% 10%;
+    --card:         0 0% 100%;
+    --card-foreground: 60 5% 10%;
+    --popover:      0 0% 100%;
+    --popover-foreground: 60 5% 10%;
+    --primary:      149 52% 9%;     /* nusuk dark green */
+    --primary-foreground: 36 57% 51%; /* gold on dark green */
+    --secondary:    45 25% 95%;
+    --secondary-foreground: 60 5% 10%;
+    --muted:        45 25% 95%;
+    --muted-foreground: 60 5% 60%;
+    --accent:       36 57% 51%;     /* gold */
+    --accent-foreground: 149 52% 9%;
+    --destructive:  0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border:       60 5% 92%;
+    --input:        60 5% 92%;
+    --ring:         36 57% 51%;     /* gold focus ring */
+    --radius:       0.5625rem;      /* 9px */
+
+    /* ── Layout constants ── */
+    --sidebar-width:           260px;
     --sidebar-collapsed-width: 72px;
-    --navbar-height: 64px;
+    --navbar-height:           64px;
+
+    /* ══════════════════════════════════════════
+       NUSUK BRAND TOKENS
+       Convention: --n-<category>[-<variant>]
+    ══════════════════════════════════════════ */
+
+    /* ── Brand greens ── */
+    --n-deep:   8 51% 7%;    /* #081A10 — deepest bg */
+    --n-dark:   149 52% 9%;  /* #091F14 — main brand  */
+    --n-mid:    149 48% 11%; /* #0D2418 — btn hover   */
+    --n-forest: 149 45% 15%; /* #143825 — surface     */
+
+    /* ── Gold ── */
+    --n-gold:    36 57% 51%; /* #C9963E */
+    --n-gold-lt: 36 62% 60%; /* #DDB25C */
+
+    /* ── Ivory ── */
+    --n-ivory:   60 29% 98%; /* #FAFAF7 */
+    --n-ivory-2: 45 25% 95%; /* #F3F1EB */
+    --n-ivory-3: 40 20% 89%; /* #EAE6DC */
+
+    /* ── Ink ── */
+    --n-ink:   60 5% 10%;  /* #1A1A17 */
+    --n-ink-2: 60 5% 35%;  /* #58584F */
+    --n-ink-3: 60 5% 60%;  /* #9A9A90 */
+
+    /* ── Status ── */
+    --n-success: 142 71% 35%;
+    --n-warning:  38 92% 50%;
+    --n-error:     0 84% 60%;
+    --n-info:    201 96% 32%;
+
+    /* ── Border radii ── */
+    --n-radius-sm:  6px;
+    --n-radius-md:  9px;
+    --n-radius-lg:  14px;
+    --n-radius-xl:  20px;
+    --n-radius-2xl: 28px;
+
+    /* ── Shadows ── */
+    --n-shadow-card:
+      0 2px 4px  rgba(0,0,0,.08),
+      0 8px 20px rgba(0,0,0,.16),
+      0 24px 56px rgba(0,0,0,.28),
+      0 0 0 .5px rgba(201,150,62,.12);
+    --n-shadow-form:
+      0 1px 3px rgba(0,0,0,.05),
+      0 4px 16px rgba(0,0,0,.07);
+    --n-shadow-btn:
+      0 4px 18px rgba(8,26,16,.32),
+      0 1px 4px  rgba(8,26,16,.2);
+    --n-shadow-btn-hover:
+      0 8px 28px rgba(8,26,16,.40),
+      0 2px 6px  rgba(8,26,16,.22);
+
+    /* ── Motion ── */
+    --n-ease-out:    cubic-bezier(.23,1,.32,1);
+    --n-ease-spring: cubic-bezier(.34,1.56,.64,1);
+    --n-dur-fast:    150ms;
+    --n-dur-base:    220ms;
+    --n-dur-slow:    500ms;
   }
 
+  /* Dark mode — semantic token overrides */
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 201 96% 42%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 201 96% 42%;
+    --background:   149 52% 4%;
+    --foreground:   45 25% 95%;
+    --card:         149 48% 7%;
+    --card-foreground: 45 25% 95%;
+    --popover:      149 48% 7%;
+    --popover-foreground: 45 25% 95%;
+    --primary:      36 57% 51%;
+    --primary-foreground: 149 52% 9%;
+    --secondary:    149 45% 12%;
+    --secondary-foreground: 45 25% 95%;
+    --muted:        149 45% 12%;
+    --muted-foreground: 60 5% 60%;
+    --accent:       36 57% 51%;
+    --accent-foreground: 149 52% 9%;
+    --destructive:  0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+    --border:       149 45% 14%;
+    --input:        149 45% 14%;
+    --ring:         36 57% 51%;
   }
 }
 
+/* ── Base reset ── */
 @layer base {
   * {
     @apply border-border;
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground;
+    font-family: "Cairo", "Tajawal", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  /* Arabic RTL styles */
   [dir="rtl"] {
     font-family: "Cairo", "Tajawal", sans-serif;
   }
-
-  [dir="rtl"] .sidebar-slide {
-    animation: slide-in-from-left 0.3s ease-out;
-  }
-
-  [dir="ltr"] .sidebar-slide {
-    animation: slide-in-from-right 0.3s ease-out;
-  }
 }
 
+/* ── Utility classes ── */
 @layer utilities {
+  /* Scrollbar */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+  .text-balance { text-wrap: balance; }
+
+  /* ── NUSUK brand helpers ── */
+
+  /* Auth page: the brand panel ivory background */
+  .nusuk-brand-bg {
+    background: radial-gradient(
+      ellipse 90% 80% at 55% 45%,
+      hsl(45 30% 97%) 0%,
+      hsl(44 28% 95%) 55%,
+      hsl(43 24% 92%) 100%
+    );
   }
 
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  /* Nusuk brand gradient */
-  .nusuk-gradient {
-    background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 50%, #38bdf8 100%);
-  }
-
-  .nusuk-gradient-text {
-    background: linear-gradient(135deg, #0369a1, #0ea5e9);
+  /* Gold text shimmer */
+  .nusuk-gold-text {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--n-gold)) 0%,
+      hsl(var(--n-gold-lt)) 50%,
+      hsl(var(--n-gold)) 100%
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  /* Glassmorphism helpers */
-  .glass {
-    background: rgba(255, 255, 255, 0.65);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+  /* Focus ring — gold */
+  .nusuk-focus {
+    @apply outline-none;
+    &:focus-visible {
+      box-shadow: 0 0 0 3.5px hsl(var(--n-gold) / 0.3);
+    }
   }
 
-  .dark .glass {
-    background: rgba(15, 23, 42, 0.65);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-  }
-
-  /* Page ambient background */
+  /* Dashboard ambient background */
   .dashboard-bg {
     background:
-      radial-gradient(ellipse at 20% 0%, rgba(14, 165, 233, 0.06) 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 100%, rgba(139, 92, 246, 0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 10% 5%,  hsl(var(--n-gold) / .04) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 35% at 90% 95%, hsl(var(--n-dark) / .03) 0%, transparent 55%),
       hsl(var(--background));
+  }
+
+  /* Status badge colors — separate from brand accent */
+  .status-success { color: hsl(var(--n-success)); background: hsl(var(--n-success) / .1); }
+  .status-warning { color: hsl(var(--n-warning)); background: hsl(var(--n-warning) / .1); }
+  .status-error   { color: hsl(var(--n-error));   background: hsl(var(--n-error)   / .1); }
+  .status-info    { color: hsl(var(--n-info));     background: hsl(var(--n-info)    / .1); }
+
+  /* ── Auth layout responsive ── */
+  @media (max-width: 860px) {
+    .nusuk-auth-layout {
+      grid-template-columns: 1fr !important;
+      grid-template-rows: auto 1fr;
+      overflow-y: auto;
+    }
+    .nusuk-auth-layout .nusuk-form-panel {
+      order: -1; /* form on top on mobile */
+    }
+    .nusuk-auth-layout .nusuk-brand-panel {
+      min-height: 55vw;
+      overflow: hidden;
+    }
+  }
+
+  /* Glassmorphism */
+  .glass {
+    background: rgba(255,255,255,.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,.3);
+  }
+  .dark .glass {
+    background: rgba(8,26,16,.65);
+    border: 1px solid rgba(255,255,255,.07);
+  }
+
+  /* Input field — nusuk brand style */
+  .nusuk-input {
+    @apply w-full rounded-n-md border border-transparent bg-nusuk-ivory-2 px-4 py-3 text-n-base text-nusuk-ink outline-none transition-all duration-n-base;
+    direction: ltr;
+    text-align: left;
+  }
+  .nusuk-input:focus {
+    @apply border-nusuk-gold bg-white shadow-n-input-focus;
+  }
+  .nusuk-input::placeholder {
+    @apply text-nusuk-ink-3 text-n-sm;
+  }
+
+  /* Primary button — nusuk dark green + gold text */
+  .nusuk-btn-primary {
+    @apply relative w-full overflow-hidden rounded-n-md border-none py-4 text-n-base font-bold text-nusuk-gold outline-none transition-all duration-n-base;
+    background: linear-gradient(145deg, hsl(var(--n-mid)), hsl(var(--n-dark)));
+    box-shadow: var(--n-shadow-btn);
+    cursor: pointer;
+  }
+  .nusuk-btn-primary:hover {
+    box-shadow: var(--n-shadow-btn-hover);
+  }
+  .nusuk-btn-primary:active {
+    transform: scale(.975);
+    box-shadow: 0 2px 8px rgba(8,26,16,.28);
+  }
+  .nusuk-btn-primary:focus-visible {
+    box-shadow: var(--n-shadow-btn), 0 0 0 3px hsl(var(--n-gold) / .35);
   }
 }
