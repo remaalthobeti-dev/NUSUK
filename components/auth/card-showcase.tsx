@@ -8,7 +8,7 @@ import { useEffect, useRef, useCallback } from "react";
   Drop  /public/nusuk-card.png  into the repo and this component
   will render it automatically.  No other change needed.
 */
-const CARD_IMAGE_SRC = "/nusuk-card.png";
+const CARD_IMAGE_SRC = "/images/nusuk-card.png";
 
 /* ─────────────────────────────────────────────────────────────
    Islamic geometric corner pattern (canvas, fade toward center)
