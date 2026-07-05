@@ -57,7 +57,7 @@ export default function LoginPage() {
                   width={152}
                   height={159}
                   style={{
-                    height:    83,
+                    height:    108,
                     width:     "auto",
                     objectFit: "contain",
                     display:   "block",
@@ -80,7 +80,7 @@ export default function LoginPage() {
               {/* System name — updated */}
               <p
                 className="mb-7"
-                style={{ fontSize: 13, fontWeight: 600, color: "#58584F", letterSpacing: ".15px" }}
+                style={{ fontSize: 17, fontWeight: 600, color: "#58584F", letterSpacing: ".15px" }}
               >
                 مساحة عمل فريق بطاقات نسك
               </p>
