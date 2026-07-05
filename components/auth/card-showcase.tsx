@@ -3,47 +3,97 @@
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 
-/*
-  Official card: 469 × 675 px (aspect ratio 0.6948) — RGBA transparent PNG.
-  Display at 318 × 458 px. drop-shadow() traces the exact card silhouette
-  (including lanyard) — no white rect bleed. No CSS strap needed.
-  Negative marginTop pushes the lanyard above the viewport top edge.
-*/
 const CARD_SRC = "/images/nusuk-card.png";
 const CARD_W   = 477;
-const CARD_H   = 687; // 477 / 0.6948 ≈ 687  (+50% from 318×458)
+const CARD_H   = 687;
+
+/* ── Keyframes injected once ─────────────────────────────────── */
+const STYLES = `
+  @keyframes card-unveil {
+    0%   {
+      opacity: 0;
+      transform: translateY(-28px) scale(.96);
+      -webkit-mask-position: 0 -100%;
+      mask-position: 0 -100%;
+    }
+    30%  { opacity: 1; }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      -webkit-mask-position: 0 0%;
+      mask-position: 0 0%;
+    }
+  }
+
+  @keyframes n-float {
+    0%, 100% { transform: translateY(0px);   }
+    50%       { transform: translateY(-10px); }
+  }
+
+  .card-reveal {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent    0%,
+      black         28%,
+      black        100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent    0%,
+      black         28%,
+      black        100%
+    );
+    -webkit-mask-size: 100% 200%;
+    mask-size: 100% 200%;
+    animation: card-unveil 1.1s cubic-bezier(.23,1,.32,1) .2s both;
+  }
+
+  .card-float {
+    animation: n-float 6s ease-in-out infinite;
+    will-change: transform;
+  }
+`;
 
 function OfficialCard({ cardRef }: { cardRef: React.Ref<HTMLDivElement> }) {
   return (
-    <div
-      ref={cardRef}
-      style={{
-        width:      CARD_W,
-        height:     CARD_H,
-        position:   "relative",
-        flexShrink: 0,
-        /*
-          Three-layer shadow simulates natural depth of a hanging card.
-          Very soft — the image itself carries the visual weight.
-        */
-        filter:
-          "drop-shadow(0 2px 4px rgba(0,0,0,.12)) " +
-          "drop-shadow(0 10px 24px rgba(0,0,0,.14)) " +
-          "drop-shadow(0 30px 56px rgba(0,0,0,.10))",
-        animation:    "n-float 6s ease-in-out infinite",
-        willChange:   "transform",
-      }}
-    >
-      <Image
-        src={CARD_SRC}
-        alt="بطاقة نُسك الرسمية"
-        width={469}
-        height={675}
-        style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
-        quality={100}
-        priority
-      />
-    </div>
+    <>
+      <style>{STYLES}</style>
+
+      {/* Reveal wrapper — mask sweeps top-to-bottom */}
+      <div
+        className="card-reveal"
+        style={{
+          width:      CARD_W,
+          height:     CARD_H,
+          flexShrink: 0,
+        }}
+      >
+        {/* Float wrapper — separates float from reveal so both play cleanly */}
+        <div
+          ref={cardRef}
+          className="card-float"
+          style={{
+            width:    "100%",
+            height:   "100%",
+            position: "relative",
+            filter:
+              "drop-shadow(0 2px 6px rgba(0,0,0,.18)) " +
+              "drop-shadow(0 12px 28px rgba(0,0,0,.20)) " +
+              "drop-shadow(0 36px 64px rgba(0,0,0,.14))",
+          }}
+        >
+          <Image
+            src={CARD_SRC}
+            alt="بطاقة نُسك الرسمية"
+            width={469}
+            height={675}
+            style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+            quality={100}
+            priority
+          />
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -51,7 +101,6 @@ export function CardShowcase({ children }: { children?: React.ReactNode }) {
   const cardRef  = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  /* Subtle parallax — gentle, not distracting */
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const panel = panelRef.current;
@@ -66,7 +115,6 @@ export function CardShowcase({ children }: { children?: React.ReactNode }) {
       const r  = panel.getBoundingClientRect();
       const nx = (e.clientX - r.left) / r.width  - 0.5;
       const ny = (e.clientY - r.top)  / r.height - 0.5;
-      /* Restrained tilt — max ±6° horizontal, ±4° vertical */
       card.style.transform = `rotateY(${nx * 6}deg) rotateX(${-ny * 4}deg)`;
     };
 
@@ -93,8 +141,6 @@ export function CardShowcase({ children }: { children?: React.ReactNode }) {
       }}
     >
       <OfficialCard cardRef={cardRef} />
-
-      {/* Tagline — part of the same visual unit as the card */}
       {children}
     </div>
   );

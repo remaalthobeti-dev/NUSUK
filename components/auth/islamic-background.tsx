@@ -140,10 +140,6 @@ export function IslamicBackground() {
         <Arabesque cx={560} cy={560} />
       </svg>
 
-      {/* Bottom-left — NE quadrant visible */}
-      <svg aria-hidden style={{ ...PANEL, bottom: 0, left: 0 }}>
-        <Arabesque cx={0} cy={560} />
-      </svg>
     </>
   );
 }
