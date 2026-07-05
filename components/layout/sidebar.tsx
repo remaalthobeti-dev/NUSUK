@@ -15,7 +15,6 @@ import {
   Building2,
   X,
   BarChart2,
-  Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,6 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
-import { useUnreadCirculars } from "@/hooks/use-unread-circulars";
 
 interface NavItem {
   href: string;
@@ -64,7 +62,6 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const { employee, loading } = useAuth();
-  const unreadCirculars = useUnreadCirculars();
 
   const isSuperAdmin = !loading && employee?.role === "super_admin";
   const canManage =
@@ -175,16 +172,6 @@ export function Sidebar({
                 />
               )}
 
-              {/* التعاميم — visible to all with unread badge */}
-              <SidebarItem
-                {...itemProps({
-                  href: "/dashboard/notifications",
-                  icon: Megaphone,
-                  label: "التعاميم",
-                })}
-                badge={unreadCirculars > 0 ? unreadCirculars : undefined}
-              />
-
               {/* Bottom items: الاجتماعات → الملف الشخصي */}
               {BOTTOM_NAV.map((item) => (
                 <SidebarItem key={item.href} {...itemProps(item)} />
@@ -243,13 +230,11 @@ function SidebarItem({
   isCollapsed,
   isActive,
   onClick,
-  badge,
 }: {
   item: NavItem;
   isCollapsed: boolean;
   isActive: boolean;
   onClick?: () => void;
-  badge?: number;
 }) {
   const Icon = item.icon;
 
@@ -265,20 +250,8 @@ function SidebarItem({
           : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
       )}
     >
-      <span className="relative shrink-0">
-        <Icon className="h-5 w-5" />
-        {badge !== undefined && isCollapsed && (
-          <span className="absolute -top-1 -end-1 min-w-[14px] h-[14px] rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center px-0.5 leading-none">
-            {badge > 9 ? "9+" : badge}
-          </span>
-        )}
-      </span>
-      {!isCollapsed && <span className="flex-1">{item.label}</span>}
-      {!isCollapsed && badge !== undefined && (
-        <span className="ms-auto min-w-[20px] h-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center px-1.5 leading-none">
-          {badge > 99 ? "99+" : badge}
-        </span>
-      )}
+      <Icon className="h-5 w-5 shrink-0" />
+      {!isCollapsed && <span>{item.label}</span>}
     </Link>
   );
 
