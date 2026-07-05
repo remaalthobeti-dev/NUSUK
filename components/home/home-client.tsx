@@ -1,14 +1,8 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  CheckCircle2,
-  Clock,
-  Users,
-  MapPin,
-  WifiOff,
-  Wifi,
   Bell,
   Calendar,
   LayoutDashboard,
@@ -16,12 +10,13 @@ import {
   ListTodo,
   AlertCircle,
   Link2,
+  Activity,
+  MapPin,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { updateMyStatusAction } from "@/app/(dashboard)/dashboard/actions";
 import {
   MeetingTypeBadge,
   MeetingStatusBadge,
@@ -30,6 +25,9 @@ import {
 import { MeetingShortTime } from "@/components/meetings/meeting-time";
 import { CreateTaskDialog } from "@/components/assignments/create-task-dialog";
 import { CreateCircularDialog } from "@/components/home/create-circular-dialog";
+import { MyStatusDialog } from "@/components/shared/my-status-dialog";
+import { STATUS_CONFIG } from "@/components/dashboard/status-config";
+import { useMyPresence } from "@/hooks/use-my-presence";
 import type { AvailabilityStatus, UserRole, MeetingWithDetails, Team } from "@/types/database";
 
 export interface LatestCircular {
@@ -39,59 +37,6 @@ export interface LatestCircular {
   created_at: string;
   is_read: boolean;
 }
-
-// ─── Status config ────────────────────────────────────────────────────────────
-
-const STATUS_OPTIONS: Array<{
-  value: AvailabilityStatus;
-  label: string;
-  Icon: React.ElementType;
-  dot: string;
-  activeClass: string;
-}> = [
-  {
-    value: "available",
-    label: "متاح",
-    Icon: CheckCircle2,
-    dot: "bg-emerald-500",
-    activeClass: "bg-emerald-600 text-white border-emerald-600",
-  },
-  {
-    value: "busy",
-    label: "مشغول",
-    Icon: Clock,
-    dot: "bg-amber-500",
-    activeClass: "bg-amber-600 text-white border-amber-600",
-  },
-  {
-    value: "in_meeting",
-    label: "في اجتماع",
-    Icon: Users,
-    dot: "bg-blue-500",
-    activeClass: "bg-blue-600 text-white border-blue-600",
-  },
-  {
-    value: "field_work",
-    label: "عمل ميداني",
-    Icon: MapPin,
-    dot: "bg-purple-500",
-    activeClass: "bg-purple-600 text-white border-purple-600",
-  },
-  {
-    value: "remote",
-    label: "عن بعد",
-    Icon: Wifi,
-    dot: "bg-cyan-500",
-    activeClass: "bg-cyan-600 text-white border-cyan-600",
-  },
-  {
-    value: "offline",
-    label: "خارج الدوام",
-    Icon: WifiOff,
-    dot: "bg-slate-400",
-    activeClass: "bg-slate-600 text-white border-slate-600",
-  },
-];
 
 // ─── Hijri date helper ────────────────────────────────────────────────────────
 
@@ -154,24 +99,19 @@ export function HomeClient({
   unreadCirculars,
 }: HomeClientProps) {
   const [greeting, setGreeting] = useState<string>("");
-  const [status, setStatus] = useState<AvailabilityStatus>(currentStatus);
-  const [isPending, startTransition] = useTransition();
+  const [statusOpen, setStatusOpen] = useState(false);
   const todayDates = useTodayDates();
+  const { presence, refetch } = useMyPresence();
+
+  const liveStatus = presence?.availability_status ?? currentStatus;
+  const liveNote = presence?.notes ?? null;
+  const statusCfg = STATUS_CONFIG[liveStatus];
 
   useEffect(() => {
     const hour = new Date().getHours();
     setGreeting(hour < 12 ? "صباح الخير" : "مساء الخير");
   }, []);
 
-  function handleStatusChange(next: AvailabilityStatus) {
-    if (next === status || isPending) return;
-    setStatus(next);
-    startTransition(async () => {
-      await updateMyStatusAction(next);
-    });
-  }
-
-  const currentOpt = STATUS_OPTIONS.find((o) => o.value === status) ?? STATUS_OPTIONS[0];
   const canManage = role === "super_admin" || role === "track_manager";
 
   const alerts: string[] = [];
@@ -207,51 +147,77 @@ export function HomeClient({
               </div>
             )}
 
+            {/* Live status */}
             <div className="mt-4 flex items-center gap-2">
-              <span className={cn("w-2.5 h-2.5 rounded-full shrink-0", currentOpt.dot)} />
-              <span className="text-sm font-medium text-foreground">
-                {currentOpt.label}
+              <span
+                className={cn(
+                  "w-2.5 h-2.5 rounded-full shrink-0",
+                  statusCfg.dotClass,
+                  liveStatus === "available" && "animate-pulse"
+                )}
+              />
+              <span className={cn("text-sm font-medium", statusCfg.textClass)}>
+                {statusCfg.label}
               </span>
-              {isPending && (
-                <span className="text-xs text-muted-foreground">جاري التحديث…</span>
+              {liveNote && (
+                <span className="text-xs text-muted-foreground truncate">· {liveNote}</span>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Status selector */}
+        {/* Status change card */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              تغيير الحالة
+              حالة تواجدي
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex flex-wrap gap-2">
-              {STATUS_OPTIONS.map((opt) => {
-                const { Icon } = opt;
-                const isActive = status === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    onClick={() => handleStatusChange(opt.value)}
-                    disabled={isPending}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all disabled:opacity-60",
-                      isActive
-                        ? opt.activeClass
-                        : "border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                    )}
-                  >
-                    <Icon className="h-3 w-3" />
-                    {opt.label}
-                  </button>
-                );
-              })}
+          <CardContent className="pt-0 space-y-3">
+            {/* Current status display */}
+            <div
+              className={cn(
+                "flex items-center gap-3 rounded-xl border p-3",
+                statusCfg.badgeClass
+              )}
+            >
+              <span
+                className={cn(
+                  "w-3 h-3 rounded-full shrink-0",
+                  statusCfg.dotClass,
+                  liveStatus === "available" && "animate-pulse"
+                )}
+              />
+              <div className="flex-1 min-w-0">
+                <p className={cn("text-sm font-semibold", statusCfg.textClass)}>
+                  {statusCfg.label}
+                </p>
+                {liveNote && (
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">{liveNote}</p>
+                )}
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="shrink-0 h-7 text-xs px-2.5 bg-background"
+                onClick={() => setStatusOpen(true)}
+              >
+                <Activity className="h-3 w-3 me-1" />
+                تغيير
+              </Button>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Status dialog */}
+      <MyStatusDialog
+        open={statusOpen}
+        onOpenChange={setStatusOpen}
+        currentStatus={liveStatus}
+        currentNote={liveNote}
+        onSuccess={refetch}
+      />
 
       {/* ── Quick Actions ───────────────────────────────────────────────── */}
       <div>

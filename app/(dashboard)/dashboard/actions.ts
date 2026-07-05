@@ -5,24 +5,29 @@ import { requireAuthenticated, requireManager } from "@/lib/auth/guards";
 import type { AvailabilityStatus, TaskPriority } from "@/types/database";
 
 export async function updateMyStatusAction(
-  status: AvailabilityStatus
+  status: AvailabilityStatus,
+  note?: string
 ): Promise<{ error: string | null }> {
   const { supabase, context, error } = await requireAuthenticated();
   if (error) return { error };
 
+  const now = new Date().toISOString();
   const { error: dbErr } = await supabase
     .from("employee_presence")
     .upsert(
       {
         employee_id: context.employee.id,
         availability_status: status,
-        updated_at: new Date().toISOString(),
+        notes: note?.trim().slice(0, 60) || null,
+        started_at: now,
+        updated_at: now,
       },
       { onConflict: "employee_id" }
     );
 
   if (dbErr) return { error: dbErr.message };
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/profile");
   return { error: null };
 }
 

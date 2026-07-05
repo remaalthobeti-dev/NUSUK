@@ -223,16 +223,16 @@ export function UpdateStatusDialog({ employee, open, onOpenChange }: UpdateStatu
 
             {/* Field Work context */}
             {selectedStatus === "field_work" && (
-              <ContextSection color="blue" icon={<MapPin className="h-3.5 w-3.5" />} title="تفاصيل العمل الميداني">
+              <ContextSection color="blue" icon={<MapPin className="h-3.5 w-3.5" />} title="تفاصيل الجولة الميدانية">
                 <Field label="الموقع *" error={errors.field_location?.message}>
                   <Input
-                    placeholder="مثال: حي النزهة - الرياض"
+                    placeholder="مثال: المشاعر المقدسة - منى"
                     {...register("field_location")}
                     className={errors.field_location ? "border-destructive" : ""}
                   />
                 </Field>
-                <Field label="النشاط (اختياري)">
-                  <Input placeholder="مثال: توزيع دفعة بطاقات" {...register("field_activity")} />
+                <Field label="سبب الجولة (اختياري)">
+                  <Input placeholder="مثال: توزيع دفعة بطاقات نسك" {...register("field_activity")} />
                 </Field>
               </ContextSection>
             )}

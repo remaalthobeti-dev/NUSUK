@@ -161,13 +161,20 @@ export function EmployeeCard({
           />
         </div>
 
-        {/* Status duration */}
+        {/* Status duration + note */}
         {employee.presence && (
-          <div className="flex items-center gap-1 mt-3 pt-3 border-t border-border/50">
-            <Clock className="h-2.5 w-2.5 text-muted-foreground" />
-            <span className="text-[10px] text-muted-foreground">
-              {formatStatusDuration(employee.presence.started_at || employee.presence.updated_at)}
-            </span>
+          <div className="mt-3 pt-3 border-t border-border/50 space-y-1">
+            <div className="flex items-center gap-1">
+              <Clock className="h-2.5 w-2.5 text-muted-foreground" />
+              <span className="text-[10px] text-muted-foreground">
+                {formatStatusDuration(employee.presence.started_at || employee.presence.updated_at)}
+              </span>
+            </div>
+            {employee.presence.notes && (
+              <p className="text-[10px] text-muted-foreground truncate ps-4">
+                {employee.presence.notes}
+              </p>
+            )}
           </div>
         )}
       </button>
