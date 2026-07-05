@@ -135,11 +135,6 @@ const PANEL: React.CSSProperties = {
 export function IslamicBackground() {
   return (
     <>
-      {/* Top-left — SE quadrant visible */}
-      <svg aria-hidden style={{ ...PANEL, top: 0, left: 0 }}>
-        <Arabesque cx={0} cy={0} />
-      </svg>
-
       {/* Bottom-right — NW quadrant visible */}
       <svg aria-hidden style={{ ...PANEL, bottom: 0, right: 0 }}>
         <Arabesque cx={560} cy={560} />

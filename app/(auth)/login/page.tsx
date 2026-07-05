@@ -20,6 +20,11 @@ export default function LoginPage() {
   return (
     <>
       {/* Full-page Mecca background — fixed behind everything */}
+      {/*
+        opacity: 0.25 on wrapper → left side (mask=1.0) shows at 25%
+        right side mask=0.48 → 0.25×0.48≈12%
+        Column split: left 58% = card panel, right 42% = form panel (RTL)
+      */}
       <div
         aria-hidden
         style={{
@@ -27,7 +32,9 @@ export default function LoginPage() {
           inset:         0,
           zIndex:        0,
           pointerEvents: "none",
-          opacity:       0.12,
+          opacity:       0.25,
+          WebkitMaskImage: "linear-gradient(to right, black 0% 58%, rgba(0,0,0,0.48) 58% 100%)",
+          maskImage:       "linear-gradient(to right, black 0% 58%, rgba(0,0,0,0.48) 58% 100%)",
         }}
       >
         <Image
