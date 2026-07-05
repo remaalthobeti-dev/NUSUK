@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { Menu, Moon, Sun, LogOut, User, ChevronDown, Activity } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -19,7 +19,7 @@ import { useMyPresence } from "@/hooks/use-my-presence";
 import { getRoleLabel } from "@/lib/utils";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { MyStatusDialog } from "@/components/shared/my-status-dialog";
-import { STATUS_CONFIG } from "@/components/dashboard/status-config";
+import { STATUS_CONFIG, formatTimeAgo } from "@/components/dashboard/status-config";
 import { cn } from "@/lib/utils";
 
 interface NavbarProps {
@@ -48,6 +48,13 @@ export function Navbar({ onMobileMenuToggle, sidebarCollapsed }: NavbarProps) {
 
   const currentStatus = presence?.availability_status ?? "available";
   const statusCfg = STATUS_CONFIG[currentStatus];
+
+  // Auto-refresh "last updated" label every minute
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <header
@@ -114,16 +121,21 @@ export function Navbar({ onMobileMenuToggle, sidebarCollapsed }: NavbarProps) {
                 />
               </span>
 
-              <div className="hidden sm:block text-start leading-tight">
-                <p className="text-xs font-medium text-foreground">
+              <div className="hidden sm:block text-start leading-tight max-w-[160px]">
+                <p className="text-xs font-semibold text-foreground truncate">
                   {employee?.full_name ?? user?.email ?? "مستخدم"}
                 </p>
-                <p className={cn("text-[10px]", statusCfg.textClass)}>
-                  {statusCfg.label}
-                  {presence?.notes && (
-                    <span className="text-muted-foreground"> · {presence.notes}</span>
-                  )}
+                <p className={cn("text-[10px] font-medium truncate", statusCfg.textClass)}>
+                  {statusCfg.emoji} {statusCfg.label}
                 </p>
+                {presence?.notes && (
+                  <p className="text-[10px] text-muted-foreground truncate">{presence.notes}</p>
+                )}
+                {presence?.updated_at && (
+                  <p className="text-[10px] text-muted-foreground/70 truncate">
+                    آخر تحديث: {formatTimeAgo(presence.updated_at)}
+                  </p>
+                )}
               </div>
               <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:block" />
             </Button>
@@ -147,11 +159,16 @@ export function Navbar({ onMobileMenuToggle, sidebarCollapsed }: NavbarProps) {
               <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-2 py-1.5">
                 <span className={cn("w-2 h-2 rounded-full shrink-0", statusCfg.dotClass, currentStatus === "available" && "animate-pulse")} />
                 <div className="flex-1 min-w-0">
-                  <p className={cn("text-xs font-medium", statusCfg.textClass)}>
-                    {statusCfg.label}
+                  <p className={cn("text-xs font-semibold", statusCfg.textClass)}>
+                    {statusCfg.emoji} {statusCfg.label}
                   </p>
                   {presence?.notes && (
                     <p className="text-[10px] text-muted-foreground truncate">{presence.notes}</p>
+                  )}
+                  {presence?.updated_at && (
+                    <p className="text-[10px] text-muted-foreground/70">
+                      آخر تحديث: {formatTimeAgo(presence.updated_at)}
+                    </p>
                   )}
                 </div>
               </div>

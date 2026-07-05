@@ -12,6 +12,7 @@ import {
   Link2,
   Activity,
   MapPin,
+  Moon,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -32,7 +33,7 @@ import { MeetingShortTime } from "@/components/meetings/meeting-time";
 import { CreateTaskDialog } from "@/components/assignments/create-task-dialog";
 import { CreateCircularDialog } from "@/components/home/create-circular-dialog";
 import { MyStatusDialog } from "@/components/shared/my-status-dialog";
-import { STATUS_CONFIG } from "@/components/dashboard/status-config";
+import { STATUS_CONFIG, formatTimeAgo } from "@/components/dashboard/status-config";
 import { useMyPresence } from "@/hooks/use-my-presence";
 import type { AvailabilityStatus, UserRole, MeetingWithDetails, Team } from "@/types/database";
 
@@ -107,8 +108,15 @@ export function HomeClient({
   const [greeting, setGreeting] = useState<string>("");
   const [statusOpen, setStatusOpen] = useState(false);
   const [announcementOpen, setAnnouncementOpen] = useState(false);
+  const [, setTick] = useState(0);
   const todayDates = useTodayDates();
   const { presence, refetch } = useMyPresence();
+
+  // Refresh "last updated" label every minute
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const liveStatus = presence?.availability_status ?? currentStatus;
   const liveNote = presence?.notes ?? null;
@@ -132,25 +140,37 @@ export function HomeClient({
       {/* ── Row 1: Greeting + Status ────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Greeting card */}
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">
+        <Card className="overflow-hidden">
+          <CardContent className="pt-5 pb-5 relative">
+            {/* Subtle brand gradient accent */}
+            <div
+              className="absolute inset-0 opacity-[0.03] pointer-events-none rounded-2xl"
+              style={{
+                background:
+                  "radial-gradient(ellipse 80% 60% at 90% 10%, hsl(var(--n-gold)) 0%, transparent 70%)",
+              }}
+            />
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
               {greeting || "مرحباً"}
             </p>
-            <h1 className="text-2xl font-bold text-foreground mt-1">
+            <h1 className="text-2xl font-bold text-foreground mt-0.5 leading-snug">
               {employeeName}
             </h1>
-            <p className="text-sm text-muted-foreground/80 mt-1.5">
+            <p className="text-xs text-muted-foreground/80 mt-1">
               مرحبًا بعودتك، نتمنى لك يومًا مليئًا بالإنجاز.
             </p>
 
             {/* Dates */}
             {todayDates && (
-              <div className="mt-4 rounded-lg bg-muted/40 px-3 py-2 space-y-0.5">
-                <p className="text-xs font-medium text-foreground/80">{todayDates.hijri} هـ</p>
-                <p className="text-[11px] text-muted-foreground">
-                  {todayDates.gregorian}
-                </p>
+              <div className="mt-4 rounded-xl border bg-muted/30 px-3 py-2.5 space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <Moon className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
+                  <p className="text-xs font-medium text-foreground/80">{todayDates.hijri} هـ</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
+                  <p className="text-xs text-muted-foreground">{todayDates.gregorian}</p>
+                </div>
               </div>
             )}
 
@@ -176,42 +196,43 @@ export function HomeClient({
         {/* Status change card */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              حالة تواجدي
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0 space-y-3">
-            {/* Current status display */}
-            <div
-              className={cn(
-                "flex items-center gap-3 rounded-xl border p-3",
-                statusCfg.badgeClass
-              )}
-            >
-              <span
-                className={cn(
-                  "w-3 h-3 rounded-full shrink-0",
-                  statusCfg.dotClass,
-                  liveStatus === "available" && "animate-pulse"
-                )}
-              />
-              <div className="flex-1 min-w-0">
-                <p className={cn("text-sm font-semibold", statusCfg.textClass)}>
-                  {statusCfg.label}
-                </p>
-                {liveNote && (
-                  <p className="text-xs text-muted-foreground truncate mt-0.5">{liveNote}</p>
-                )}
-              </div>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                حالة تواجدي
+              </CardTitle>
               <Button
                 size="sm"
-                variant="outline"
-                className="shrink-0 h-7 text-xs px-2.5 bg-background"
+                variant="ghost"
+                className="shrink-0 h-6 text-[11px] px-2 text-muted-foreground hover:text-foreground"
                 onClick={() => setStatusOpen(true)}
               >
                 <Activity className="h-3 w-3 me-1" />
                 تغيير
               </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {/* Current status display */}
+            <div
+              className={cn(
+                "flex items-center gap-3 rounded-xl border p-3.5",
+                statusCfg.badgeClass
+              )}
+            >
+              <span className="text-2xl leading-none shrink-0">{statusCfg.emoji}</span>
+              <div className="flex-1 min-w-0">
+                <p className={cn("text-base font-bold leading-tight", statusCfg.textClass)}>
+                  {statusCfg.label}
+                </p>
+                {liveNote && (
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">{liveNote}</p>
+                )}
+                {presence?.updated_at && (
+                  <p className="text-[11px] text-muted-foreground/70 mt-1">
+                    آخر تحديث: {formatTimeAgo(presence.updated_at)}
+                  </p>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -231,7 +252,7 @@ export function HomeClient({
         <p className="text-sm font-medium text-muted-foreground mb-3">
           الإجراءات السريعة
         </p>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2.5">
           {canManage ? (
             <>
               <CreateTaskDialog
@@ -239,9 +260,9 @@ export function HomeClient({
                 teams={teams}
                 employeeTeamId={employeeTeamId}
               />
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" className="h-9 px-4 gap-2 text-sm font-medium">
                 <Link href="/dashboard/meetings">
-                  <Calendar className="h-4 w-4 me-1" />
+                  <Calendar className="h-4 w-4 shrink-0" />
                   عقد اجتماع
                 </Link>
               </Button>
@@ -249,16 +270,16 @@ export function HomeClient({
             </>
           ) : (
             <>
-              <Button asChild size="sm">
+              <Button asChild className="h-9 px-4 gap-2 text-sm font-medium">
                 <Link href="/dashboard/assignments">
-                  <FileCheck className="h-4 w-4 me-1" />
+                  <FileCheck className="h-4 w-4 shrink-0" />
                   استلام مهمة
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" className="h-9 px-4 gap-2 text-sm font-medium">
                 <Link href="/dashboard/operations">
-                  <LayoutDashboard className="h-4 w-4 me-1" />
-                  فتح مركز العمليات
+                  <LayoutDashboard className="h-4 w-4 shrink-0" />
+                  مركز العمليات
                 </Link>
               </Button>
             </>

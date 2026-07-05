@@ -7,6 +7,7 @@ import type { AvailabilityStatus } from "@/types/database";
 export interface MyPresence {
   availability_status: AvailabilityStatus;
   notes: string | null;
+  updated_at: string | null;
 }
 
 export function useMyPresence() {
@@ -26,7 +27,7 @@ export function useMyPresence() {
 
     const { data } = await supabase
       .from("employee_presence")
-      .select("availability_status, notes")
+      .select("availability_status, notes, updated_at")
       .eq("employee_id", emp.id)
       .single();
 
@@ -34,9 +35,10 @@ export function useMyPresence() {
       setPresence({
         availability_status: data.availability_status as AvailabilityStatus,
         notes: data.notes ?? null,
+        updated_at: data.updated_at ?? null,
       });
     } else {
-      setPresence({ availability_status: "available", notes: null });
+      setPresence({ availability_status: "available", notes: null, updated_at: null });
     }
   }, []);
 
