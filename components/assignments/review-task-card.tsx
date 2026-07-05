@@ -51,7 +51,7 @@ function ExecutionChain({
     <div className="rounded-lg border border-muted/60 bg-muted/20 overflow-hidden">
       <div className="flex items-center gap-2 px-3 py-2 border-b border-muted/60 bg-muted/40">
         <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+        <span className="text-xs font-semibold text-muted-foreground ">
           سلسلة التنفيذ
         </span>
       </div>
@@ -300,7 +300,7 @@ export function ReviewTaskCard({ task, currentEmployeeId, isManager }: Props) {
                 disabled={isAnyPending}
               >
                 {isPendingStart ? "جاري البدء…" : (
-                  <><Eye className="h-4 w-4 ms-1" /> بدء المراجعة</>
+                  <><Eye className="h-4 w-4 me-1" /> بدء المراجعة</>
                 )}
               </Button>
             )}
@@ -314,7 +314,7 @@ export function ReviewTaskCard({ task, currentEmployeeId, isManager }: Props) {
                   disabled={isAnyPending}
                 >
                   {isPendingApprove ? "جاري الاعتماد…" : (
-                    <><CheckCircle2 className="h-4 w-4 ms-1" /> اعتماد المهمة</>
+                    <><CheckCircle2 className="h-4 w-4 me-1" /> اعتماد المهمة</>
                   )}
                 </Button>
                 <Button
@@ -324,7 +324,7 @@ export function ReviewTaskCard({ task, currentEmployeeId, isManager }: Props) {
                   onClick={() => setShowReturnForm(true)}
                   disabled={isAnyPending}
                 >
-                  <RotateCcw className="h-4 w-4 ms-1" /> إعادة للتنفيذ
+                  <RotateCcw className="h-4 w-4 me-1" /> إعادة للتنفيذ
                 </Button>
               </>
             )}

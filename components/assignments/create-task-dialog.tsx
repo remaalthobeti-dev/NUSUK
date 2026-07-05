@@ -177,7 +177,7 @@ function PreviewCard({
 
   return (
     <div className="flex flex-col h-full">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+      <p className="text-xs font-semibold text-muted-foreground  mb-3">
         معاينة المهمة
       </p>
       <div
@@ -393,7 +393,7 @@ export function CreateTaskDialog({
   return (
     <>
       <Button onClick={() => setOpen(true)} size="sm">
-        <Plus className="h-4 w-4 ms-1" />
+        <Plus className="h-4 w-4 me-1" />
         إضافة مهمة
       </Button>
 
@@ -426,7 +426,7 @@ export function CreateTaskDialog({
             >
               {/* Section 1: Basic info */}
               <fieldset className="space-y-4">
-                <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                <legend className="text-xs font-semibold text-muted-foreground  mb-3">
                   المعلومات الأساسية
                 </legend>
                 <div className="space-y-1.5">
@@ -457,7 +457,7 @@ export function CreateTaskDialog({
 
               {/* Section 2: Assignment */}
               <fieldset className="space-y-4">
-                <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                <legend className="text-xs font-semibold text-muted-foreground  mb-3">
                   التخصيص
                 </legend>
 
@@ -512,7 +512,7 @@ export function CreateTaskDialog({
 
               {/* Section 3: Scheduling */}
               <fieldset className="space-y-4">
-                <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                <legend className="text-xs font-semibold text-muted-foreground  mb-3">
                   الجدولة
                 </legend>
 
@@ -592,7 +592,7 @@ export function CreateTaskDialog({
 
               {/* Section 4: Optional */}
               <fieldset className="space-y-4">
-                <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                <legend className="text-xs font-semibold text-muted-foreground  mb-3">
                   إضافات اختيارية
                 </legend>
 

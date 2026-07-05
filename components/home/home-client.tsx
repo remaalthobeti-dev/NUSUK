@@ -222,7 +222,7 @@ export function HomeClient({
               />
               <Button asChild variant="outline" size="sm">
                 <Link href="/dashboard/meetings">
-                  <Calendar className="h-4 w-4 ms-1" />
+                  <Calendar className="h-4 w-4 me-1" />
                   عقد اجتماع
                 </Link>
               </Button>
@@ -231,13 +231,13 @@ export function HomeClient({
             <>
               <Button asChild size="sm">
                 <Link href="/dashboard/assignments">
-                  <FileCheck className="h-4 w-4 ms-1" />
+                  <FileCheck className="h-4 w-4 me-1" />
                   استلام مهمة
                 </Link>
               </Button>
               <Button asChild variant="outline" size="sm">
                 <Link href="/dashboard/operations">
-                  <LayoutDashboard className="h-4 w-4 ms-1" />
+                  <LayoutDashboard className="h-4 w-4 me-1" />
                   فتح مركز العمليات
                 </Link>
               </Button>

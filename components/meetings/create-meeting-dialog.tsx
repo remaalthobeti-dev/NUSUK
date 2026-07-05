@@ -104,7 +104,7 @@ export function CreateMeetingDialog({ role, employeeTeamId, teams }: CreateMeeti
   return (
     <>
       <Button onClick={() => setOpen(true)} size="sm">
-        <Plus className="h-4 w-4 ms-1" />
+        <Plus className="h-4 w-4 me-1" />
         اجتماع جديد
       </Button>
 

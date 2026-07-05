@@ -40,7 +40,7 @@ export function CancelMeetingButton({ meetingId }: { meetingId: string }) {
         className="w-full"
         onClick={() => setOpen(true)}
       >
-        <XCircle className="h-4 w-4 ms-1" />
+        <XCircle className="h-4 w-4 me-1" />
         إلغاء الاجتماع
       </Button>
 

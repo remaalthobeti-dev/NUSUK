@@ -145,7 +145,7 @@ export function TeamDashboard({
 
       {/* Stats */}
       <div className="mb-8">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+        <h2 className="text-sm font-semibold text-muted-foreground mb-3">
           ملخص الحضور
         </h2>
         <TeamStats
@@ -170,7 +170,7 @@ export function TeamDashboard({
 
       {/* Employee Grid */}
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+        <h2 className="text-sm font-semibold text-muted-foreground">
           الموظفون ({filteredEmployees.length})
         </h2>
       </div>

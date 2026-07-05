@@ -58,7 +58,7 @@ export function MeetingsNowSection({
 
   return (
     <section className="mb-8">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+      <h2 className="text-sm font-semibold text-muted-foreground  mb-4">
         الاجتماعات
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
