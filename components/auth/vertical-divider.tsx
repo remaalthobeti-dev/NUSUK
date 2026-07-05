@@ -13,7 +13,7 @@
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
-function Diamond({ half = 5, opacity = 0.22 }: { half?: number; opacity?: number }) {
+function Diamond({ half = 5, opacity = 0.29 }: { half?: number; opacity?: number }) {
   const w = half, h = half * 1.55;
   return (
     <svg
@@ -37,7 +37,7 @@ function Diamond({ half = 5, opacity = 0.22 }: { half?: number; opacity?: number
   );
 }
 
-function StarMedallion({ opacity = 0.22 }: { opacity?: number }) {
+function StarMedallion({ opacity = 0.29 }: { opacity?: number }) {
   // Three concentric 8-pointed stars + rings — same style as corner ornaments
   function star8(R: number, r: number): string {
     const pts: string[] = [];
@@ -125,7 +125,7 @@ export function VerticalDivider() {
           top:        "5%",
           bottom:     "5%",
           background: "linear-gradient(to bottom, transparent, #A87228 15%, #A87228 85%, transparent)",
-          opacity:    0.22,
+          opacity:    0.29,
         }}
       />
 
@@ -141,8 +141,8 @@ export function VerticalDivider() {
           }}
         >
           {type === "lg" && <StarMedallion />}
-          {type === "md" && <Diamond half={6} opacity={0.24} />}
-          {type === "sm" && <Diamond half={4} opacity={0.20} />}
+          {type === "md" && <Diamond half={6} opacity={0.31} />}
+          {type === "sm" && <Diamond half={4} opacity={0.26} />}
         </div>
       ))}
     </div>
