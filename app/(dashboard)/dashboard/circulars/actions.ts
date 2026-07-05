@@ -3,25 +3,34 @@
 import { revalidatePath } from "next/cache";
 import { requireManager } from "@/lib/auth/guards";
 
-export interface CreateCircularPayload {
+export type AnnouncementTarget =
+  | { type: "all" }
+  | { type: "team"; teamId: string }
+  | { type: "individuals"; employeeIds: string[] };
+
+export interface CreateAnnouncementPayload {
   title: string;
   body: string;
+  target: AnnouncementTarget;
 }
 
 export async function createCircularAction(
-  payload: CreateCircularPayload
+  payload: CreateAnnouncementPayload
 ): Promise<{ error: string | null }> {
   const { supabase, context, error } = await requireManager();
   if (error) return { error };
 
-  // Fetch all active employee IDs
-  const { data: employees, error: empErr } = await supabase
-    .from("employees")
-    .select("id")
-    .eq("is_active", true);
+  let query = supabase.from("employees").select("id").eq("is_active", true);
 
+  if (payload.target.type === "team") {
+    query = query.eq("team_id", payload.target.teamId);
+  } else if (payload.target.type === "individuals") {
+    if (!payload.target.employeeIds.length) return { error: "اختر موظفاً واحداً على الأقل" };
+    query = query.in("id", payload.target.employeeIds);
+  }
+
+  const { data: employees, error: empErr } = await query;
   if (empErr || !employees) return { error: empErr?.message ?? "فشل جلب الموظفين" };
-
 
   const now = new Date().toISOString();
   const notifications = employees.map((emp) => ({

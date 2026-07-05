@@ -245,7 +245,7 @@ export function HomeClient({
                   عقد اجتماع
                 </Link>
               </Button>
-              <CreateCircularDialog />
+              <CreateCircularDialog teams={teams} />
             </>
           ) : (
             <>
