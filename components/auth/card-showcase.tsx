@@ -4,12 +4,10 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 
 /*
-  Official card: 469 × 675 px (aspect ratio 0.6948).
-  Display at 278 × 400 px (+15% vs original 242 × 347).
-  The card image already contains the lanyard — no CSS strap needed.
-  A negative marginTop on the wrapper pushes the card's top edge above
-  the viewport so only the card body is visible and the lanyard appears
-  to exit through the ceiling, creating a natural hanging sensation.
+  Official card: 469 × 675 px (aspect ratio 0.6948) — RGBA transparent PNG.
+  Display at 318 × 458 px. drop-shadow() traces the exact card silhouette
+  (including lanyard) — no white rect bleed. No CSS strap needed.
+  Negative marginTop pushes the lanyard above the viewport top edge.
 */
 const CARD_SRC = "/images/nusuk-card.png";
 const CARD_W   = 318;
@@ -29,9 +27,9 @@ function OfficialCard({ cardRef }: { cardRef: React.Ref<HTMLDivElement> }) {
           Very soft — the image itself carries the visual weight.
         */
         filter:
-          "drop-shadow(0 4px 10px rgba(0,0,0,.09)) " +
-          "drop-shadow(0 14px 30px rgba(0,0,0,.08)) " +
-          "drop-shadow(0 28px 50px rgba(0,0,0,.05))",
+          "drop-shadow(0 2px 4px rgba(0,0,0,.12)) " +
+          "drop-shadow(0 10px 24px rgba(0,0,0,.14)) " +
+          "drop-shadow(0 30px 56px rgba(0,0,0,.10))",
         animation:    "n-float 6s ease-in-out infinite",
         willChange:   "transform",
       }}
