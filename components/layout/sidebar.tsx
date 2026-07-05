@@ -17,7 +17,6 @@ import {
   BarChart2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Tooltip,
@@ -33,15 +32,13 @@ interface NavItem {
   label: string;
 }
 
-// Core nav — visible to all authenticated employees, in display order.
 const BASE_NAV: NavItem[] = [
-  { href: "/dashboard",            icon: Home,            label: "الرئيسية" },
-  { href: "/dashboard/operations", icon: LayoutDashboard, label: "مركز العمليات" },
-  { href: "/dashboard/assignments",icon: ClipboardList,   label: "إسناد الأعمال" },
-  { href: "/dashboard/my-tasks",   icon: ListTodo,        label: "مهامي" },
+  { href: "/dashboard",             icon: Home,          label: "الرئيسية" },
+  { href: "/dashboard/operations",  icon: LayoutDashboard, label: "مركز العمليات" },
+  { href: "/dashboard/assignments", icon: ClipboardList, label: "إسناد الأعمال" },
+  { href: "/dashboard/my-tasks",    icon: ListTodo,      label: "مهامي" },
 ];
 
-// Bottom nav — always visible
 const BOTTOM_NAV: NavItem[] = [
   { href: "/dashboard/meetings", icon: CalendarDays, label: "الاجتماعات" },
   { href: "/dashboard/profile",  icon: CircleUser,   label: "الملف الشخصي" },
@@ -82,86 +79,111 @@ export function Sidebar({
 
   return (
     <>
-      {/* Mobile Overlay */}
+      {/* Mobile overlay */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-30 bg-black/60 lg:hidden"
           onClick={onMobileClose}
           aria-hidden="true"
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar shell — always dark brand green */}
       <aside
         className={cn(
-          "fixed top-0 end-0 z-40 h-screen bg-card border-s flex flex-col transition-all duration-300 ease-in-out",
+          "fixed top-0 end-0 z-40 h-screen flex flex-col transition-all duration-300 ease-in-out",
           isCollapsed
             ? "w-[var(--sidebar-collapsed-width)]"
             : "w-[var(--sidebar-width)]",
           "hidden lg:flex",
           isMobileOpen && "!flex"
         )}
+        style={{ background: "hsl(var(--n-dark))" }}
       >
-        {/* Logo */}
+        {/* ── Logo area ── */}
         <div
           className={cn(
-            "h-[var(--navbar-height)] flex items-center border-b px-4 shrink-0",
+            "h-[var(--navbar-height)] flex items-center px-4 shrink-0 border-b",
             isCollapsed ? "justify-center" : "justify-between"
           )}
+          style={{ borderColor: "rgba(255,255,255,0.07)" }}
         >
+          {/* Logo link */}
           {!isCollapsed && (
-            <Link href="/dashboard" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg nusuk-gradient flex items-center justify-center shrink-0">
-                <Building2 className="h-4 w-4 text-white" />
+            <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0">
+              {/* Gold mosque icon */}
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: "hsl(var(--n-gold) / 0.15)" }}
+              >
+                <Building2
+                  className="h-4 w-4"
+                  style={{ color: "hsl(var(--n-gold))" }}
+                />
               </div>
-              <div>
-                <p className="font-bold text-foreground leading-tight text-sm">نسك</p>
-                <p className="text-[10px] text-muted-foreground leading-tight">إدارة البطاقات</p>
+              <div className="min-w-0">
+                <p className="font-bold text-sm leading-tight truncate" style={{ color: "hsl(var(--n-ivory))" }}>
+                  بطاقات نسك
+                </p>
+                <p className="text-[10px] leading-tight" style={{ color: "rgba(250,250,247,0.45)" }}>
+                  إدارة البطاقات
+                </p>
               </div>
             </Link>
           )}
 
           {isCollapsed && (
-            <div className="w-8 h-8 rounded-lg nusuk-gradient flex items-center justify-center">
-              <Building2 className="h-4 w-4 text-white" />
-            </div>
+            <Link href="/dashboard">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center"
+                style={{ background: "hsl(var(--n-gold) / 0.15)" }}
+              >
+                <Building2 className="h-4 w-4" style={{ color: "hsl(var(--n-gold))" }} />
+              </div>
+            </Link>
           )}
 
           {/* Mobile close */}
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
             onClick={onMobileClose}
-            className="lg:hidden"
+            className="lg:hidden p-1.5 rounded-lg transition-colors"
+            style={{ color: "rgba(250,250,247,0.6)" }}
             aria-label="إغلاق القائمة"
           >
             <X className="h-4 w-4" />
-          </Button>
+          </button>
 
           {/* Desktop collapse toggle */}
           {!isCollapsed && (
-            <Button
-              variant="ghost"
-              size="icon"
+            <button
               onClick={onToggle}
-              className="hidden lg:flex"
+              className="hidden lg:flex p-1.5 rounded-lg transition-colors hover:bg-white/10"
+              style={{ color: "rgba(250,250,247,0.45)" }}
               aria-label="طي القائمة الجانبية"
             >
               <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
-            </Button>
+            </button>
           )}
         </div>
 
-        {/* Navigation */}
-        <ScrollArea className="flex-1 py-4">
+        {/* ── Navigation ── */}
+        <ScrollArea className="flex-1 py-3">
           <TooltipProvider delayDuration={0}>
-            <nav className="px-3 space-y-1">
-              {/* Core items: الرئيسية → مركز العمليات → إسناد الأعمال → مهامي */}
+            <nav className="px-3 space-y-0.5">
+              {/* Section label */}
+              {!isCollapsed && (
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-widest px-3 pb-2 pt-1"
+                  style={{ color: "rgba(250,250,247,0.30)" }}
+                >
+                  القائمة الرئيسية
+                </p>
+              )}
+
               {BASE_NAV.map((item) => (
                 <SidebarItem key={item.href} {...itemProps(item)} />
               ))}
 
-              {/* التقارير — managers only */}
               {canManage && (
                 <SidebarItem
                   {...itemProps({
@@ -172,12 +194,19 @@ export function Sidebar({
                 />
               )}
 
-              {/* Bottom items: الاجتماعات → الملف الشخصي */}
+              {/* Divider */}
+              {!isCollapsed && (
+                <div
+                  className="my-3 mx-3 h-px"
+                  style={{ background: "rgba(255,255,255,0.07)" }}
+                />
+              )}
+              {isCollapsed && <div className="my-2" />}
+
               {BOTTOM_NAV.map((item) => (
                 <SidebarItem key={item.href} {...itemProps(item)} />
               ))}
 
-              {/* الموافقات — super_admin only */}
               {isSuperAdmin && (
                 <SidebarItem
                   {...itemProps({
@@ -191,9 +220,12 @@ export function Sidebar({
           </TooltipProvider>
         </ScrollArea>
 
-        {/* Bottom pinned: الإعدادات — super_admin only */}
+        {/* ── Settings pinned bottom ── */}
         {isSuperAdmin && (
-          <div className="p-3 border-t">
+          <div
+            className="p-3 border-t"
+            style={{ borderColor: "rgba(255,255,255,0.07)" }}
+          >
             <TooltipProvider delayDuration={0}>
               <SidebarItem
                 {...itemProps({
@@ -206,24 +238,28 @@ export function Sidebar({
           </div>
         )}
 
-        {/* Expand button when collapsed (desktop) */}
+        {/* Expand button (desktop, collapsed state) */}
         {isCollapsed && (
-          <div className="p-3 border-t hidden lg:block">
-            <Button
-              variant="ghost"
-              size="icon"
+          <div
+            className="p-3 border-t hidden lg:block"
+            style={{ borderColor: "rgba(255,255,255,0.07)" }}
+          >
+            <button
               onClick={onToggle}
-              className="w-full"
+              className="w-full flex items-center justify-center p-2 rounded-lg transition-colors hover:bg-white/10"
+              style={{ color: "rgba(250,250,247,0.45)" }}
               aria-label="توسيع القائمة الجانبية"
             >
               <ChevronLeft className="h-4 w-4 rotate-180 rtl:rotate-0" />
-            </Button>
+            </button>
           </div>
         )}
       </aside>
     </>
   );
 }
+
+// ─── Sidebar item ─────────────────────────────────────────────────────────────
 
 function SidebarItem({
   item,
@@ -243,14 +279,36 @@ function SidebarItem({
       href={item.href}
       onClick={onClick}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
-        isCollapsed && "justify-center px-2",
-        isActive
-          ? "bg-primary text-primary-foreground shadow-sm border-s-2 border-primary-foreground/50"
-          : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 group",
+        isCollapsed && "justify-center px-0"
       )}
+      style={
+        isActive
+          ? {
+              background: "hsl(var(--n-forest))",
+              color: "hsl(var(--n-ivory))",
+            }
+          : {
+              color: "rgba(250,250,247,0.60)",
+            }
+      }
+      onMouseEnter={(e) => {
+        if (!isActive) {
+          (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)";
+          (e.currentTarget as HTMLElement).style.color = "hsl(var(--n-ivory))";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isActive) {
+          (e.currentTarget as HTMLElement).style.background = "";
+          (e.currentTarget as HTMLElement).style.color = "rgba(250,250,247,0.60)";
+        }
+      }}
     >
-      <Icon className="h-5 w-5 shrink-0" />
+      <Icon
+        className="h-[18px] w-[18px] shrink-0"
+        style={{ color: isActive ? "hsl(var(--n-gold))" : "inherit" }}
+      />
       {!isCollapsed && <span>{item.label}</span>}
     </Link>
   );
