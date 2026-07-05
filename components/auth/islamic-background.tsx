@@ -75,47 +75,47 @@ function scallopRing(N: number, R: number, bulge: number, cx: number, cy: number
 // ── Medallion ─────────────────────────────────────────────────────────────
 
 function Arabesque({ cx, cy }: { cx: number; cy: number }) {
-  const S = "#C9963E";
+  const S = "#A87228"; // warmer, deeper gold — more visible on white
   return (
     <g stroke={S} fill="none">
 
       {/* ① Outermost boundary circle */}
-      <circle cx={cx} cy={cy} r={268} strokeWidth={0.7} />
+      <circle cx={cx} cy={cy} r={268} strokeWidth={1.1} />
 
       {/* ② 16-lobe scalloped outer ring */}
-      <path d={scallopRing(16, 262, 1.055, cx, cy)} strokeWidth={0.55} />
+      <path d={scallopRing(16, 262, 1.055, cx, cy)} strokeWidth={0.85} />
 
       {/* ③ 16-pointed star — the main geometric web */}
-      <path d={starPath(16, 255, 103, cx, cy)} strokeWidth={1.1} />
+      <path d={starPath(16, 255, 103, cx, cy)} strokeWidth={1.55} />
 
       {/* ④ Outer petal ring — 16 long almond petals */}
-      <path d={petalRing(16, 204, 92, 28, cx, cy)} strokeWidth={0.8} />
+      <path d={petalRing(16, 204, 92, 28, cx, cy)} strokeWidth={1.15} />
 
       {/* ⑤ Mid boundary + 12-lobe scallop */}
-      <circle cx={cx} cy={cy} r={172} strokeWidth={0.55} />
-      <path d={scallopRing(12, 167, 1.06, cx, cy)} strokeWidth={0.45} />
+      <circle cx={cx} cy={cy} r={172} strokeWidth={0.9} />
+      <path d={scallopRing(12, 167, 1.06, cx, cy)} strokeWidth={0.72} />
 
       {/* ⑥ 12-pointed star */}
-      <path d={starPath(12, 162, 66, cx, cy)} strokeWidth={0.95} />
+      <path d={starPath(12, 162, 66, cx, cy)} strokeWidth={1.35} />
 
       {/* ⑦ Mid petal ring — 12 petals */}
-      <path d={petalRing(12, 132, 72, 24, cx, cy)} strokeWidth={0.75} />
+      <path d={petalRing(12, 132, 72, 24, cx, cy)} strokeWidth={1.05} />
 
       {/* ⑧ Inner boundary + 8-lobe scallop */}
-      <circle cx={cx} cy={cy} r={102} strokeWidth={0.5} />
-      <path d={scallopRing(8, 98, 1.07, cx, cy)} strokeWidth={0.42} />
+      <circle cx={cx} cy={cy} r={102} strokeWidth={0.8} />
+      <path d={scallopRing(8, 98, 1.07, cx, cy)} strokeWidth={0.65} />
 
       {/* ⑨ 8-pointed star */}
-      <path d={starPath(8, 94, 38, cx, cy)} strokeWidth={0.88} />
+      <path d={starPath(8, 94, 38, cx, cy)} strokeWidth={1.25} />
 
       {/* ⑩ Inner petal ring — 8 petals */}
-      <path d={petalRing(8, 70, 55, 18, cx, cy)} strokeWidth={0.7} />
+      <path d={petalRing(8, 70, 55, 18, cx, cy)} strokeWidth={1.0} />
 
       {/* ⑪ Core star + detail circles */}
-      <circle cx={cx} cy={cy} r={40} strokeWidth={0.52} />
-      <path d={starPath(8, 36, 15, cx, cy)} strokeWidth={0.7} />
-      <circle cx={cx} cy={cy} r={18} strokeWidth={0.48} />
-      <circle cx={cx} cy={cy} r={8}  strokeWidth={0.42} />
+      <circle cx={cx} cy={cy} r={40} strokeWidth={0.82} />
+      <path d={starPath(8, 36, 15, cx, cy)} strokeWidth={1.0} />
+      <circle cx={cx} cy={cy} r={18} strokeWidth={0.75} />
+      <circle cx={cx} cy={cy} r={8}  strokeWidth={0.65} />
     </g>
   );
 }
@@ -129,7 +129,7 @@ const PANEL: React.CSSProperties = {
   overflow:      "visible",
   pointerEvents: "none",
   zIndex:        1,
-  opacity:       0.10,
+  opacity:       0.15,
 };
 
 export function IslamicBackground() {
