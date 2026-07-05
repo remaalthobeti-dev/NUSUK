@@ -1,53 +1,58 @@
 "use client";
 
-import { useState } from "react";
-import type { TeamWorkloadMetrics, WorkloadLevel } from "@/lib/data/analytics-executive";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  LabelList,
+} from "recharts";
+import Link from "next/link";
+import type { TeamWorkloadMetrics } from "@/lib/data/analytics-executive";
 
 interface Props {
   teams: TeamWorkloadMetrics[];
 }
 
-// ─── Level config ─────────────────────────────────────────────────────────────
+function truncate(name: string, len = 6) {
+  return name.length > len ? name.slice(0, len) + "…" : name;
+}
 
-const LEVEL_CONFIG: Record<WorkloadLevel, {
-  label: string;
-  dotClass: string;
-  textClass: string;
-  bgClass: string;
-}> = {
-  low:      { label: "منخفض",  dotClass: "bg-emerald-500", textClass: "text-emerald-700 dark:text-emerald-400", bgClass: "bg-emerald-100 dark:bg-emerald-950/40" },
-  normal:   { label: "طبيعي",  dotClass: "bg-blue-500",    textClass: "text-blue-700 dark:text-blue-400",       bgClass: "bg-blue-100 dark:bg-blue-950/40" },
-  high:     { label: "مرتفع",  dotClass: "bg-amber-500",   textClass: "text-amber-700 dark:text-amber-400",     bgClass: "bg-amber-100 dark:bg-amber-950/40" },
-  critical: { label: "حرج",    dotClass: "bg-red-500",     textClass: "text-red-700 dark:text-red-400",         bgClass: "bg-red-100 dark:bg-red-950/40" },
-};
-
-// ─── Bar segments ─────────────────────────────────────────────────────────────
-
-const SEGMENTS: Array<{ key: keyof TeamWorkloadMetrics; label: string; barClass: string; color: string }> = [
-  { key: "completed", label: "مكتملة",           barClass: "bg-emerald-500", color: "#10b981" },
-  { key: "active",    label: "جارية / جديدة",    barClass: "bg-blue-500",   color: "#3b82f6" },
-  { key: "onHold",    label: "قيد المراجعة",     barClass: "bg-violet-500", color: "#8b5cf6" },
-  { key: "overdue",   label: "متأخرة",           barClass: "bg-red-500",    color: "#ef4444" },
-  { key: "available", label: "متاحة",            barClass: "bg-slate-300 dark:bg-slate-600",  color: "#94a3b8" },
-];
-
-// ─── Tooltip ──────────────────────────────────────────────────────────────────
-
-function TeamTooltip({ team }: { team: TeamWorkloadMetrics }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CustomLabel(props: any) {
+  const { x, y, width, value } = props;
   return (
-    <div className="absolute z-50 bottom-full mb-2 start-0 min-w-[210px] rounded-xl border bg-popover text-popover-foreground shadow-xl p-3.5 pointer-events-none">
-      <p className="font-bold text-sm mb-2.5 border-b pb-2">{team.teamName}</p>
-      <div className="space-y-1.5 text-xs">
-        <Row label="الأعضاء"           value={`${team.memberCount} موظف`} />
-        <Row label="جارية / جديدة"     value={team.active}     accent="text-blue-600 dark:text-blue-400" />
-        <Row label="مكتملة"            value={team.completed}  accent="text-emerald-600 dark:text-emerald-400" />
-        <Row label="قيد المراجعة"      value={team.onHold}     accent="text-violet-600 dark:text-violet-400" />
-        <Row label="متأخرة"            value={team.overdue}    accent="text-red-600 dark:text-red-400" />
-        <Row label="متاحة"             value={team.available} />
-        <div className="border-t pt-1.5 mt-1">
-          <Row label="معدل الإنجاز"    value={`${team.completionRate}%`} accent="text-emerald-600 dark:text-emerald-400" />
-          <Row label="عبء العمل"       value={`${team.workloadScore} مهمة / عضو`} />
-        </div>
+    <text
+      x={x + width / 2}
+      y={y - 6}
+      textAnchor="middle"
+      fontSize={12}
+      fontWeight={700}
+      fill="currentColor"
+      className="fill-foreground"
+    >
+      {value}%
+    </text>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CustomTooltip({ active, payload }: any) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload as TeamWorkloadMetrics;
+  return (
+    <div className="rounded-xl border bg-popover text-popover-foreground shadow-lg p-3.5 text-xs min-w-[180px]">
+      <p className="font-bold text-sm mb-2 border-b pb-2">{d.teamName}</p>
+      <div className="space-y-1">
+        <Row label="الأعضاء"    value={`${d.memberCount} موظف`} />
+        <Row label="مكتملة"     value={d.completed} accent="text-emerald-600 dark:text-emerald-400" />
+        <Row label="نشطة"       value={d.active}    accent="text-blue-600 dark:text-blue-400" />
+        <Row label="متأخرة"     value={d.overdue}   accent="text-red-600 dark:text-red-400" />
+        <Row label="معدل الإنجاز" value={`${d.completionRate}%`} accent="text-emerald-600 dark:text-emerald-400" />
       </div>
     </div>
   );
@@ -62,113 +67,78 @@ function Row({ label, value, accent }: { label: string; value: string | number; 
   );
 }
 
-// ─── Single team row ──────────────────────────────────────────────────────────
-
-function TeamRow({ team }: { team: TeamWorkloadMetrics }) {
-  const [hovered, setHovered] = useState(false);
-  const levelConf = LEVEL_CONFIG[team.workloadLevel];
-
-  return (
-    <div
-      className="group relative flex items-center gap-4 py-3.5 border-b last:border-b-0"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {/* Team name + member count */}
-      <div className="w-32 xl:w-40 shrink-0 text-end">
-        <p className="text-sm font-semibold text-foreground truncate leading-tight">{team.teamName}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{team.memberCount} أعضاء</p>
-      </div>
-
-      {/* Progress bar */}
-      <div className="relative flex-1 h-7 rounded-lg overflow-hidden bg-muted/40 cursor-pointer">
-        {team.total === 0 ? (
-          <div className="h-full flex items-center justify-center text-xs text-muted-foreground px-3">
-            لا توجد مهام
-          </div>
-        ) : (
-          <div className="flex h-full">
-            {SEGMENTS.map(({ key, barClass }) => {
-              const count = team[key] as number;
-              if (count === 0) return null;
-              const pct = (count / team.total) * 100;
-              return (
-                <div
-                  key={key}
-                  className={`h-full transition-all duration-500 ${barClass}`}
-                  style={{ width: `${pct}%` }}
-                />
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Completion rate + workload badge */}
-      <div className="w-28 shrink-0 flex items-center justify-between gap-2">
-        <div className="text-start">
-          <p className="text-base font-bold tabular-nums text-foreground leading-tight">
-            {team.completionRate}%
-          </p>
-          <p className="text-[10px] text-muted-foreground">إنجاز</p>
-        </div>
-        <span
-          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${levelConf.bgClass} ${levelConf.textClass}`}
-        >
-          {levelConf.label}
-        </span>
-      </div>
-
-      {/* Tooltip */}
-      {hovered && <TeamTooltip team={team} />}
-    </div>
-  );
-}
-
-// ─── Legend ───────────────────────────────────────────────────────────────────
-
-function BarLegend() {
-  return (
-    <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
-      {SEGMENTS.map(({ label, barClass }) => (
-        <span key={label} className="flex items-center gap-1.5">
-          <span className={`w-2.5 h-2.5 rounded-sm shrink-0 ${barClass}`} />
-          {label}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-// ─── Main ─────────────────────────────────────────────────────────────────────
-
 export function TeamWorkloadChart({ teams }: Props) {
+  const sorted = [...teams].sort((a, b) => b.completionRate - a.completionRate);
+  const chartData = sorted.map((t) => ({
+    ...t,
+    name: truncate(t.teamName),
+  }));
+
   return (
-    <section>
-      {/* Section header */}
-      <div className="flex items-center justify-between mb-4">
+    <div className="rounded-2xl border bg-card p-5 flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
         <div>
-          <h2 className="text-base font-bold text-foreground leading-tight">أداء الفرق</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            نسبة إنجاز المهام لكل فريق — مرّر على الشريط للتفاصيل
-          </p>
+          <h3 className="text-sm font-bold text-foreground">أداء الفرق</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">نسبة إنجاز المهام لكل فريق</p>
         </div>
+        <Link
+          href="/dashboard/operations"
+          className="text-xs text-primary hover:underline flex items-center gap-0.5 mt-0.5"
+        >
+          عرض تفاصيل الفرق ›
+        </Link>
       </div>
 
+      {/* Chart */}
       {teams.length === 0 ? (
-        <div className="rounded-xl border bg-muted/20 py-16 text-center">
-          <p className="text-sm text-muted-foreground">لا توجد فرق مسجلة بعد</p>
+        <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+          لا توجد بيانات
         </div>
       ) : (
-        <div className="rounded-2xl border bg-card p-5">
-          <BarLegend />
-          <div className="mt-3">
-            {teams.map((team) => (
-              <TeamRow key={team.teamId} team={team} />
-            ))}
-          </div>
+        <div className="flex-1 min-h-0">
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart
+              data={chartData}
+              margin={{ top: 20, right: 10, left: -20, bottom: 10 }}
+              barCategoryGap="30%"
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} className="opacity-20" />
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                domain={[0, 100]}
+                tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+                axisLine={false}
+                tickLine={false}
+                unit="%"
+              />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+              <Bar dataKey="completionRate" radius={[6, 6, 0, 0]} maxBarSize={48}>
+                <LabelList dataKey="completionRate" content={<CustomLabel />} />
+                {chartData.map((entry, index) => (
+                  <Cell
+                    key={index}
+                    fill={
+                      entry.completionRate >= 80
+                        ? "#10b981"
+                        : entry.completionRate >= 60
+                          ? "#3b82f6"
+                          : entry.completionRate >= 40
+                            ? "#f59e0b"
+                            : "#ef4444"
+                    }
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       )}
-    </section>
+    </div>
   );
 }

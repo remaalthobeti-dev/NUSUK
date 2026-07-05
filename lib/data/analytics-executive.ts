@@ -64,12 +64,31 @@ export interface LiveInsight {
   metric?: string;
 }
 
+// Weekly trend point (last 5 weeks)
+export interface TrendPoint {
+  weekLabel: string;   // e.g. "04 مايو"
+  completed: number;
+  created: number;
+}
+
+// Individual overdue task detail
+export interface OverdueTaskDetail {
+  id: string;
+  title: string;
+  teamName: string;
+  dueDate: string;      // ISO string
+  daysLate: number;
+}
+
 // Root data object passed to the client component
 export interface ExecutiveAnalyticsData {
   heroMetrics: HeroMetrics;
   teamWorkloads: TeamWorkloadMetrics[];
   taskDistribution: TaskDistributionMetrics;
   insights: LiveInsight[];
+  trendData: TrendPoint[];
+  overdueTaskDetails: OverdueTaskDetail[];
+  teamCount: number;
   viewerRole: string;
   viewerTeamId: string | null;
   generatedAt: string;
@@ -211,10 +230,52 @@ export function computeInsights(
 
 // ─── Data fetch ───────────────────────────────────────────────────────────────
 
+// ─── Trend aggregation ───────────────────────────────────────────────────────
+
+function buildTrendData(
+  tasks: Array<{ created_at: string; completed_at: string | null }>
+): TrendPoint[] {
+  const now = Date.now();
+  const points: TrendPoint[] = [];
+
+  for (let w = 4; w >= 0; w--) {
+    const weekStart = new Date(now - (w + 1) * 7 * 86_400_000);
+    const weekEnd   = new Date(now - w * 7 * 86_400_000);
+
+    const label = weekStart.toLocaleDateString("ar-SA", {
+      day: "2-digit",
+      month: "short",
+    });
+
+    const created   = tasks.filter((t) => {
+      const d = new Date(t.created_at).getTime();
+      return d >= weekStart.getTime() && d < weekEnd.getTime();
+    }).length;
+
+    const completed = tasks.filter((t) => {
+      if (!t.completed_at) return false;
+      const d = new Date(t.completed_at).getTime();
+      return d >= weekStart.getTime() && d < weekEnd.getTime();
+    }).length;
+
+    points.push({ weekLabel: label, created, completed });
+  }
+  return points;
+}
+
 interface RawTask {
   team_id: string | null;
   status: string;
   priority: string;
+  due_date: string | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+interface RawOverdueTask {
+  id: string;
+  title: string;
+  team_id: string | null;
   due_date: string | null;
 }
 
@@ -233,24 +294,64 @@ export async function getExecutiveAnalyticsData(): Promise<ExecutiveAnalyticsDat
 
   // ── Parallel fetches ──────────────────────────────────────────────────────
 
-  const [teamsRes, tasksRes, employeesRes] = await Promise.all([
-    // All active teams (super_admin sees all, manager sees own team only)
+  const [teamsRes, tasksRes, employeesRes, overdueRes] = await Promise.all([
+    // All active teams
     isSuperAdmin
       ? supabase.from("teams").select("id, name").eq("is_active", true).order("name")
       : supabase.from("teams").select("id, name").eq("id", teamId ?? "").eq("is_active", true),
 
-    // Tasks: only fields needed for analytics
+    // Tasks: fields needed for analytics + trend
     isSuperAdmin
-      ? supabase.from("tasks").select("team_id, status, priority, due_date")
-      : supabase.from("tasks").select("team_id, status, priority, due_date").eq("team_id", teamId ?? ""),
+      ? supabase.from("tasks").select("team_id, status, priority, due_date, created_at, completed_at")
+      : supabase.from("tasks").select("team_id, status, priority, due_date, created_at, completed_at").eq("team_id", teamId ?? ""),
 
     // Employee counts per team
     supabase.from("employees").select("id, team_id").eq("is_active", true),
+
+    // Top 5 overdue tasks with title
+    isSuperAdmin
+      ? supabase
+          .from("tasks")
+          .select("id, title, team_id, due_date")
+          .not("status", "in", '("completed","cancelled")')
+          .lt("due_date", new Date().toISOString().split("T")[0])
+          .not("due_date", "is", null)
+          .order("due_date", { ascending: true })
+          .limit(5)
+      : supabase
+          .from("tasks")
+          .select("id, title, team_id, due_date")
+          .eq("team_id", teamId ?? "")
+          .not("status", "in", '("completed","cancelled")')
+          .lt("due_date", new Date().toISOString().split("T")[0])
+          .not("due_date", "is", null)
+          .order("due_date", { ascending: true })
+          .limit(5),
   ]);
 
   const teams = (teamsRes.data ?? []) as Array<{ id: string; name: string }>;
   const tasks = (tasksRes.data ?? []) as RawTask[];
   const employees = (employeesRes.data ?? []) as Array<{ id: string; team_id: string | null }>;
+  const rawOverdue = (overdueRes.data ?? []) as RawOverdueTask[];
+
+  // Build team name lookup for overdue tasks
+  const teamNameById = new Map(teams.map((t) => [t.id, t.name]));
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const overdueTaskDetails: OverdueTaskDetail[] = rawOverdue.map((t) => {
+    const due = new Date(t.due_date!);
+    due.setHours(0, 0, 0, 0);
+    const daysLate = Math.max(0, Math.floor((today.getTime() - due.getTime()) / 86_400_000));
+    return {
+      id: t.id,
+      title: t.title,
+      teamName: t.team_id ? (teamNameById.get(t.team_id) ?? "—") : "—",
+      dueDate: t.due_date!,
+      daysLate,
+    };
+  });
 
   // ── Member count lookup ────────────────────────────────────────────────────
 
@@ -359,11 +460,18 @@ export async function getExecutiveAnalyticsData(): Promise<ExecutiveAnalyticsDat
 
   const insights = computeInsights(teamWorkloads, heroMetrics);
 
+  // ── Trend data (weekly aggregates) ───────────────────────────────────────
+
+  const trendData = buildTrendData(tasks);
+
   return {
     heroMetrics,
     teamWorkloads,
     taskDistribution,
     insights,
+    trendData,
+    overdueTaskDetails,
+    teamCount: teams.length,
     viewerRole: role,
     viewerTeamId: teamId,
     generatedAt: new Date().toISOString(),
@@ -378,6 +486,9 @@ function emptyData(): ExecutiveAnalyticsData {
     teamWorkloads: [],
     taskDistribution: { byStatus: [], byPriority: [], total: 0 },
     insights: [],
+    trendData: [],
+    overdueTaskDetails: [],
+    teamCount: 0,
     viewerRole: "team_member",
     viewerTeamId: null,
     generatedAt: new Date().toISOString(),

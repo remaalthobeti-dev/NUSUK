@@ -2,13 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw, Download, Printer } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
 import { HeroMetricsSection } from "./hero-metrics";
-import { LiveInsightsSection } from "./live-insights";
 import { TeamWorkloadChart } from "./team-workload-chart";
 import { TaskDistributionChart } from "./task-distribution-chart";
+import { TrendChart } from "./trend-chart";
+import { TopTeamsPanel } from "./top-teams-panel";
+import { OverdueTasksPanel } from "./overdue-tasks-panel";
+import { KpiIndicatorsPanel } from "./kpi-indicators-panel";
+import { FilterPanel } from "./filter-panel";
 import type { ExecutiveAnalyticsData } from "@/lib/data/analytics-executive";
 
 interface Props {
@@ -33,11 +36,11 @@ export function ExecutiveClient({ data }: Props) {
   // Realtime: refresh on task changes
   useEffect(() => {
     const supabase = createClient();
-    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
     const trigger = () => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
         setIsRefreshing(true);
         router.refresh();
       }, 600);
@@ -49,106 +52,71 @@ export function ExecutiveClient({ data }: Props) {
         : undefined;
 
     const channel = supabase
-      .channel("executive-analytics-rt")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "tasks", ...(filter ? { filter } : {}) },
-        trigger
-      )
+      .channel("exec-analytics-rt")
+      .on("postgres_changes", { event: "*", schema: "public", table: "tasks", ...(filter ? { filter } : {}) }, trigger)
       .subscribe();
 
     return () => {
-      if (debounceTimer) clearTimeout(debounceTimer);
+      if (timer) clearTimeout(timer);
       supabase.removeChannel(channel);
     };
   }, [router, data.viewerTeamId, data.viewerRole]);
 
-  async function handleExcelExport() {
-    const XLSX = await import("xlsx");
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet([
-      ["المؤشر", "القيمة"],
-      ["إجمالي المهام", data.heroMetrics.totalTasks],
-      ["معدل الإنجاز %", data.heroMetrics.completionRate],
-      ["المهام النشطة", data.heroMetrics.activeTasks],
-      ["المهام المتأخرة", data.heroMetrics.overdueTasks],
-    ]);
-    XLSX.utils.book_append_sheet(wb, ws, "ملخص");
-    XLSX.writeFile(wb, `تقرير-نسك-${new Date().toLocaleDateString("ar-SA")}.xlsx`);
-  }
-
   function formatTime(d: Date) {
-    return d.toLocaleTimeString("ar-SA", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
+    return d.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" });
   }
 
   return (
-    <div className="space-y-8 pb-8">
-      {/* ── Top control bar ── */}
+    <div className="space-y-6 pb-8">
+      {/* ── Live status bar ── */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        {/* Live status indicator */}
-        <div className="flex items-center gap-2.5 text-sm">
-          <span className="relative flex h-2.5 w-2.5 shrink-0">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="relative flex h-2 w-2 shrink-0">
             {isRefreshing ? (
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-400 animate-pulse" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400 animate-pulse" />
             ) : (
               <>
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </>
             )}
           </span>
-          <span className="text-muted-foreground text-xs">
-            {isRefreshing
-              ? "جاري التحديث…"
-              : `آخر تحديث: ${formatTime(lastUpdated)}`}
-          </span>
+          {isRefreshing ? "جاري التحديث…" : `آخر تحديث: ${formatTime(lastUpdated)}`}
         </div>
-
-        {/* Action buttons */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-2 text-xs"
-            onClick={handleExcelExport}
-          >
-            <Download className="h-3.5 w-3.5 text-emerald-600" />
-            تصدير Excel
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-2 text-xs print:hidden"
-            onClick={() => window.print()}
-          >
-            <Printer className="h-3.5 w-3.5" />
-            طباعة
-          </Button>
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 h-8 px-2.5 rounded-lg border border-border hover:bg-muted/50"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
-            تحديث
-          </button>
-        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 px-2.5 py-1.5 rounded-lg border border-border hover:bg-muted/40"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+          تحديث يدوي
+        </button>
       </div>
 
-      {/* ── KPI cards ── */}
-      <HeroMetricsSection metrics={data.heroMetrics} />
+      {/* ── Main layout: filter sidebar + content ── */}
+      <div className="flex gap-5 items-start">
+        {/* Filter panel (right side in RTL = first in DOM) */}
+        <FilterPanel teams={data.teamWorkloads} onRefresh={handleRefresh} />
 
-      {/* ── Live insights ── */}
-      <LiveInsightsSection insights={data.insights} />
+        {/* Main content */}
+        <div className="flex-1 min-w-0 space-y-5">
+          {/* Row 1: 5 KPI cards */}
+          <HeroMetricsSection metrics={data.heroMetrics} teamCount={data.teamCount} />
 
-      {/* ── Charts row ── */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <TeamWorkloadChart teams={data.teamWorkloads} />
-        <TaskDistributionChart distribution={data.taskDistribution} />
+          {/* Row 2: 3 charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <TeamWorkloadChart teams={data.teamWorkloads} />
+            <TaskDistributionChart distribution={data.taskDistribution} />
+            <TrendChart trendData={data.trendData} />
+          </div>
+
+          {/* Row 3: 3 bottom panels */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <TopTeamsPanel teams={data.teamWorkloads} />
+            <OverdueTasksPanel tasks={data.overdueTaskDetails} />
+            <KpiIndicatorsPanel metrics={data.heroMetrics} teams={data.teamWorkloads} />
+          </div>
+        </div>
       </div>
     </div>
   );
