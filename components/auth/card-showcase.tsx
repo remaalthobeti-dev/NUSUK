@@ -10,8 +10,8 @@ import { useEffect, useRef } from "react";
   Negative marginTop pushes the lanyard above the viewport top edge.
 */
 const CARD_SRC = "/images/nusuk-card.png";
-const CARD_W   = 318;
-const CARD_H   = 458; // 318 / 0.6948 ≈ 458
+const CARD_W   = 477;
+const CARD_H   = 687; // 477 / 0.6948 ≈ 687  (+50% from 318×458)
 
 function OfficialCard({ cardRef }: { cardRef: React.Ref<HTMLDivElement> }) {
   return (

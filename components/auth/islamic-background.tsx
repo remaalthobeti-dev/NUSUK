@@ -1,57 +1,95 @@
 "use client";
 
 /*
-  SVG-based Islamic geometric background.
-  Layer order: white body → this SVG (z:1) → page content (z:2).
+  Two large Islamic medallion ornaments at opposite corners.
+  Only the visible quadrant of each ornament shows — the rest
+  is naturally clipped by the viewport edge.
 
-  Pattern: 8-pointed star (two overlapping squares, 22.5° step vertices).
-  Star centered at (29,29) in a 58×58 tile.
-  CSS mask fades the pattern out toward the centre so only edges show.
+  Layer order: white <body> → this (z:1) → page content (z:2).
 */
 
-const STAR =
-  "M29,12 L31.68,22.53 L41.02,16.98 L35.47,26.32 L46,29 " +
-  "L35.47,31.68 L41.02,41.02 L31.68,35.47 L29,46 " +
-  "L26.32,35.47 L16.98,41.02 L22.53,31.68 L12,29 " +
-  "L22.53,26.32 L16.98,16.98 L26.32,22.53 Z";
+function star8Path(R: number, r: number, cx: number, cy: number): string {
+  const pts: string[] = [];
+  for (let i = 0; i < 16; i++) {
+    const a   = (i * Math.PI) / 8 - Math.PI / 2;
+    const rad = i % 2 === 0 ? R : r;
+    pts.push(
+      `${(cx + Math.cos(a) * rad).toFixed(2)},${(cy + Math.sin(a) * rad).toFixed(2)}`,
+    );
+  }
+  return "M " + pts[0] + " " + pts.slice(1).map((p) => "L " + p).join(" ") + " Z";
+}
 
-/* Radial CSS mask: transparent inside → opaque at edges/corners */
-const MASK =
-  "radial-gradient(ellipse 78% 72% at 50% 50%, " +
-  "transparent 0%, transparent 28%, black 68%)";
+function Medallion({ cx, cy }: { cx: number; cy: number }) {
+  return (
+    <g stroke="#C9963E" fill="none">
+      {/* Outermost ring */}
+      <circle cx={cx} cy={cy} r={245} strokeWidth={0.5} />
+
+      {/* Large outer star */}
+      <path d={star8Path(228, 92, cx, cy)} strokeWidth={1.0} />
+
+      {/* Spoke lines — outer ring to mid ring */}
+      {Array.from({ length: 8 }, (_, i) => {
+        const a  = (i * Math.PI) / 4 - Math.PI / 2;
+        const x1 = cx + Math.cos(a) * 155;
+        const y1 = cy + Math.sin(a) * 155;
+        const x2 = cx + Math.cos(a) * 245;
+        const y2 = cy + Math.sin(a) * 245;
+        return <line key={i} x1={x1.toFixed(2)} y1={y1.toFixed(2)} x2={x2.toFixed(2)} y2={y2.toFixed(2)} strokeWidth={0.35} />;
+      })}
+
+      {/* Mid ring */}
+      <circle cx={cx} cy={cy} r={155} strokeWidth={0.5} />
+
+      {/* Mid star */}
+      <path d={star8Path(148, 60, cx, cy)} strokeWidth={0.85} />
+
+      {/* Spoke lines — inner ring to mid ring */}
+      {Array.from({ length: 8 }, (_, i) => {
+        const a  = (i * Math.PI) / 4;
+        const x1 = cx + Math.cos(a) * 88;
+        const y1 = cy + Math.sin(a) * 88;
+        const x2 = cx + Math.cos(a) * 155;
+        const y2 = cy + Math.sin(a) * 155;
+        return <line key={i} x1={x1.toFixed(2)} y1={y1.toFixed(2)} x2={x2.toFixed(2)} y2={y2.toFixed(2)} strokeWidth={0.3} />;
+      })}
+
+      {/* Inner ring */}
+      <circle cx={cx} cy={cy} r={88} strokeWidth={0.45} />
+
+      {/* Inner star */}
+      <path d={star8Path(82, 33, cx, cy)} strokeWidth={0.75} />
+
+      {/* Centre detail */}
+      <circle cx={cx} cy={cy} r={28} strokeWidth={0.5} />
+      <circle cx={cx} cy={cy} r={14} strokeWidth={0.4} />
+    </g>
+  );
+}
+
+const BASE: React.CSSProperties = {
+  position:      "fixed",
+  width:         450,
+  height:        450,
+  overflow:      "visible",
+  pointerEvents: "none",
+  zIndex:        1,
+  opacity:       0.09,
+};
 
 export function IslamicBackground() {
   return (
-    <svg
-      aria-hidden
-      style={{
-        position:              "fixed",
-        inset:                 0,
-        width:                 "100%",
-        height:                "100%",
-        pointerEvents:         "none",
-        zIndex:                1,
-        maskImage:             MASK,
-        WebkitMaskImage:       MASK,
-      }}
-    >
-      <defs>
-        <pattern
-          id="nusuk-star"
-          x="0" y="0"
-          width="58" height="58"
-          patternUnits="userSpaceOnUse"
-        >
-          <path
-            d={STAR}
-            fill="none"
-            stroke="#C9963E"
-            strokeWidth="0.85"
-          />
-        </pattern>
-      </defs>
+    <>
+      {/* Top-left — only the SE quadrant of the medallion is in-viewport */}
+      <svg aria-hidden style={{ ...BASE, top: 0, left: 0 }}>
+        <Medallion cx={0} cy={0} />
+      </svg>
 
-      <rect width="100%" height="100%" fill="url(#nusuk-star)" opacity="0.45" />
-    </svg>
+      {/* Bottom-right — only the NW quadrant is in-viewport */}
+      <svg aria-hidden style={{ ...BASE, bottom: 0, right: 0 }}>
+        <Medallion cx={450} cy={450} />
+      </svg>
+    </>
   );
 }

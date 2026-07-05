@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, Loader2, Mail, Lock, UserPlus, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, UserPlus, ShieldCheck, ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const loginSchema = z.object({
@@ -82,11 +82,8 @@ export function LoginForm() {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema) });
-
-  const emailValue = watch("email", "");
 
   async function onSubmit(data: LoginFormData) {
     setAuthError(null);
@@ -181,7 +178,7 @@ export function LoginForm() {
             placeholder="example@email.com"
             autoComplete="email"
             hasError={!!errors.email}
-            endIcon={!emailValue ? <Mail size={15} /> : undefined}
+            endIcon={undefined}
             registration={register("email")}
           />
           {errors.email && (
