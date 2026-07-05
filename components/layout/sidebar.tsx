@@ -246,8 +246,8 @@ function SidebarItem({
         "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
         isCollapsed && "justify-center px-2",
         isActive
-          ? "bg-primary text-primary-foreground shadow-sm"
-          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          ? "bg-primary text-primary-foreground shadow-sm border-s-2 border-primary-foreground/50"
+          : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
       )}
     >
       <Icon className="h-5 w-5 shrink-0" />

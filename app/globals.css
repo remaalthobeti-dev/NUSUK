@@ -154,6 +154,16 @@
 
   /* ── NUSUK brand helpers ── */
 
+  /* Brand gradient — used for logo chips, accent elements */
+  .nusuk-gradient {
+    background: linear-gradient(135deg, hsl(var(--n-dark)) 0%, hsl(var(--n-forest)) 100%);
+  }
+
+  /* Smooth page entry */
+  .page-enter {
+    animation: n-rise 0.4s var(--n-ease-out) both;
+  }
+
   /* Auth page: the brand panel ivory background */
   .nusuk-brand-bg {
     background: radial-gradient(

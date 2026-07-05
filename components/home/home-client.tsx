@@ -146,16 +146,16 @@ export function HomeClient({
 
             {/* Dates */}
             {todayDates && (
-              <div className="mt-4 space-y-0.5">
-                <p className="text-xs text-muted-foreground">{todayDates.hijri} هـ</p>
-                <p className="text-xs text-muted-foreground/70">
-                  الموافق {todayDates.gregorian}
+              <div className="mt-4 rounded-lg bg-muted/40 px-3 py-2 space-y-0.5">
+                <p className="text-xs font-medium text-foreground/80">{todayDates.hijri} هـ</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {todayDates.gregorian}
                 </p>
               </div>
             )}
 
             {/* Live status */}
-            <div className="mt-4 flex items-center gap-2">
+            <div className="mt-3 flex items-center gap-2">
               <span
                 className={cn(
                   "w-2.5 h-2.5 rounded-full shrink-0",
@@ -163,7 +163,7 @@ export function HomeClient({
                   liveStatus === "available" && "animate-pulse"
                 )}
               />
-              <span className={cn("text-sm font-medium", statusCfg.textClass)}>
+              <span className={cn("text-xs font-semibold", statusCfg.textClass)}>
                 {statusCfg.label}
               </span>
               {liveNote && (
@@ -315,23 +315,23 @@ export function HomeClient({
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-3 text-center">
-              <div className="rounded-lg bg-muted/50 p-3">
-                <p className="text-2xl font-bold">{taskCounts.assigned}</p>
-                <p className="text-xs text-muted-foreground mt-1">المسندة</p>
+              <div className="rounded-xl bg-muted/50 p-4">
+                <p className="text-3xl font-bold tabular-nums text-foreground">{taskCounts.assigned}</p>
+                <p className="text-xs text-muted-foreground mt-1.5 font-medium">المسندة</p>
               </div>
-              <div className="rounded-lg bg-amber-50 dark:bg-amber-950/20 p-3">
-                <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">
+              <div className="rounded-xl bg-amber-50 dark:bg-amber-950/20 p-4">
+                <p className="text-3xl font-bold tabular-nums text-amber-700 dark:text-amber-400">
                   {taskCounts.pending}
                 </p>
-                <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">
+                <p className="text-xs text-amber-600 dark:text-amber-500 mt-1.5 font-medium">
                   قيد الانتظار
                 </p>
               </div>
-              <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/20 p-3">
-                <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
+              <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/20 p-4">
+                <p className="text-3xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400">
                   {taskCounts.completedToday}
                 </p>
-                <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">
+                <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1.5 font-medium">
                   مكتملة اليوم
                 </p>
               </div>
@@ -345,9 +345,9 @@ export function HomeClient({
 
       {/* ── Latest Announcement (compact) ───────────────────────────────── */}
       <Card>
-        <div className="flex items-center justify-between px-4 py-3 border-b">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b bg-muted/20 rounded-t-2xl">
           <div className="flex items-center gap-2">
-            <span className="text-base leading-none">📢</span>
+            <span className="text-sm leading-none">📢</span>
             <span className="text-sm font-semibold text-foreground">آخر إعلان</span>
             {unreadAnnouncements > 0 && (
               <Badge variant="destructive" className="text-[10px] h-4 px-1.5">
@@ -356,7 +356,7 @@ export function HomeClient({
             )}
           </div>
         </div>
-        <div className="px-4 py-3">
+        <div className="px-5 py-3.5">
           {!latestAnnouncement ? (
             <p className="text-xs text-muted-foreground text-center py-2">
               لا توجد إعلانات حالياً.
@@ -463,7 +463,7 @@ export function HomeClient({
               {todaysMeetings.map((m) => (
                 <div
                   key={m.id}
-                  className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                  className="flex items-start gap-3 p-3 rounded-xl border bg-card hover:bg-accent/40 hover:shadow-sm transition-all duration-150"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">

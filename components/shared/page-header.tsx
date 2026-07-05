@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Breadcrumb {
@@ -23,19 +23,19 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <div className={cn("mb-8", className)}>
+    <div className={cn("mb-6", className)}>
       {/* Breadcrumbs */}
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav className="flex items-center gap-2 mb-4 text-sm">
+        <nav className="flex items-center gap-1.5 mb-3 text-xs text-muted-foreground">
           {breadcrumbs.map((crumb, idx) => (
-            <span key={idx} className="flex items-center gap-2">
+            <span key={idx} className="flex items-center gap-1.5">
               {idx > 0 && (
-                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground rtl:rotate-180" />
+                <ChevronLeft className="h-3 w-3 rtl:rotate-180 text-muted-foreground/50" />
               )}
               {crumb.href ? (
                 <Link
                   href={crumb.href}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className="hover:text-foreground transition-colors duration-150"
                 >
                   {crumb.label}
                 </Link>
@@ -49,10 +49,10 @@ export function PageHeader({
 
       {/* Title row */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+        <div className="border-s-[3px] border-primary ps-4">
+          <h1 className="text-xl font-bold text-foreground leading-tight">{title}</h1>
           {description && (
-            <p className="text-sm text-muted-foreground mt-1">{description}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
           )}
         </div>
         {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
