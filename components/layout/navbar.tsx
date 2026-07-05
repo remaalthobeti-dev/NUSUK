@@ -60,10 +60,10 @@ export function Navbar({ onMobileMenuToggle, sidebarCollapsed }: NavbarProps) {
     <header
       className="fixed top-0 start-0 z-20 h-[var(--navbar-height)] bg-card border-b flex items-center px-4 gap-3 transition-all duration-300 ease-in-out"
       style={{
-        insetInlineEnd: sidebarCollapsed
+        insetInlineStart: sidebarCollapsed
           ? "var(--sidebar-collapsed-width)"
           : "var(--sidebar-width)",
-        insetInlineStart: 0,
+        insetInlineEnd: 0,
       }}
     >
       {/* Mobile menu toggle */}

@@ -24,8 +24,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         className={cn(
           "transition-all duration-300 ease-in-out",
           isCollapsed
-            ? "lg:me-[var(--sidebar-collapsed-width)]"
-            : "lg:me-[var(--sidebar-width)]"
+            ? "lg:ms-[var(--sidebar-collapsed-width)]"
+            : "lg:ms-[var(--sidebar-width)]"
         )}
       >
         {/* Navbar */}

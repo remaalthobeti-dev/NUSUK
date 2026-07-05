@@ -11,6 +11,7 @@ import {
   CircleUser,
   Settings,
   ShieldCheck,
+  ChevronRight,
   ChevronLeft,
   Building2,
   X,
@@ -91,7 +92,7 @@ export function Sidebar({
       {/* Sidebar shell — always dark brand green */}
       <aside
         className={cn(
-          "fixed top-0 end-0 z-40 h-screen flex flex-col transition-all duration-300 ease-in-out",
+          "fixed top-0 start-0 z-40 h-screen flex flex-col transition-all duration-300 ease-in-out",
           isCollapsed
             ? "w-[var(--sidebar-collapsed-width)]"
             : "w-[var(--sidebar-width)]",
@@ -161,7 +162,7 @@ export function Sidebar({
               style={{ color: "rgba(250,250,247,0.45)" }}
               aria-label="طي القائمة الجانبية"
             >
-              <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
+              <ChevronRight className="h-4 w-4 rtl:rotate-180" />
             </button>
           )}
         </div>
@@ -250,7 +251,7 @@ export function Sidebar({
               style={{ color: "rgba(250,250,247,0.45)" }}
               aria-label="توسيع القائمة الجانبية"
             >
-              <ChevronLeft className="h-4 w-4 rotate-180 rtl:rotate-0" />
+              <ChevronRight className="h-4 w-4 rotate-180 rtl:rotate-0" />
             </button>
           </div>
         )}
