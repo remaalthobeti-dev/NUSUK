@@ -41,7 +41,7 @@ export function IslamicBackground() {
 
       ctx.clearRect(0, 0, W, H);
       ctx.strokeStyle = "#C9963E";
-      ctx.lineWidth   = 0.55;
+      ctx.lineWidth   = 0.38;
 
       const S       = 54;          // tile size
       const FADE_PX = 300;         // edge band width in px
@@ -59,7 +59,7 @@ export function IslamicBackground() {
 
           // Alpha: strongest at corners, fades toward centre
           const t     = Math.max(0, 1 - edgeDist / FADE_PX);
-          const alpha = t * t * 0.032; // max ≈ 3.2% at the very edge
+          const alpha = t * t * 0.022; // max ≈ 2.2% at the very edge
 
           ctx.globalAlpha = alpha;
           drawStar8(ctx, x, y, S * 0.31, S * 0.13);

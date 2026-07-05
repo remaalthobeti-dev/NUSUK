@@ -5,14 +5,15 @@ import { useEffect, useRef } from "react";
 
 /*
   Official card: 469 × 675 px (aspect ratio 0.6948).
-  Display at 258 × 371 px (+7% vs previous 242 × 347).
+  Display at 278 × 400 px (+15% vs original 242 × 347).
   The card image already contains the lanyard — no CSS strap needed.
-  The panel positions this at the top so the lanyard appears to
-  extend outside the viewport, creating the natural hanging feeling.
+  A negative marginTop on the wrapper pushes the card's top edge above
+  the viewport so only the card body is visible and the lanyard appears
+  to exit through the ceiling, creating a natural hanging sensation.
 */
 const CARD_SRC = "/images/nusuk-card.png";
-const CARD_W   = 258;
-const CARD_H   = 371; // 258 / 0.6948
+const CARD_W   = 278;
+const CARD_H   = 400; // 278 / 0.6948 ≈ 400
 
 function OfficialCard({ cardRef }: { cardRef: React.Ref<HTMLDivElement> }) {
   return (
@@ -89,6 +90,7 @@ export function CardShowcase({ children }: { children?: React.ReactNode }) {
         alignItems:    "center",
         position:      "relative",
         zIndex:        1,
+        marginTop:     "-32px",
       }}
     >
       <OfficialCard cardRef={cardRef} />

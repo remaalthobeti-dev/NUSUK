@@ -54,8 +54,8 @@ export function TypewriterTagline({
       style={{
         direction:  "rtl",
         textAlign:  "center",
-        /* Comfortable gap below the card — not too far, not too close */
-        marginTop:  32,
+        /* Tight connection — tagline reads as part of the card unit */
+        marginTop:  22,
         lineHeight: 1.6,
         opacity:    phase === "waiting" ? 0 : 1,
         transition: "opacity 300ms ease",

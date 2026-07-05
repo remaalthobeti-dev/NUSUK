@@ -111,7 +111,7 @@ export default function LoginPage() {
           style={{
             background: "transparent",
             animation:  "n-rise .9s var(--n-ease-out) both",
-            paddingTop: "6vh",
+            paddingTop: "0",
           }}
         >
           <CardShowcase>
