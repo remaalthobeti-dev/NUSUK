@@ -57,7 +57,7 @@ export default function LoginPage() {
                   width={152}
                   height={159}
                   style={{
-                    height:    108,
+                    height:    162,
                     width:     "auto",
                     objectFit: "contain",
                     display:   "block",
