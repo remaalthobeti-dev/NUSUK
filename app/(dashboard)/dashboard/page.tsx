@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { HomeClient } from "@/components/home/home-client";
+import type { LatestCircular } from "@/components/home/home-client";
 import { getTodaysMeetings } from "@/lib/data/meetings";
 import type { AvailabilityStatus, UserRole, Team } from "@/types/database";
 
@@ -52,17 +53,63 @@ export default async function HomePage() {
     ).length,
   };
 
-  const [{ count: unreadCount }, todaysMeetings, teamsRes] = await Promise.all([
-    supabase
-      .from("notifications")
-      .select("id", { count: "exact", head: true })
-      .eq("recipient_id", emp.id)
-      .eq("is_read", false),
-    getTodaysMeetings(),
-    supabase.from("teams").select("*").eq("is_active", true).order("name"),
-  ]);
+  const [{ count: unreadCount }, todaysMeetings, teamsRes, latestCircularRes, unreadCircularsRes] =
+    await Promise.all([
+      supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("recipient_id", emp.id)
+        .eq("is_read", false),
+      getTodaysMeetings(),
+      supabase.from("teams").select("*").eq("is_active", true).order("name"),
+      // Latest circular for this employee (system notification with is_circular: true)
+      supabase
+        .from("notifications")
+        .select("id, title, body, created_at, is_read")
+        .eq("recipient_id", emp.id)
+        .eq("type", "system")
+        .order("created_at", { ascending: false })
+        .limit(20),
+      // Unread circulars count
+      supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("recipient_id", emp.id)
+        .eq("type", "system")
+        .eq("is_read", false),
+    ]);
 
   const teams = (teamsRes.data as Team[] | null) ?? [];
+
+  // Filter to only circulars (data->is_circular == true)
+  const allSystemNotifs = (latestCircularRes.data ?? []) as Array<{
+    id: string; title: string; body: string | null; created_at: string; is_read: boolean;
+  }>;
+
+  // We need data field too to filter — re-query with data
+  const { data: circularRows } = await supabase
+    .from("notifications")
+    .select("id, title, body, created_at, is_read, data")
+    .eq("recipient_id", emp.id)
+    .eq("type", "system")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  const circulars = (circularRows ?? []).filter(
+    (n) => n.data && typeof n.data === "object" && (n.data as Record<string, unknown>).is_circular === true
+  );
+
+  const latestCircular: LatestCircular | null = circulars[0]
+    ? {
+        id: circulars[0].id,
+        title: circulars[0].title,
+        body: circulars[0].body,
+        created_at: circulars[0].created_at,
+        is_read: circulars[0].is_read,
+      }
+    : null;
+
+  const unreadCirculars = circulars.filter((n) => !n.is_read).length;
 
   return (
     <HomeClient
@@ -76,6 +123,8 @@ export default async function HomePage() {
       taskCounts={taskCounts}
       unreadNotifications={unreadCount ?? 0}
       todaysMeetings={todaysMeetings}
+      latestCircular={latestCircular}
+      unreadCirculars={unreadCirculars}
     />
   );
 }

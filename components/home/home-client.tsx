@@ -16,6 +16,7 @@ import {
   ListTodo,
   AlertCircle,
   Link2,
+  Megaphone,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,16 @@ import {
 } from "@/components/meetings/meeting-badge";
 import { MeetingShortTime } from "@/components/meetings/meeting-time";
 import { CreateTaskDialog } from "@/components/assignments/create-task-dialog";
+import { CreateCircularDialog } from "@/components/home/create-circular-dialog";
 import type { AvailabilityStatus, UserRole, MeetingWithDetails, Team } from "@/types/database";
+
+export interface LatestCircular {
+  id: string;
+  title: string;
+  body: string | null;
+  created_at: string;
+  is_read: boolean;
+}
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
@@ -99,6 +109,8 @@ interface HomeClientProps {
   };
   unreadNotifications: number;
   todaysMeetings: MeetingWithDetails[];
+  latestCircular: LatestCircular | null;
+  unreadCirculars: number;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -112,6 +124,8 @@ export function HomeClient({
   taskCounts,
   unreadNotifications,
   todaysMeetings,
+  latestCircular,
+  unreadCirculars,
 }: HomeClientProps) {
   const [greeting, setGreeting] = useState<string>("");
   const [status, setStatus] = useState<AvailabilityStatus>(currentStatus);
@@ -226,6 +240,7 @@ export function HomeClient({
                   عقد اجتماع
                 </Link>
               </Button>
+              <CreateCircularDialog />
             </>
           ) : (
             <>
@@ -332,6 +347,58 @@ export function HomeClient({
           </CardContent>
         </Card>
       </div>
+
+      {/* ── Latest Circular ─────────────────────────────────────────────── */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Megaphone className="h-4 w-4 text-muted-foreground" />
+              آخر تعميم
+              {unreadCirculars > 0 && (
+                <Badge variant="destructive" className="text-xs h-5 px-1.5">
+                  {unreadCirculars} جديد
+                </Badge>
+              )}
+            </CardTitle>
+            <Button asChild variant="ghost" size="sm" className="text-xs h-7 px-2">
+              <Link href="/dashboard/notifications">عرض الكل</Link>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {!latestCircular ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              لا توجد تعاميم حالياً
+            </p>
+          ) : (
+            <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-semibold text-foreground leading-snug flex-1">
+                  {latestCircular.title}
+                </p>
+                {!latestCircular.is_read && (
+                  <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
+                    جديد
+                  </Badge>
+                )}
+              </div>
+              {latestCircular.body && (
+                <p className="text-xs text-muted-foreground line-clamp-2">
+                  {latestCircular.body}
+                </p>
+              )}
+              <p className="text-[11px] text-muted-foreground/70">
+                {new Date(latestCircular.created_at).toLocaleDateString("ar-SA", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* ── Today's Meetings ────────────────────────────────────────────── */}
       <Card>
