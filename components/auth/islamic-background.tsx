@@ -59,7 +59,7 @@ export function IslamicBackground() {
 
           // Alpha: strongest at corners, fades toward centre
           const t     = Math.max(0, 1 - edgeDist / FADE_PX);
-          const alpha = t * t * 0.055; // max ≈ 5.5% at the very edge
+          const alpha = t * t * 0.032; // max ≈ 3.2% at the very edge
 
           ctx.globalAlpha = alpha;
           drawStar8(ctx, x, y, S * 0.31, S * 0.13);

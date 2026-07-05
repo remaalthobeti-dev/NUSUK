@@ -107,10 +107,11 @@ export default function LoginPage() {
 
         {/* ════ CARD PANEL — left in RTL ════ */}
         <div
-          className="nusuk-brand-panel relative flex items-center justify-center overflow-visible"
+          className="nusuk-brand-panel relative flex items-start justify-center overflow-visible"
           style={{
             background: "transparent",
             animation:  "n-rise .9s var(--n-ease-out) both",
+            paddingTop: "6vh",
           }}
         >
           <CardShowcase>
