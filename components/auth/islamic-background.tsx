@@ -129,20 +129,25 @@ const PANEL: React.CSSProperties = {
   overflow:      "visible",
   pointerEvents: "none",
   zIndex:        1,
-  opacity:       0.15,
+  opacity:       0.20,
 };
 
 export function IslamicBackground() {
   return (
     <>
-      {/* Top-left — SE quadrant of medallion visible */}
+      {/* Top-left — SE quadrant visible */}
       <svg aria-hidden style={{ ...PANEL, top: 0, left: 0 }}>
         <Arabesque cx={0} cy={0} />
       </svg>
 
-      {/* Bottom-right — NW quadrant of medallion visible */}
+      {/* Bottom-right — NW quadrant visible */}
       <svg aria-hidden style={{ ...PANEL, bottom: 0, right: 0 }}>
         <Arabesque cx={560} cy={560} />
+      </svg>
+
+      {/* Bottom-left — NE quadrant visible */}
+      <svg aria-hidden style={{ ...PANEL, bottom: 0, left: 0 }}>
+        <Arabesque cx={0} cy={560} />
       </svg>
     </>
   );
