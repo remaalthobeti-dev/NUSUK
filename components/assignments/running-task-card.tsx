@@ -130,7 +130,7 @@ export function RunningTaskCard({ task }: Props) {
         <Button asChild variant="outline" size="sm" className="w-full">
           <Link href={`/dashboard/assignments/${task.id}`}>
             فتح المهمة
-            <ChevronLeft className="h-4 w-4 me-1" />
+            <ChevronLeft className="h-4 w-4 me-1 rtl:rotate-180" />
           </Link>
         </Button>
       </CardContent>

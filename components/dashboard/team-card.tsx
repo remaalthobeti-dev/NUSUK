@@ -75,7 +75,7 @@ export function TeamCard({
         </div>
 
         {/* Arrow */}
-        <div className="absolute bottom-5 start-5 opacity-0 group-hover:opacity-100 transition-all duration-200 -translate-x-1 group-hover:translate-x-0">
+        <div className="absolute bottom-5 start-5 opacity-0 group-hover:opacity-100 transition-all duration-200 ltr:-translate-x-1 rtl:translate-x-1 group-hover:translate-x-0">
           <ArrowLeft
             className="h-5 w-5 rtl:rotate-180"
             style={{ color: team.color }}

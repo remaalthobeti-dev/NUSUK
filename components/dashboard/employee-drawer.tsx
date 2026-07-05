@@ -121,7 +121,7 @@ export function EmployeeDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full max-w-[480px] p-0">
+      <SheetContent side="end" className="w-full max-w-[480px] p-0">
         {/* ── Header ─────────────────────────────── */}
         <SheetHeader className="relative border-b bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6">
           <SheetClose className="absolute top-4 start-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-ring">

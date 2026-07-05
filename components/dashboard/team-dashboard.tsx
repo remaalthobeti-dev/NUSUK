@@ -100,7 +100,7 @@ export function TeamDashboard({
           href="/dashboard"
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          <ArrowRight className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" />
+          <ArrowRight className="h-4 w-4 rtl:rotate-180" />
           الرئيسية
         </Link>
         <span className="text-muted-foreground">/</span>

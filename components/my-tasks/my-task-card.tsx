@@ -170,7 +170,7 @@ export function MyTaskCard({ task, onStatusChange }: Props) {
         <Button asChild variant="ghost" size="sm" className="w-full gap-1 text-muted-foreground">
           <Link href={`/dashboard/assignments/${task.id}`}>
             عرض التفاصيل
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
           </Link>
         </Button>
       </CardContent>

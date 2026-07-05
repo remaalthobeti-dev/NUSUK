@@ -146,7 +146,7 @@ export function CreateMeetingDialog({ role, employeeTeamId, teams }: CreateMeeti
                         setSelectedTeams([employeeTeamId]);
                       }
                     }}
-                    className={`p-2.5 rounded-lg text-xs font-medium border transition-all text-right ${
+                    className={`p-2.5 rounded-lg text-xs font-medium border transition-all text-end ${
                       meetingType === opt.value
                         ? "bg-primary text-primary-foreground border-primary"
                         : "border-border text-muted-foreground hover:bg-accent"

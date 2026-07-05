@@ -29,13 +29,13 @@ SheetOverlay.displayName = "SheetOverlay";
 
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
-  side?: "right" | "left";
+  side?: "right" | "left" | "end" | "start";
 }
 
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, ...props }, ref) => (
+>(({ side = "end", className, children, ...props }, ref) => (
   <SheetPortal>
     <SheetOverlay />
     <DialogPrimitive.Content
@@ -45,10 +45,11 @@ const SheetContent = React.forwardRef<
         "focus:outline-none",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:duration-300 data-[state=open]:duration-300",
-        side === "right" &&
-          "inset-y-0 right-0 w-full max-w-md border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
-        side === "left" &&
-          "inset-y-0 left-0 w-full max-w-md border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
+        /* Logical sides — RTL-aware */
+        (side === "end" || side === "right") &&
+          "inset-y-0 end-0 w-full max-w-md border-s data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+        (side === "start" || side === "left") &&
+          "inset-y-0 start-0 w-full max-w-md border-e data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
         className
       )}
       {...props}

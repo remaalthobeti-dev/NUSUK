@@ -50,7 +50,7 @@ function ExecutionChain({
   return (
     <div className="rounded-lg border border-muted/60 bg-muted/20 overflow-hidden">
       <div className="flex items-center gap-2 px-3 py-2 border-b border-muted/60 bg-muted/40">
-        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground rtl:rotate-180" />
         <span className="text-xs font-semibold text-muted-foreground ">
           سلسلة التنفيذ
         </span>
@@ -337,7 +337,7 @@ export function ReviewTaskCard({ task, currentEmployeeId, isManager }: Props) {
 
             <Button asChild variant="ghost" size="sm" className="w-full text-xs text-muted-foreground">
               <Link href={`/dashboard/assignments/${task.id}`}>
-                فتح التفاصيل <ChevronLeft className="h-3.5 w-3.5 me-1" />
+                فتح التفاصيل <ChevronLeft className="h-3.5 w-3.5 me-1 rtl:rotate-180" />
               </Link>
             </Button>
           </div>

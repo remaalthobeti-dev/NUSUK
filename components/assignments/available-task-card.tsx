@@ -150,7 +150,7 @@ export function AvailableTaskCard({ task }: Props) {
           ) : (
             <>
               استلام المهمة
-              <ChevronLeft className="h-4 w-4 me-1" />
+              <ChevronLeft className="h-4 w-4 me-1 rtl:rotate-180" />
             </>
           )}
         </Button>

@@ -99,7 +99,7 @@ export function TaskDetailClient({ data }: Props) {
       <div>
         <Button asChild variant="ghost" size="sm" className="gap-1 text-muted-foreground -ms-2">
           <Link href="/dashboard/assignments">
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4 rtl:rotate-180" />
             الأعمال الجارية
           </Link>
         </Button>

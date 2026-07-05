@@ -147,7 +147,7 @@ export function Sidebar({
               className="hidden lg:flex"
               aria-label="طي القائمة الجانبية"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
             </Button>
           )}
         </div>
@@ -216,7 +216,7 @@ export function Sidebar({
               className="w-full"
               aria-label="توسيع القائمة الجانبية"
             >
-              <ChevronLeft className="h-4 w-4 rotate-180" />
+              <ChevronLeft className="h-4 w-4 rotate-180 rtl:rotate-0" />
             </Button>
           </div>
         )}
