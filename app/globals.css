@@ -201,6 +201,8 @@
 
   /* ── Auth layout responsive ── */
   @media (max-width: 860px) {
+    .nusuk-divider { display: none; }
+
     .nusuk-auth-layout {
       grid-template-columns: 1fr !important;
       grid-template-rows: auto 1fr;

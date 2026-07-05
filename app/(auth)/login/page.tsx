@@ -4,6 +4,7 @@ import { CardShowcase } from "@/components/auth/card-showcase";
 import { TypewriterTagline } from "@/components/auth/typewriter-tagline";
 import { IslamicBackground } from "@/components/auth/islamic-background";
 import { LoginForm } from "@/components/auth/login-form";
+import { VerticalDivider } from "@/components/auth/vertical-divider";
 
 export const metadata: Metadata = {
   title: "تسجيل الدخول",
@@ -20,6 +21,9 @@ export default function LoginPage() {
     <>
       {/* Full-page gold geometric pattern — fixed behind everything */}
       <IslamicBackground />
+
+      {/* Vertical ornamental divider between card and form columns */}
+      <VerticalDivider />
 
       <div
         className="nusuk-auth-layout grid min-h-screen"
