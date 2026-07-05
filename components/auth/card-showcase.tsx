@@ -45,7 +45,7 @@ const STYLES = `
     );
     -webkit-mask-size: 100% 200%;
     mask-size: 100% 200%;
-    animation: card-unveil 1.1s cubic-bezier(.23,1,.32,1) .2s both;
+    animation: card-unveil 2.4s cubic-bezier(.23,1,.32,1) .3s both;
   }
 
   .card-float {
