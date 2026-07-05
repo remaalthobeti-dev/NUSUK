@@ -31,7 +31,7 @@ export function CreateCircularDialog() {
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("تم إرسال التعميم إلى جميع الموظفين");
+        toast.success("تم إرسال الإعلان إلى جميع الموظفين");
         setOpen(false);
         setTitle("");
         setBody("");
@@ -43,7 +43,7 @@ export function CreateCircularDialog() {
     <>
       <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
         <Megaphone className="h-4 w-4 me-1.5" />
-        إنشاء تعميم
+        إنشاء إعلان
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -51,18 +51,18 @@ export function CreateCircularDialog() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Megaphone className="h-5 w-5 text-primary" />
-              إنشاء تعميم جديد
+              إنشاء إعلان جديد
             </DialogTitle>
             <DialogDescription>
-              سيُرسَل التعميم إلى جميع الموظفين النشطين فور النشر.
+              سيُرسَل الإعلان إلى جميع الموظفين النشطين فور النشر.
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="circular-title">عنوان التعميم</Label>
+              <Label htmlFor="announcement-title">عنوان الإعلان</Label>
               <Input
-                id="circular-title"
+                id="announcement-title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="مثال: إجازة رسمية يوم الأحد"
@@ -73,12 +73,12 @@ export function CreateCircularDialog() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="circular-body">نص التعميم</Label>
+              <Label htmlFor="announcement-body">محتوى الإعلان</Label>
               <Textarea
-                id="circular-body"
+                id="announcement-body"
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
-                placeholder="اكتب محتوى التعميم هنا…"
+                placeholder="اكتب محتوى الإعلان هنا…"
                 rows={4}
                 maxLength={800}
                 required
@@ -102,7 +102,7 @@ export function CreateCircularDialog() {
                 ) : (
                   <Megaphone className="h-4 w-4 me-1.5" />
                 )}
-                نشر التعميم
+                نشر الإعلان
               </Button>
             </DialogFooter>
           </form>

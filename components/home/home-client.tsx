@@ -14,6 +14,12 @@ import {
   MapPin,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -30,7 +36,7 @@ import { STATUS_CONFIG } from "@/components/dashboard/status-config";
 import { useMyPresence } from "@/hooks/use-my-presence";
 import type { AvailabilityStatus, UserRole, MeetingWithDetails, Team } from "@/types/database";
 
-export interface LatestCircular {
+export interface LatestAnnouncement {
   id: string;
   title: string;
   body: string | null;
@@ -80,8 +86,8 @@ interface HomeClientProps {
   };
   unreadNotifications: number;
   todaysMeetings: MeetingWithDetails[];
-  latestCircular: LatestCircular | null;
-  unreadCirculars: number;
+  latestAnnouncement: LatestAnnouncement | null;
+  unreadAnnouncements: number;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -95,11 +101,12 @@ export function HomeClient({
   taskCounts,
   unreadNotifications,
   todaysMeetings,
-  latestCircular,
-  unreadCirculars,
+  latestAnnouncement,
+  unreadAnnouncements,
 }: HomeClientProps) {
   const [greeting, setGreeting] = useState<string>("");
   const [statusOpen, setStatusOpen] = useState(false);
+  const [announcementOpen, setAnnouncementOpen] = useState(false);
   const todayDates = useTodayDates();
   const { presence, refetch } = useMyPresence();
 
@@ -342,49 +349,85 @@ export function HomeClient({
           <div className="flex items-center gap-2">
             <span className="text-base leading-none">📢</span>
             <span className="text-sm font-semibold text-foreground">آخر إعلان</span>
-            {unreadCirculars > 0 && (
+            {unreadAnnouncements > 0 && (
               <Badge variant="destructive" className="text-[10px] h-4 px-1.5">
-                {unreadCirculars} جديد
+                {unreadAnnouncements} جديد
               </Badge>
             )}
           </div>
-          <Button asChild variant="ghost" size="sm" className="text-xs h-6 px-2">
-            <Link href="/dashboard/notifications">عرض الكل</Link>
-          </Button>
         </div>
         <div className="px-4 py-3">
-          {!latestCircular ? (
+          {!latestAnnouncement ? (
             <p className="text-xs text-muted-foreground text-center py-2">
               لا توجد إعلانات حالياً.
             </p>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex items-start gap-3">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 mb-0.5">
                   <p className="text-sm font-medium text-foreground truncate">
-                    {latestCircular.title}
+                    {latestAnnouncement.title}
                   </p>
-                  {!latestCircular.is_read && (
+                  {!latestAnnouncement.is_read && (
                     <Badge variant="secondary" className="text-[10px] h-4 px-1 shrink-0">
                       جديد
                     </Badge>
                   )}
                 </div>
-                <p className="text-[11px] text-muted-foreground/70 mt-0.5">
-                  {new Date(latestCircular.created_at).toLocaleDateString("ar-SA", {
+                {latestAnnouncement.body && (
+                  <p className="text-xs text-muted-foreground line-clamp-1 mb-0.5">
+                    {latestAnnouncement.body}
+                  </p>
+                )}
+                <p className="text-[11px] text-muted-foreground/60">
+                  {new Date(latestAnnouncement.created_at).toLocaleDateString("ar-SA", {
                     year: "numeric",
                     month: "short",
                     day: "numeric",
                   })}
                 </p>
               </div>
-              <Button asChild variant="outline" size="sm" className="shrink-0 h-7 text-xs px-2.5">
-                <Link href="/dashboard/notifications">عرض</Link>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 h-7 text-xs px-2.5"
+                onClick={() => setAnnouncementOpen(true)}
+              >
+                عرض
               </Button>
             </div>
           )}
         </div>
       </Card>
+
+      {/* ── Announcement Viewer Dialog ───────────────────────────────────── */}
+      {latestAnnouncement && (
+        <Dialog open={announcementOpen} onOpenChange={setAnnouncementOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xl">📢</span>
+                <DialogTitle className="leading-snug">
+                  {latestAnnouncement.title}
+                </DialogTitle>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {new Date(latestAnnouncement.created_at).toLocaleDateString("ar-SA", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </DialogHeader>
+            <div className="mt-2">
+              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                {latestAnnouncement.body ?? ""}
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* ── Today's Meetings ────────────────────────────────────────────── */}
       <Card>
