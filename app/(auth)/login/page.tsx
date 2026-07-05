@@ -26,10 +26,10 @@ export default function LoginPage() {
         style={{
           direction:           "rtl",
           gridTemplateColumns: "42fr 58fr",
-          /* Unified white — no split */
-          background:          "#FFFFFF",
+          /* Transparent — white comes from <body>, SVG pattern sits between */
+          background:          "transparent",
           position:            "relative",
-          zIndex:              1,
+          zIndex:              2,
         }}
       >
         {/* ════ FORM PANEL — right in RTL ════ */}

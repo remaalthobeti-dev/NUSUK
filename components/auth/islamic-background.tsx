@@ -1,90 +1,57 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-
 /*
-  Full-page fixed canvas with 8-pointed star Islamic geometric pattern.
-  Concentrated near the 4 edges, fading toward the centre — so the
-  form and card areas stay clean while the page has visual identity.
-  Opacity is intentionally very low (~5%) so it never distracts.
+  SVG-based Islamic geometric background.
+  Layer order: white body → this SVG (z:1) → page content (z:2).
+
+  Pattern: 8-pointed star (two overlapping squares, 22.5° step vertices).
+  Star centered at (29,29) in a 58×58 tile.
+  CSS mask fades the pattern out toward the centre so only edges show.
 */
 
-function drawStar8(
-  ctx: CanvasRenderingContext2D,
-  cx: number, cy: number,
-  R: number, r: number,
-) {
-  ctx.beginPath();
-  for (let i = 0; i < 16; i++) {
-    const a   = (i * Math.PI) / 8 - Math.PI / 2;
-    const rad = i % 2 === 0 ? R : r;
-    i === 0
-      ? ctx.moveTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad)
-      : ctx.lineTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad);
-  }
-  ctx.closePath();
-  ctx.stroke();
-}
+const STAR =
+  "M29,12 L31.68,22.53 L41.02,16.98 L35.47,26.32 L46,29 " +
+  "L35.47,31.68 L41.02,41.02 L31.68,35.47 L29,46 " +
+  "L26.32,35.47 L16.98,41.02 L22.53,31.68 L12,29 " +
+  "L22.53,26.32 L16.98,16.98 L26.32,22.53 Z";
+
+/* Radial CSS mask: transparent inside → opaque at edges/corners */
+const MASK =
+  "radial-gradient(ellipse 78% 72% at 50% 50%, " +
+  "transparent 0%, transparent 28%, black 68%)";
 
 export function IslamicBackground() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const cv = canvasRef.current;
-    if (!cv) return;
-
-    const draw = () => {
-      const W = (cv.width  = window.innerWidth);
-      const H = (cv.height = window.innerHeight);
-      const ctx = cv.getContext("2d");
-      if (!ctx) return;
-
-      ctx.clearRect(0, 0, W, H);
-      ctx.strokeStyle = "#C9963E";
-      ctx.lineWidth   = 0.65;
-
-      const S       = 58;          // tile size
-      const FADE_PX = 380;         // edge band width in px
-
-      for (let row = -1; row < H / S + 2; row++) {
-        for (let col = -1; col < W / S + 2; col++) {
-          const x = col * S + (row % 2 === 0 ? 0 : S / 2);
-          const y = row * S * 0.866;
-
-          // Distance from the nearest viewport edge
-          const edgeDist = Math.min(x, W - x, y, H - y);
-
-          // Only render within the edge band
-          if (edgeDist > FADE_PX) continue;
-
-          // Alpha: cubic falloff — strong near corners, clean fade inward
-          const t     = Math.max(0, 1 - edgeDist / FADE_PX);
-          const alpha = t * t * t * 0.28; // max ≈ 28% at the very edge corner
-
-          ctx.globalAlpha = alpha;
-          drawStar8(ctx, x, y, S * 0.31, S * 0.13);
-        }
-      }
-      ctx.globalAlpha = 1;
-    };
-
-    draw();
-
-    const ro = new ResizeObserver(draw);
-    ro.observe(document.documentElement);
-    return () => ro.disconnect();
-  }, []);
-
   return (
-    <canvas
-      ref={canvasRef}
+    <svg
       aria-hidden
       style={{
-        position:      "fixed",
-        inset:         0,
-        pointerEvents: "none",
-        zIndex:        0,
+        position:              "fixed",
+        inset:                 0,
+        width:                 "100%",
+        height:                "100%",
+        pointerEvents:         "none",
+        zIndex:                1,
+        maskImage:             MASK,
+        WebkitMaskImage:       MASK,
       }}
-    />
+    >
+      <defs>
+        <pattern
+          id="nusuk-star"
+          x="0" y="0"
+          width="58" height="58"
+          patternUnits="userSpaceOnUse"
+        >
+          <path
+            d={STAR}
+            fill="none"
+            stroke="#C9963E"
+            strokeWidth="0.85"
+          />
+        </pattern>
+      </defs>
+
+      <rect width="100%" height="100%" fill="url(#nusuk-star)" opacity="0.45" />
+    </svg>
   );
 }
