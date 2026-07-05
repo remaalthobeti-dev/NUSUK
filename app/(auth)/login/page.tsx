@@ -19,6 +19,26 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <>
+      {/* Full-page Mecca background — fixed behind everything */}
+      <div
+        aria-hidden
+        style={{
+          position:      "fixed",
+          inset:         0,
+          zIndex:        0,
+          pointerEvents: "none",
+          opacity:       0.12,
+        }}
+      >
+        <Image
+          src="/images/mecca-background.jpg"
+          alt=""
+          fill
+          priority
+          style={{ objectFit: "cover", objectPosition: "center 30%" }}
+        />
+      </div>
+
       {/* Full-page gold geometric pattern — fixed behind everything */}
       <IslamicBackground />
 
@@ -118,20 +138,6 @@ export default function LoginPage() {
             paddingTop: "0",
           }}
         >
-          {/* Mecca background — low opacity, focused on Kaaba */}
-          <Image
-            src="/images/mecca-background.jpg"
-            alt=""
-            fill
-            aria-hidden
-            style={{
-              objectFit:      "cover",
-              objectPosition: "center 30%",
-              opacity:        0.12,
-              pointerEvents:  "none",
-            }}
-          />
-
           <CardShowcase>
             <TypewriterTagline />
           </CardShowcase>
