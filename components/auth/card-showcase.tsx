@@ -39,7 +39,8 @@ function OfficialCard({ cardRef }: { cardRef: React.Ref<HTMLDivElement> }) {
         alt="بطاقة نُسك الرسمية"
         width={469}
         height={675}
-        style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+        style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", imageRendering: "high-quality" }}
+        quality={100}
         priority
       />
     </div>

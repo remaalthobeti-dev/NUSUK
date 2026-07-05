@@ -129,7 +129,7 @@ const PANEL: React.CSSProperties = {
   overflow:      "visible",
   pointerEvents: "none",
   zIndex:        1,
-  opacity:       0.26,
+  opacity:       0.34,
 };
 
 export function IslamicBackground() {
