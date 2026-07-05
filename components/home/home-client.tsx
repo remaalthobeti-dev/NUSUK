@@ -16,7 +16,6 @@ import {
   ListTodo,
   AlertCircle,
   Link2,
-  Megaphone,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -94,6 +93,33 @@ const STATUS_OPTIONS: Array<{
   },
 ];
 
+// ─── Hijri date helper ────────────────────────────────────────────────────────
+
+function useTodayDates() {
+  const [dates, setDates] = useState<{ hijri: string; gregorian: string } | null>(null);
+
+  useEffect(() => {
+    const now = new Date();
+
+    const hijri = now.toLocaleDateString("ar-SA-u-ca-islamic", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    const gregorian = now.toLocaleDateString("ar-SA", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    setDates({ hijri, gregorian });
+  }, []);
+
+  return dates;
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface HomeClientProps {
@@ -130,12 +156,11 @@ export function HomeClient({
   const [greeting, setGreeting] = useState<string>("");
   const [status, setStatus] = useState<AvailabilityStatus>(currentStatus);
   const [isPending, startTransition] = useTransition();
+  const todayDates = useTodayDates();
 
   useEffect(() => {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) setGreeting("صباح الخير");
-    else if (hour >= 12 && hour < 18) setGreeting("مساء الخير");
-    else setGreeting("مساء النور");
+    setGreeting(hour < 12 ? "صباح الخير" : "مساء الخير");
   }, []);
 
   function handleStatusChange(next: AvailabilityStatus) {
@@ -168,20 +193,27 @@ export function HomeClient({
             <h1 className="text-2xl font-bold text-foreground mt-1">
               {employeeName}
             </h1>
+            <p className="text-sm text-muted-foreground/80 mt-1.5">
+              مرحبًا بعودتك، نتمنى لك يومًا مليئًا بالإنجاز.
+            </p>
+
+            {/* Dates */}
+            {todayDates && (
+              <div className="mt-4 space-y-0.5">
+                <p className="text-xs text-muted-foreground">{todayDates.hijri} هـ</p>
+                <p className="text-xs text-muted-foreground/70">
+                  الموافق {todayDates.gregorian}
+                </p>
+              </div>
+            )}
+
             <div className="mt-4 flex items-center gap-2">
-              <span
-                className={cn(
-                  "w-2.5 h-2.5 rounded-full shrink-0",
-                  currentOpt.dot
-                )}
-              />
+              <span className={cn("w-2.5 h-2.5 rounded-full shrink-0", currentOpt.dot)} />
               <span className="text-sm font-medium text-foreground">
                 {currentOpt.label}
               </span>
               {isPending && (
-                <span className="text-xs text-muted-foreground">
-                  جاري التحديث…
-                </span>
+                <span className="text-xs text-muted-foreground">جاري التحديث…</span>
               )}
             </div>
           </CardContent>
@@ -294,12 +326,7 @@ export function HomeClient({
                 ))}
               </ul>
             )}
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="w-full mt-3 text-xs"
-            >
+            <Button asChild variant="ghost" size="sm" className="w-full mt-3 text-xs">
               <Link href="/dashboard/notifications">عرض جميع الإشعارات</Link>
             </Button>
           </CardContent>
@@ -336,68 +363,61 @@ export function HomeClient({
                 </p>
               </div>
             </div>
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="w-full mt-3 text-xs"
-            >
+            <Button asChild variant="ghost" size="sm" className="w-full mt-3 text-xs">
               <Link href="/dashboard/my-tasks">عرض جميع مهامي</Link>
             </Button>
           </CardContent>
         </Card>
       </div>
 
-      {/* ── Latest Circular ─────────────────────────────────────────────── */}
+      {/* ── Latest Announcement (compact) ───────────────────────────────── */}
       <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between gap-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Megaphone className="h-4 w-4 text-muted-foreground" />
-              آخر تعميم
-              {unreadCirculars > 0 && (
-                <Badge variant="destructive" className="text-xs h-5 px-1.5">
-                  {unreadCirculars} جديد
-                </Badge>
-              )}
-            </CardTitle>
-            <Button asChild variant="ghost" size="sm" className="text-xs h-7 px-2">
-              <Link href="/dashboard/notifications">عرض الكل</Link>
-            </Button>
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <div className="flex items-center gap-2">
+            <span className="text-base leading-none">📢</span>
+            <span className="text-sm font-semibold text-foreground">آخر إعلان</span>
+            {unreadCirculars > 0 && (
+              <Badge variant="destructive" className="text-[10px] h-4 px-1.5">
+                {unreadCirculars} جديد
+              </Badge>
+            )}
           </div>
-        </CardHeader>
-        <CardContent>
+          <Button asChild variant="ghost" size="sm" className="text-xs h-6 px-2">
+            <Link href="/dashboard/notifications">عرض الكل</Link>
+          </Button>
+        </div>
+        <div className="px-4 py-3">
           {!latestCircular ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              لا توجد تعاميم حالياً
+            <p className="text-xs text-muted-foreground text-center py-2">
+              لا توجد إعلانات حالياً.
             </p>
           ) : (
-            <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-semibold text-foreground leading-snug flex-1">
-                  {latestCircular.title}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {latestCircular.title}
+                  </p>
+                  {!latestCircular.is_read && (
+                    <Badge variant="secondary" className="text-[10px] h-4 px-1 shrink-0">
+                      جديد
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground/70 mt-0.5">
+                  {new Date(latestCircular.created_at).toLocaleDateString("ar-SA", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
                 </p>
-                {!latestCircular.is_read && (
-                  <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
-                    جديد
-                  </Badge>
-                )}
               </div>
-              {latestCircular.body && (
-                <p className="text-xs text-muted-foreground line-clamp-2">
-                  {latestCircular.body}
-                </p>
-              )}
-              <p className="text-[11px] text-muted-foreground/70">
-                {new Date(latestCircular.created_at).toLocaleDateString("ar-SA", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
+              <Button asChild variant="outline" size="sm" className="shrink-0 h-7 text-xs px-2.5">
+                <Link href="/dashboard/notifications">عرض</Link>
+              </Button>
             </div>
           )}
-        </CardContent>
+        </div>
       </Card>
 
       {/* ── Today's Meetings ────────────────────────────────────────────── */}
@@ -437,23 +457,17 @@ export function HomeClient({
                   className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                 >
                   <div className="flex-1 min-w-0">
-                    {/* Priority + Status row */}
                     <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
                       <MeetingPriorityBadge priority={m.priority} />
                       <MeetingStatusBadge displayStatus={m.status} />
                     </div>
-
-                    {/* Title */}
                     <p className="text-sm font-semibold text-foreground truncate mb-1">
                       {m.title}
                     </p>
-
-                    {/* Time + Type */}
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <MeetingShortTime startTime={m.start_time} endTime={m.end_time} />
                       <MeetingTypeBadge type={m.meeting_type} />
                     </div>
-
                     {m.location && (
                       <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                         <MapPin className="h-3 w-3" />
@@ -467,8 +481,6 @@ export function HomeClient({
                       </p>
                     )}
                   </div>
-
-                  {/* View Details button */}
                   <Link
                     href={`/dashboard/meetings/${m.id}`}
                     className="shrink-0 text-xs text-primary hover:underline px-2 py-1 rounded border border-primary/30 hover:bg-primary/5 transition-colors whitespace-nowrap"
