@@ -4,7 +4,7 @@ import { getExecutiveAnalyticsData } from "@/lib/data/analytics-executive";
 import { ExecutiveClient } from "@/components/analytics/executive-client";
 import { PageHeader } from "@/components/shared/page-header";
 
-export const metadata: Metadata = { title: "التحليلات التنفيذية — نسك" };
+export const metadata: Metadata = { title: "التقارير والتحليلات — نسك" };
 
 export default async function AnalyticsPage() {
   await assertManager();
@@ -14,11 +14,11 @@ export default async function AnalyticsPage() {
   return (
     <>
       <PageHeader
-        title="التحليلات التنفيذية"
-        description="لوحة أداء حية — KPIs · عبء العمل · توزيع المهام · تنبيهات فورية"
+        title="التقارير والتحليلات"
+        description="نظرة شاملة على أداء الفرق والمهام"
         breadcrumbs={[
           { label: "الرئيسية", href: "/dashboard" },
-          { label: "التحليلات" },
+          { label: "التقارير" },
         ]}
       />
       <ExecutiveClient data={data} />
