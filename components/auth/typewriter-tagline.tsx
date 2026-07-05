@@ -63,14 +63,14 @@ export function TypewriterTagline({
       aria-label={`${LINE_1} ${LINE_2}`}
       aria-live="polite"
     >
-      {/* Line 1 — supporting, lighter weight, muted green */}
+      {/* Line 1 — supporting, medium weight, muted green */}
       <p
         style={{
-          fontSize:      15,     /* up from 13px */
-          fontWeight:    400,
+          fontSize:      18,
+          fontWeight:    500,
           color:         "#1E3D28",
           letterSpacing: ".1px",
-          marginBottom:  5,
+          marginBottom:  8,
           minHeight:     "1.6em",
         }}
       >
@@ -91,13 +91,13 @@ export function TypewriterTagline({
         )}
       </p>
 
-      {/* Line 2 — slightly larger, quiet warm gold */}
+      {/* Line 2 — headline weight, warm gold */}
       <p
         style={{
-          fontSize:      20,     /* up from 17px */
-          fontWeight:    600,
-          color:         "rgba(178,128,42,.80)",
-          letterSpacing: "-.2px",
+          fontSize:      27,
+          fontWeight:    700,
+          color:         "rgba(178,128,42,.85)",
+          letterSpacing: "-.3px",
           minHeight:     "1.6em",
           opacity:
             phase === "waiting" || phase === "line1" || phase === "pause"

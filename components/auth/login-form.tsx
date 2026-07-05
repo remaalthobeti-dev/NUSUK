@@ -82,8 +82,11 @@ export function LoginForm() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema) });
+
+  const emailValue = watch("email", "");
 
   async function onSubmit(data: LoginFormData) {
     setAuthError(null);
@@ -178,7 +181,7 @@ export function LoginForm() {
             placeholder="example@email.com"
             autoComplete="email"
             hasError={!!errors.email}
-            endIcon={<Mail size={15} />}
+            endIcon={!emailValue ? <Mail size={15} /> : undefined}
             registration={register("email")}
           />
           {errors.email && (

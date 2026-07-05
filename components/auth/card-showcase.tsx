@@ -12,8 +12,8 @@ import { useEffect, useRef } from "react";
   to exit through the ceiling, creating a natural hanging sensation.
 */
 const CARD_SRC = "/images/nusuk-card.png";
-const CARD_W   = 278;
-const CARD_H   = 400; // 278 / 0.6948 ≈ 400
+const CARD_W   = 318;
+const CARD_H   = 458; // 318 / 0.6948 ≈ 458
 
 function OfficialCard({ cardRef }: { cardRef: React.Ref<HTMLDivElement> }) {
   return (
