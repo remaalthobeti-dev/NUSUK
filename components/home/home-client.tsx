@@ -13,6 +13,7 @@ import {
   Activity,
   MapPin,
   Moon,
+  CheckCircle2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -32,6 +33,7 @@ import {
 import { MeetingShortTime } from "@/components/meetings/meeting-time";
 import { CreateTaskDialog } from "@/components/assignments/create-task-dialog";
 import { CreateCircularDialog } from "@/components/home/create-circular-dialog";
+import { EmptyState } from "@/components/shared/empty-state";
 import { MyStatusDialog } from "@/components/shared/my-status-dialog";
 import { STATUS_CONFIG, formatTimeAgo } from "@/components/dashboard/status-config";
 import { useMyPresence } from "@/hooks/use-my-presence";
@@ -304,9 +306,12 @@ export function HomeClient({
           </CardHeader>
           <CardContent>
             {alerts.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">
-                لا توجد تنبيهات جديدة
-              </p>
+              <EmptyState
+                size="sm"
+                icon={<CheckCircle2 />}
+                title="لا توجد تنبيهات"
+                description="جميع المهام والإشعارات محدّثة"
+              />
             ) : (
               <ul className="space-y-2">
                 {alerts.map((msg, i) => (
@@ -379,8 +384,8 @@ export function HomeClient({
         </div>
         <div className="px-5 py-3.5">
           {!latestAnnouncement ? (
-            <p className="text-xs text-muted-foreground text-center py-2">
-              لا توجد إعلانات حالياً.
+            <p className="text-xs text-muted-foreground text-center py-3">
+              لا توجد إعلانات حالياً
             </p>
           ) : (
             <div className="flex items-start gap-3">
@@ -470,15 +475,19 @@ export function HomeClient({
         </CardHeader>
         <CardContent>
           {todaysMeetings.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Calendar className="h-10 w-10 text-muted-foreground/20 mb-3" />
-              <p className="text-sm text-muted-foreground">لا توجد اجتماعات مجدولة اليوم</p>
-              {canManage && (
-                <Button asChild variant="ghost" size="sm" className="mt-3 text-xs">
-                  <Link href="/dashboard/meetings">جدولة اجتماع</Link>
-                </Button>
-              )}
-            </div>
+            <EmptyState
+              size="sm"
+              icon={<Calendar />}
+              title="لا توجد اجتماعات اليوم"
+              description="لم يتم جدولة أي اجتماعات لهذا اليوم"
+              action={
+                canManage ? (
+                  <Button asChild variant="ghost" size="sm" className="text-xs h-8">
+                    <Link href="/dashboard/meetings">جدولة اجتماع</Link>
+                  </Button>
+                ) : undefined
+              }
+            />
           ) : (
             <div className="space-y-2">
               {todaysMeetings.map((m) => (

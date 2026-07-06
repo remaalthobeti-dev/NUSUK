@@ -36,7 +36,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
         {/* Page Content */}
         <main className="pt-[var(--navbar-height)] min-h-screen">
-          <div className="p-6">{children}</div>
+          <div className="p-6 page-enter">{children}</div>
         </main>
       </div>
     </div>

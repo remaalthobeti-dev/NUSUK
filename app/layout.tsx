@@ -39,7 +39,20 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <Toaster position="top-center" richColors dir="rtl" />
+          <Toaster
+            position="top-center"
+            richColors
+            dir="rtl"
+            closeButton
+            duration={4000}
+            toastOptions={{
+              style: {
+                fontFamily: "'Cairo', 'Tajawal', sans-serif",
+                fontSize: "14px",
+                borderRadius: "12px",
+              },
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>

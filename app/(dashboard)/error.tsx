@@ -16,20 +16,21 @@ export default function DashboardError({
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+    <div className="min-h-[60vh] flex items-center justify-center p-6">
       <div className="max-w-sm w-full text-center space-y-6">
-        <div className="mx-auto w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center">
-          <AlertTriangle className="h-8 w-8 text-amber-500 dark:text-amber-400" />
+        <div
+          className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center"
+          style={{ background: "hsl(var(--n-warning) / .1)", border: "1.5px solid hsl(var(--n-warning) / .2)" }}
+        >
+          <AlertTriangle className="h-7 w-7" style={{ color: "hsl(var(--n-warning))" }} />
         </div>
         <div className="space-y-2">
           <h1 className="text-xl font-bold text-foreground">حدث خطأ غير متوقع</h1>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            {error.message || "فشل تحميل لوحة التحكم. يرجى المحاولة مرة أخرى."}
+            {error.message || "فشل تحميل الصفحة. يرجى المحاولة مرة أخرى."}
           </p>
           {error.digest && (
-            <p className="text-[11px] text-muted-foreground/60 font-mono mt-1">
-              #{error.digest}
-            </p>
+            <p className="text-[11px] text-muted-foreground/50 font-mono mt-1">#{error.digest}</p>
           )}
         </div>
         <div className="flex gap-2 justify-center">
@@ -37,11 +38,7 @@ export default function DashboardError({
             <RotateCcw className="h-4 w-4" />
             إعادة المحاولة
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => (window.location.href = "/login")}
-            className="gap-2"
-          >
+          <Button variant="outline" onClick={() => (window.location.href = "/login")} className="gap-2">
             <LogOut className="h-4 w-4" />
             تسجيل الخروج
           </Button>
