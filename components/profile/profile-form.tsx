@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, User, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,7 +69,12 @@ export function ProfileForm({ employee }: ProfileFormProps) {
     <div className="space-y-6">
       {/* Profile info */}
       <div className="rounded-2xl border bg-card p-6 space-y-4">
-        <h2 className="text-base font-semibold">المعلومات الشخصية</h2>
+        <div className="flex items-center gap-2.5 pb-1">
+          <div className="w-7 h-7 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <User className="h-3.5 w-3.5 text-primary" />
+          </div>
+          <h2 className="text-sm font-bold">المعلومات الشخصية</h2>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
@@ -91,9 +96,18 @@ export function ProfileForm({ employee }: ProfileFormProps) {
         </div>
 
         {profileMsg && (
-          <p className={`text-sm ${profileMsg.type === "success" ? "text-green-600" : "text-destructive"}`}>
-            {profileMsg.text}
-          </p>
+          <div className={`rounded-xl border px-3 py-2.5 flex items-center gap-2 ${
+            profileMsg.type === "success"
+              ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800"
+              : "bg-destructive/10 border-destructive/20"
+          }`}>
+            {profileMsg.type === "success"
+              ? <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              : <AlertCircle className="h-4 w-4 text-destructive shrink-0" />}
+            <p className={`text-sm ${profileMsg.type === "success" ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"}`}>
+              {profileMsg.text}
+            </p>
+          </div>
         )}
 
         <Button onClick={saveProfile} disabled={saving || !fullName.trim()}>
@@ -104,7 +118,12 @@ export function ProfileForm({ employee }: ProfileFormProps) {
 
       {/* Change password */}
       <div className="rounded-2xl border bg-card p-6 space-y-4">
-        <h2 className="text-base font-semibold">تغيير كلمة المرور</h2>
+        <div className="flex items-center gap-2.5 pb-1">
+          <div className="w-7 h-7 rounded-xl bg-muted flex items-center justify-center shrink-0">
+            <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+          </div>
+          <h2 className="text-sm font-bold">تغيير كلمة المرور</h2>
+        </div>
 
         <div className="space-y-3">
           <div className="space-y-1.5">
@@ -129,9 +148,18 @@ export function ProfileForm({ employee }: ProfileFormProps) {
         </div>
 
         {passwordMsg && (
-          <p className={`text-sm ${passwordMsg.type === "success" ? "text-green-600" : "text-destructive"}`}>
-            {passwordMsg.text}
-          </p>
+          <div className={`rounded-xl border px-3 py-2.5 flex items-center gap-2 ${
+            passwordMsg.type === "success"
+              ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800"
+              : "bg-destructive/10 border-destructive/20"
+          }`}>
+            {passwordMsg.type === "success"
+              ? <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              : <AlertCircle className="h-4 w-4 text-destructive shrink-0" />}
+            <p className={`text-sm ${passwordMsg.type === "success" ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"}`}>
+              {passwordMsg.text}
+            </p>
+          </div>
         )}
 
         <Button

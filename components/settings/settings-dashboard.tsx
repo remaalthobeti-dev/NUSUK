@@ -9,15 +9,24 @@ import {
   Activity,
   Plus,
   Edit2,
-  Trash2,
+  Power,
   Loader2,
   RefreshCw,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -296,10 +305,14 @@ function TeamsTab({
                         variant="ghost"
                         size="icon"
                         onClick={() => toggleActive(team)}
-                        title={team.is_active ? "تعطيل" : "تفعيل"}
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        title={team.is_active ? "تعطيل الفريق" : "تفعيل الفريق"}
+                        className={`h-8 w-8 transition-colors ${
+                          team.is_active
+                            ? "text-muted-foreground hover:text-destructive"
+                            : "text-muted-foreground hover:text-emerald-600"
+                        }`}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Power className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </TableCell>
@@ -380,7 +393,10 @@ function TeamsTab({
               </div>
             </div>
             {actionError && (
-              <p className="text-sm text-destructive">{actionError}</p>
+              <div className="rounded-xl bg-destructive/10 border border-destructive/20 px-3 py-2.5 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+                <p className="text-sm text-destructive">{actionError}</p>
+              </div>
             )}
           </DialogBody>
           <DialogFooter>
@@ -569,6 +585,7 @@ function EmployeesTab({
                         size="icon"
                         onClick={() => openEdit(emp)}
                         className="h-8 w-8"
+                        title="تعديل"
                       >
                         <Edit2 className="h-3.5 w-3.5" />
                       </Button>
@@ -576,10 +593,14 @@ function EmployeesTab({
                         variant="ghost"
                         size="icon"
                         onClick={() => toggleActive(emp)}
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                        title={emp.is_active ? "تعطيل" : "تفعيل"}
+                        className={`h-8 w-8 transition-colors ${
+                          emp.is_active
+                            ? "text-muted-foreground hover:text-destructive"
+                            : "text-muted-foreground hover:text-emerald-600"
+                        }`}
+                        title={emp.is_active ? "تعطيل الموظف" : "تفعيل الموظف"}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Power className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </TableCell>
@@ -626,37 +647,38 @@ function EmployeesTab({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>الدور</Label>
-                <select
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  value={form.role}
-                  onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}
-                >
-                  {ROLES.map((r) => (
-                    <option key={r} value={r}>
-                      {getRoleLabel(r)}
-                    </option>
-                  ))}
-                </select>
+                <Label className="text-xs font-semibold">الدور</Label>
+                <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as UserRole })}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROLES.map((r) => (
+                      <SelectItem key={r} value={r}>{getRoleLabel(r)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5 col-span-2">
-                <Label>الفريق</Label>
-                <select
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  value={form.team_id}
-                  onChange={(e) => setForm({ ...form, team_id: e.target.value })}
-                >
-                  <option value="">بدون فريق</option>
-                  {teams.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
+                <Label className="text-xs font-semibold">الفريق</Label>
+                <Select value={form.team_id || "_none"} onValueChange={(v) => setForm({ ...form, team_id: v === "_none" ? "" : v })}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="بدون فريق" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">بدون فريق</SelectItem>
+                    {teams.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             {actionError && (
-              <p className="text-sm text-destructive">{actionError}</p>
+              <div className="rounded-xl bg-destructive/10 border border-destructive/20 px-3 py-2.5 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+                <p className="text-sm text-destructive">{actionError}</p>
+              </div>
             )}
           </DialogBody>
           <DialogFooter>

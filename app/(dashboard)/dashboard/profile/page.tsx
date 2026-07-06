@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { ProfileStatusCard } from "@/components/profile/profile-status-card";
+import { PageHeader } from "@/components/shared/page-header";
 import type { Employee, AvailabilityStatus } from "@/types/database";
 
 export const metadata: Metadata = { title: "الملف الشخصي" };
@@ -53,18 +54,16 @@ export default async function ProfilePage() {
   if (redirectTo) redirect(redirectTo);
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">الملف الشخصي</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          إدارة معلوماتك الشخصية وحالة التواجد
-        </p>
-      </div>
-
-      {/* Status card */}
+    <div className="max-w-2xl mx-auto space-y-6">
+      <PageHeader
+        title="الملف الشخصي"
+        description="إدارة معلوماتك الشخصية وكلمة المرور وحالة التواجد"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/dashboard" },
+          { label: "الملف الشخصي" },
+        ]}
+      />
       <ProfileStatusCard currentStatus={currentStatus} currentNote={currentNote} />
-
-      {/* Profile info form */}
       <ProfileForm employee={employee!} />
     </div>
   );
