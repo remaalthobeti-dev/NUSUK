@@ -471,3 +471,46 @@ export async function getActiveEmployees(): Promise<
     (data as Array<{ id: string; full_name: string; team_id: string | null }> | null) ?? []
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Operations KPIs
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface OperationsKpis {
+  taskPending: number;
+  taskInProgress: number;
+  taskOnHold: number;
+  taskOverdue: number;
+}
+
+export async function getOperationsKpis(): Promise<OperationsKpis> {
+  const supabase = await createClient();
+  const now = new Date().toISOString();
+
+  const [pendingRes, inProgressRes, onHoldRes, overdueRes] = await Promise.all([
+    supabase
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+    supabase
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "in_progress"),
+    supabase
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "on_hold"),
+    supabase
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .lt("due_date", now)
+      .not("status", "in", '("completed","cancelled")'),
+  ]);
+
+  return {
+    taskPending:    pendingRes.count    ?? 0,
+    taskInProgress: inProgressRes.count ?? 0,
+    taskOnHold:     onHoldRes.count     ?? 0,
+    taskOverdue:    overdueRes.count    ?? 0,
+  };
+}
