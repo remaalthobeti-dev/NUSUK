@@ -42,6 +42,7 @@ import {
 import { cn } from "@/lib/utils";
 import { approveRequestAction, rejectRequestAction } from "@/app/(dashboard)/dashboard/approvals/actions";
 import { getRoleLabel } from "@/lib/utils";
+import { EmptyState } from "@/components/shared/empty-state";
 import type { RegistrationRequest, Team, UserRole } from "@/types/database";
 
 interface ApprovalsProps {
@@ -719,13 +720,11 @@ export function ApprovalsDashboard({ requests, teams }: ApprovalsProps) {
 
       {/* ─── List ─── */}
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed bg-muted/10 p-12 text-center">
-          <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-          <p className="text-sm text-muted-foreground font-medium">لا توجد طلبات</p>
-          {search && (
-            <p className="text-xs text-muted-foreground mt-1">جرّب البحث بكلمات مختلفة</p>
-          )}
-        </div>
+        <EmptyState
+          icon={<Users />}
+          title="لا توجد طلبات"
+          description={search ? "جرّب البحث بكلمات مختلفة" : "جميع الطلبات تمت معالجتها"}
+        />
       ) : (
         <div className="space-y-3">
           {filtered.map((req) => (
