@@ -19,7 +19,7 @@ const STYLES = `
   }
 
   .nk-card-enter {
-    animation: card-enter 1.1s cubic-bezier(.23,1,.32,1) 0.3s both;
+    animation: card-enter 2.2s cubic-bezier(.23,1,.32,1) 0.3s both;
   }
 
   .nk-card-float {
