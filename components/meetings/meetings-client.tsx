@@ -14,6 +14,7 @@ import { MeetingCard } from "./meeting-card";
 import { CreateMeetingDialog } from "./create-meeting-dialog";
 import { sortMeetingsByPriority } from "@/types/database";
 import { cn } from "@/lib/utils";
+import { EmptyState as SharedEmptyState } from "@/components/shared/empty-state";
 import type { MeetingWithDetails, UserRole, Team } from "@/types/database";
 
 const TABS = [
@@ -292,14 +293,11 @@ function EmptyState({ tab }: { tab: TabKey }) {
   };
   const msg = messages[tab];
   return (
-    <div className="rounded-2xl border border-dashed bg-muted/10 flex flex-col items-center justify-center py-20 gap-4 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center">
-        <CalendarDays className="h-8 w-8 text-muted-foreground/30" />
-      </div>
-      <div>
-        <p className="font-semibold text-foreground">{msg.title}</p>
-        <p className="text-sm text-muted-foreground mt-1.5">{msg.sub}</p>
-      </div>
-    </div>
+    <SharedEmptyState
+      size="lg"
+      icon={<CalendarDays />}
+      title={msg.title}
+      description={msg.sub}
+    />
   );
 }

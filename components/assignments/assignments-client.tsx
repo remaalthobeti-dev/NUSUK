@@ -14,6 +14,7 @@ import { priorityOrder } from "./card-utils";
 import type { FilterState } from "./filter-bar";
 import type { UserRole, Team } from "@/types/database";
 import { createClient } from "@/lib/supabase/client";
+import { EmptyState as SharedEmptyState } from "@/components/shared/empty-state";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -250,14 +251,11 @@ function EmptyState({ icon: Icon, title, description }: {
   icon: React.ElementType; title: string; description: string;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
-      <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center">
-        <Icon className="h-8 w-8 text-muted-foreground/40" />
-      </div>
-      <div>
-        <p className="font-medium text-foreground">{title}</p>
-        <p className="text-sm text-muted-foreground mt-1">{description}</p>
-      </div>
-    </div>
+    <SharedEmptyState
+      size="lg"
+      icon={<Icon />}
+      title={title}
+      description={description}
+    />
   );
 }

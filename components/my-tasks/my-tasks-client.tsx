@@ -16,6 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { MyTaskCard } from "./my-task-card";
+import { EmptyState as SharedEmptyState } from "@/components/shared/empty-state";
 import type { MyTask } from "@/lib/data/my-tasks";
 import type { TaskPriority, TaskStatus } from "@/types/database";
 import { formatDueDate } from "@/components/assignments/card-utils";
@@ -436,22 +437,17 @@ function EmptyState({ tab, hasSearch }: { tab: TabId; hasSearch: boolean }) {
   const Icon = TAB_ICONS[tab];
 
   return (
-    <div className="rounded-2xl border border-dashed bg-muted/10 flex flex-col items-center justify-center py-20 gap-4 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center">
-        <Icon className="h-8 w-8 text-muted-foreground/30" />
-      </div>
-      <div>
-        <p className="font-semibold text-foreground">
-          {hasSearch ? "لا توجد نتائج" : `لا توجد مهام ${TAB_LABELS[tab]}`}
-        </p>
-        <p className="text-sm text-muted-foreground mt-1.5 max-w-xs mx-auto">
-          {hasSearch
-            ? "جرّب تغيير معايير البحث أو الفلترة"
-            : tab === "completed"
-            ? "أكمل مهامك وستظهر هنا"
-            : "استلم مهمة من قسم إسناد الأعمال"}
-        </p>
-      </div>
-    </div>
+    <SharedEmptyState
+      size="lg"
+      icon={<Icon />}
+      title={hasSearch ? "لا توجد نتائج" : `لا توجد مهام ${TAB_LABELS[tab]}`}
+      description={
+        hasSearch
+          ? "جرّب تغيير معايير البحث أو الفلترة"
+          : tab === "completed"
+          ? "أكمل مهامك وستظهر هنا"
+          : "استلم مهمة من قسم إسناد الأعمال"
+      }
+    />
   );
 }
