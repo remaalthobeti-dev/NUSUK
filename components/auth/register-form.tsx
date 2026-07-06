@@ -10,10 +10,8 @@ import {
   Eye,
   EyeOff,
   Phone,
-  Building2,
   Briefcase,
   Users,
-  FileEdit,
   UserPlus,
   ChevronDown,
 } from "lucide-react";
@@ -136,21 +134,6 @@ function Field({
   );
 }
 
-// ─── NUSUK departments ───────────────────────────────────────────────────────
-
-const DEPARTMENTS = [
-  "إدارة العمليات",
-  "إدارة خدمة الحجاج",
-  "إدارة البطاقات",
-  "إدارة تقنية المعلومات",
-  "إدارة الموارد البشرية",
-  "إدارة المالية",
-  "إدارة التخطيط والتطوير",
-  "إدارة الجودة",
-  "إدارة الاتصال المؤسسي",
-  "أخرى",
-];
-
 // ─── Main component ──────────────────────────────────────────────────────────
 
 export function RegisterForm({ teams }: RegisterFormProps) {
@@ -160,10 +143,8 @@ export function RegisterForm({ teams }: RegisterFormProps) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
-  const [department, setDepartment] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [teamId, setTeamId] = useState("");
-  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -184,10 +165,8 @@ export function RegisterForm({ teams }: RegisterFormProps) {
         data: {
           full_name: fullName.trim(),
           phone: phone.trim() || undefined,
-          department: department || undefined,
           job_title: jobTitle.trim() || undefined,
           team_id: teamId || undefined,
-          notes: notes.trim() || undefined,
         },
       },
     });
@@ -242,39 +221,25 @@ export function RegisterForm({ teams }: RegisterFormProps) {
         </Field>
       </div>
 
-      {/* Row 3: Phone + Department */}
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="رقم الجوال" required>
-          <div className="flex gap-2">
-            {/* Country code */}
-            <div className="flex items-center gap-1 h-11 px-2.5 rounded-lg border border-gray-200 bg-white text-sm text-gray-700 shrink-0 select-none">
-              <ChevronDown className="h-3 w-3 text-gray-400" />
-              <span className="font-medium" dir="ltr">+966</span>
-            </div>
-            <div className="relative flex-1 flex items-center">
-              <Phone className="absolute end-3 h-4 w-4 text-gray-400 pointer-events-none z-10" />
-              <input
-                id="phone" name="phone" type="tel" value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="5xxxxxxxx" required dir="ltr"
-                autoComplete="tel"
-                className="w-full h-11 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 pe-10 ps-3 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--n-dark)/0.25)] focus:border-[hsl(var(--n-dark)/0.4)] placeholder:text-gray-400 transition-all"
-              />
-            </div>
+      {/* Row 3: Phone (full width) */}
+      <Field label="رقم الجوال" required>
+        <div className="flex gap-2">
+          <div className="flex items-center gap-1 h-11 px-2.5 rounded-lg border border-gray-200 bg-white text-sm text-gray-700 shrink-0 select-none">
+            <ChevronDown className="h-3 w-3 text-gray-400" />
+            <span className="font-medium" dir="ltr">+966</span>
           </div>
-        </Field>
-        <Field label="الإدارة" required>
-          <FieldSelect
-            id="department" name="department" value={department} onChange={setDepartment}
-            icon={Building2}
-          >
-            <option value="">اختر الإدارة</option>
-            {DEPARTMENTS.map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </FieldSelect>
-        </Field>
-      </div>
+          <div className="relative flex-1 flex items-center">
+            <Phone className="absolute end-3 h-4 w-4 text-gray-400 pointer-events-none z-10" />
+            <input
+              id="phone" name="phone" type="tel" value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="5xxxxxxxx" required dir="ltr"
+              autoComplete="tel"
+              className="w-full h-11 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 pe-10 ps-3 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--n-dark)/0.25)] focus:border-[hsl(var(--n-dark)/0.4)] placeholder:text-gray-400 transition-all"
+            />
+          </div>
+        </div>
+      </Field>
 
       {/* Row 4: Job title + Team */}
       <div className="grid grid-cols-2 gap-4">
@@ -297,19 +262,6 @@ export function RegisterForm({ teams }: RegisterFormProps) {
         </Field>
       </div>
 
-      {/* Row 5: Notes (full width) */}
-      <Field label="ملاحظات (اختياري)">
-        <div className="relative">
-          <FileEdit className="absolute end-3 top-3 h-4 w-4 text-gray-400 pointer-events-none z-10" />
-          <textarea
-            id="notes" name="notes" value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="أي ملاحظات إضافية ترغب في ذكرها"
-            rows={2}
-            className="w-full rounded-lg border border-gray-200 bg-white text-sm text-gray-900 pe-10 ps-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--n-dark)/0.25)] focus:border-[hsl(var(--n-dark)/0.4)] placeholder:text-gray-400 transition-all resize-none"
-          />
-        </div>
-      </Field>
 
       {/* Error */}
       {error && (
