@@ -35,15 +35,15 @@ const STYLES = `
 
   .nk-brush-wrap {
     clip-path: polygon(100% 0%, 100% 0%, 100% 0%, 100% 0%);
-    animation: brush-reveal 1.6s cubic-bezier(.4,0,.2,1) 0.3s forwards;
+    animation: brush-reveal 2.8s cubic-bezier(.25,0,.1,1) 0.5s forwards;
   }
 
   .nk-colour-bloom {
-    animation: colour-bloom 1.9s cubic-bezier(.23,1,.32,1) 0.3s both;
+    animation: colour-bloom 3.2s cubic-bezier(.23,1,.32,1) 0.5s both;
   }
 
   .nk-card-float {
-    animation: card-float 6s ease-in-out 2.4s infinite;
+    animation: card-float 6s ease-in-out 4.0s infinite;
     will-change: transform;
   }
 
