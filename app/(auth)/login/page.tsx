@@ -70,24 +70,24 @@ export default function LoginPage() {
         >
           <div
             className="relative z-10 w-full"
-            style={{
-              maxWidth:  320,
-              animation: "n-rise .85s .15s var(--n-ease-out) both",
-            }}
+            style={{ maxWidth: 320 }}
           >
             {/* ── Official logo ── */}
             <div className="mb-8" style={{ direction: "rtl" }}>
-              <div className="mb-4">
+
+              {/* Logo — first to appear */}
+              <div
+                className="mb-4"
+                style={{ animation: "n-rise .72s cubic-bezier(.23,1,.32,1) .05s both" }}
+              >
                 <Image
                   src="/images/nusuk-logo.png"
                   alt="بطاقة نُسك"
                   width={152}
                   height={159}
                   style={{
-                    height:    162,
-                    width:     "auto",
-                    objectFit: "contain",
-                    display:   "block",
+                    height: 162, width: "auto",
+                    objectFit: "contain", display: "block",
                   }}
                   priority
                 />
@@ -97,17 +97,21 @@ export default function LoginPage() {
               <div
                 className="mb-5"
                 style={{
-                  width:        32,
-                  height:       2,
-                  background:   "linear-gradient(90deg,#C9963E,transparent)",
+                  width: 32, height: 2,
+                  background: "linear-gradient(90deg,#C9963E,transparent)",
                   borderRadius: 2,
+                  animation: "n-fade .5s ease .22s both",
                 }}
               />
 
-              {/* System name — updated */}
+              {/* System name */}
               <p
                 className="mb-7"
-                style={{ fontSize: 17, fontWeight: 600, color: "#58584F", letterSpacing: ".15px" }}
+                style={{
+                  fontSize: 17, fontWeight: 600,
+                  color: "#58584F", letterSpacing: ".15px",
+                  animation: "n-rise .7s cubic-bezier(.23,1,.32,1) .28s both",
+                }}
               >
                 مساحة عمل فريق بطاقات نسك
               </p>
@@ -115,24 +119,32 @@ export default function LoginPage() {
               {/* Page heading */}
               <h1
                 style={{
-                  fontSize:     42,
-                  fontWeight:   800,
-                  color:        "#1A1A17",
-                  letterSpacing: "-1px",
-                  lineHeight:   1.15,
-                  textWrap:     "balance",
+                  fontSize: 42, fontWeight: 800,
+                  color: "#1A1A17", letterSpacing: "-1px",
+                  lineHeight: 1.15, textWrap: "balance",
                   marginBottom: 10,
+                  animation: "n-rise .75s cubic-bezier(.23,1,.32,1) .36s both",
                 }}
               >
                 مرحباً بك
               </h1>
-              <p style={{ fontSize: 13, color: "#9A9A90", lineHeight: 1.65, fontWeight: 400 }}>
+
+              {/* Subtitle */}
+              <p
+                style={{
+                  fontSize: 13, color: "#9A9A90",
+                  lineHeight: 1.65, fontWeight: 400,
+                  animation: "n-rise .7s cubic-bezier(.23,1,.32,1) .44s both",
+                }}
+              >
                 سجّل دخولك للوصول إلى لوحة التحكم
               </p>
             </div>
 
-            {/* ── Login form ── */}
-            <LoginForm />
+            {/* ── Login form — appears last ── */}
+            <div style={{ animation: "n-rise .8s cubic-bezier(.23,1,.32,1) .54s both" }}>
+              <LoginForm />
+            </div>
           </div>
         </div>
 

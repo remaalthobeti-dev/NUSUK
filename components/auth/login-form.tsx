@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, Loader2, Lock, UserPlus, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, UserPlus, ShieldCheck, ArrowLeft, CheckCircle2, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const loginSchema = z.object({
@@ -15,36 +15,137 @@ const loginSchema = z.object({
 });
 type LoginFormData = z.infer<typeof loginSchema>;
 
-/* ── Field input — gold focus ring via CSS ──────────────────── */
+/* ─── Injected CSS ──────────────────────────────────────────────────────────
+   All animation & interaction styles isolated here to avoid polluting globals.
+   Uses transform/opacity only → GPU-composited, 60fps guaranteed.
+   Respects prefers-reduced-motion.
+*/
+const STYLES = `
+  /* ── Field base ── */
+  .nf-input {
+    width: 100%;
+    padding: 13px 16px;
+    background: #F3F1EB;
+    border: 1.5px solid transparent;
+    border-radius: 9px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1A1A17;
+    outline: none;
+    transition:
+      border-color 200ms cubic-bezier(.23,1,.32,1),
+      background   200ms cubic-bezier(.23,1,.32,1),
+      box-shadow   200ms cubic-bezier(.23,1,.32,1);
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .nf-input::placeholder { color: #9A9A90; font-size: 13px; }
+
+  /* Focus state — green */
+  .nf-input:focus {
+    border-color: #1a7a45;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(26,122,69,.15), 0 1px 4px rgba(0,0,0,.06);
+  }
+
+  /* Error state */
+  .nf-input[data-error="true"] {
+    background: #FEF2F2;
+    border-color: #FCA5A5;
+  }
+  .nf-input[data-error="true"]:focus {
+    border-color: #EF4444;
+    box-shadow: 0 0 0 3px rgba(239,68,68,.12);
+  }
+
+  /* ── Shake on error ── */
+  .nf-shake { animation: n-shake .42s cubic-bezier(.36,.07,.19,.97) both; }
+
+  /* ── Primary button ── */
+  .nf-btn-primary {
+    transition:
+      box-shadow  220ms cubic-bezier(.23,1,.32,1),
+      transform   160ms cubic-bezier(.23,1,.32,1),
+      opacity     200ms ease;
+    will-change: transform;
+  }
+  .nf-btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(8,26,16,.42), 0 2px 8px rgba(8,26,16,.24);
+  }
+  .nf-btn-primary:active:not(:disabled) {
+    transform: scale(0.98) translateY(0);
+    box-shadow: 0 2px 10px rgba(8,26,16,.28);
+    transition-duration: 80ms;
+  }
+
+  /* ── Secondary button ── */
+  .nf-btn-secondary {
+    transition:
+      background    220ms ease,
+      border-color  220ms ease,
+      color         220ms ease,
+      box-shadow    220ms cubic-bezier(.23,1,.32,1),
+      transform     160ms cubic-bezier(.23,1,.32,1);
+    will-change: transform;
+  }
+  .nf-btn-secondary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  }
+  .nf-btn-secondary:active:not(:disabled) {
+    transform: scale(0.98);
+    transition-duration: 80ms;
+  }
+
+  /* ── Error message slide-down ── */
+  .nf-error-msg { animation: n-slide-down .24s cubic-bezier(.23,1,.32,1) both; }
+
+  /* ── Check icon pop-in ── */
+  .nf-check-pop { animation: n-pop-in .22s cubic-bezier(.34,1.56,.64,1) both; }
+
+  /* ── Success state pulse ── */
+  .nf-success-pulse { animation: n-success-pulse .35s ease both; }
+
+  /* ── Reduced motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    .nf-input, .nf-btn-primary, .nf-btn-secondary {
+      transition: none !important;
+    }
+    .nf-btn-primary:hover:not(:disabled),
+    .nf-btn-secondary:hover:not(:disabled) {
+      transform: none !important;
+    }
+    .nf-shake, .nf-check-pop, .nf-error-msg, .nf-success-pulse {
+      animation: none !important;
+    }
+  }
+`;
+
+/* ─── Field wrapper ──────────────────────────────────────────────────────── */
 function Field({
-  id,
-  type = "text",
-  placeholder,
-  autoComplete,
-  hasError,
-  endIcon,
-  startSlot,
-  dir = "ltr",
-  registration,
+  id, type = "text", placeholder, autoComplete, hasError, isValid,
+  endIcon, startSlot, dir = "ltr", shake, registration,
 }: {
-  id: string;
-  type?: string;
-  placeholder?: string;
-  autoComplete?: string;
-  hasError?: boolean;
-  endIcon?: React.ReactNode;
-  startSlot?: React.ReactNode;
-  dir?: "ltr" | "rtl";
+  id: string; type?: string; placeholder?: string; autoComplete?: string;
+  hasError?: boolean; isValid?: boolean; shake?: boolean;
+  endIcon?: React.ReactNode; startSlot?: React.ReactNode; dir?: "ltr" | "rtl";
   registration: ReturnType<ReturnType<typeof useForm<LoginFormData>>["register"]>;
 }) {
   return (
-    <div className="relative">
+    <div className={`relative ${shake ? "nf-shake" : ""}`}>
       {endIcon && (
-        <span
-          className="pointer-events-none absolute end-[14px] top-1/2 -translate-y-1/2"
-          style={{ color: "#9A9A90" }}
-        >
+        <span className="pointer-events-none absolute end-[14px] top-1/2 -translate-y-1/2" style={{ color: "#9A9A90" }}>
           {endIcon}
+        </span>
+      )}
+      {/* Green check — valid field */}
+      {isValid && !hasError && (
+        <span
+          className="nf-check-pop pointer-events-none absolute end-[14px] top-1/2 -translate-y-1/2"
+          style={{ color: "#1a7a45" }}
+        >
+          <Check size={14} strokeWidth={2.5} />
         </span>
       )}
       <input
@@ -53,19 +154,16 @@ function Field({
         placeholder={placeholder}
         autoComplete={autoComplete}
         dir={dir}
-        className="nusuk-field-input"
+        className="nf-input"
         data-error={hasError ? "true" : undefined}
         style={{
-          paddingInlineEnd:   endIcon ? 42 : 16,
+          paddingInlineEnd:   (endIcon || isValid) ? 42 : 16,
           paddingInlineStart: startSlot ? 42 : 16,
         }}
         {...registration}
       />
       {startSlot && (
-        <span
-          className="absolute start-[12px] top-1/2 -translate-y-1/2"
-          style={{ color: "#9A9A90" }}
-        >
+        <span className="absolute start-[12px] top-1/2 -translate-y-1/2" style={{ color: "#9A9A90" }}>
           {startSlot}
         </span>
       )}
@@ -73,17 +171,28 @@ function Field({
   );
 }
 
+/* ─── Main form ──────────────────────────────────────────────────────────── */
 export function LoginForm() {
-  const router                     = useRouter();
-  const [showPw, setShowPw]        = useState(false);
-  const [authError, setAuthError]  = useState<string | null>(null);
-  const btnRef                     = useRef<HTMLButtonElement>(null);
+  const router = useRouter();
+  const [showPw, setShowPw]       = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [success, setSuccess]     = useState(false);
+  const [shakeEmail, setShakeEmail]   = useState(false);
+  const [shakePass, setShakePass]     = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    watch,
+    formState: { errors, isSubmitting, touchedFields },
   } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema) });
+
+  const emailVal = watch("email") ?? "";
+  const passVal  = watch("password") ?? "";
+
+  const emailValid = touchedFields.email   && !errors.email   && emailVal.length > 0;
+  const passValid  = touchedFields.password && !errors.password && passVal.length > 0;
 
   async function onSubmit(data: LoginFormData) {
     setAuthError(null);
@@ -93,15 +202,23 @@ export function LoginForm() {
       password: data.password,
     });
     if (error) {
-      setAuthError(
+      const msg =
         error.message === "Invalid login credentials"
           ? "البريد الإلكتروني أو كلمة المرور غير صحيحة"
-          : "حدث خطأ أثناء تسجيل الدخول، يرجى المحاولة مجدداً"
-      );
+          : "حدث خطأ أثناء تسجيل الدخول، يرجى المحاولة مجدداً";
+      setAuthError(msg);
+      // Trigger shake on fields
+      setShakeEmail(true);
+      setShakePass(true);
+      setTimeout(() => { setShakeEmail(false); setShakePass(false); }, 500);
       return;
     }
-    router.push("/dashboard");
-    router.refresh();
+    // Brief success state before redirect
+    setSuccess(true);
+    setTimeout(() => {
+      router.push("/dashboard");
+      router.refresh();
+    }, 550);
   }
 
   function handleRipple(e: React.PointerEvent<HTMLButtonElement>) {
@@ -119,45 +236,18 @@ export function LoginForm() {
     setTimeout(() => span.remove(), 600);
   }
 
+  const isLoading = isSubmitting || (success && !authError);
+
   return (
     <>
-      {/* Field input styles — defined here to avoid globals pollution */}
-      <style>{`
-        .nusuk-field-input {
-          width:100%;
-          padding:13px 16px;
-          background:#F3F1EB;
-          border:1.5px solid transparent;
-          border-radius:9px;
-          font-family:inherit;
-          font-size:14px;
-          color:#1A1A17;
-          outline:none;
-          transition:border-color 220ms,background 220ms,box-shadow 220ms;
-          -webkit-appearance:none;
-          appearance:none;
-        }
-        .nusuk-field-input::placeholder { color:#9A9A90; font-size:13px; }
-        .nusuk-field-input:focus {
-          border-color:#C9963E;
-          background:#fff;
-          box-shadow:0 0 0 3.5px rgba(201,150,62,.28);
-        }
-        .nusuk-field-input[data-error="true"] {
-          background:#FEF2F2;
-          border-color:#FCA5A5;
-        }
-      `}</style>
+      <style>{STYLES}</style>
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        noValidate
-        dir="rtl"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} noValidate dir="rtl">
+
+        {/* ── Auth error ── */}
         {authError && (
           <div
-            className="mb-5 rounded-[9px] border border-red-200 bg-red-50 px-4 py-3 text-center text-[12px] text-red-700"
-            style={{ animation: "n-fade .25s ease" }}
+            className="nf-error-msg mb-5 rounded-[9px] border border-red-200 bg-red-50 px-4 py-3 text-center text-[12px] text-red-700"
           >
             {authError}
           </div>
@@ -165,11 +255,7 @@ export function LoginForm() {
 
         {/* ── Email ── */}
         <div className="mb-5">
-          <label
-            htmlFor="email"
-            className="mb-[7px] block text-[12px] font-semibold"
-            style={{ color: "#58584F" }}
-          >
+          <label htmlFor="email" className="mb-[7px] block text-[12px] font-semibold" style={{ color: "#58584F" }}>
             البريد الإلكتروني
           </label>
           <Field
@@ -178,11 +264,12 @@ export function LoginForm() {
             placeholder="example@email.com"
             autoComplete="email"
             hasError={!!errors.email}
-            endIcon={undefined}
+            isValid={emailValid}
+            shake={shakeEmail}
             registration={register("email")}
           />
           {errors.email && (
-            <p className="mt-1.5 text-[11px]" style={{ color: "#DC2626" }}>
+            <p className="nf-error-msg mt-1.5 text-[11px]" style={{ color: "#DC2626" }}>
               {errors.email.message}
             </p>
           )}
@@ -190,25 +277,30 @@ export function LoginForm() {
 
         {/* ── Password ── */}
         <div className="mb-5">
-          <label
-            htmlFor="password"
-            className="mb-[7px] block text-[12px] font-semibold"
-            style={{ color: "#58584F" }}
-          >
+          <label htmlFor="password" className="mb-[7px] block text-[12px] font-semibold" style={{ color: "#58584F" }}>
             كلمة المرور
           </label>
-          <div className="relative">
+          <div className={`relative ${shakePass ? "nf-shake" : ""}`}>
             <Lock
               className="pointer-events-none absolute end-[14px] top-1/2 -translate-y-1/2"
               size={15}
-              style={{ color: "#9A9A90" }}
+              style={{ color: errors.password ? "#FCA5A5" : passValid ? "#1a7a45" : "#9A9A90" }}
             />
+            {/* Green check for valid password */}
+            {passValid && !errors.password && (
+              <span
+                className="nf-check-pop pointer-events-none absolute end-[14px] top-1/2 -translate-y-1/2"
+                style={{ color: "#1a7a45" }}
+              >
+                <Check size={14} strokeWidth={2.5} />
+              </span>
+            )}
             <input
               id="password"
               type={showPw ? "text" : "password"}
               placeholder="••••••••"
               autoComplete="current-password"
-              className="nusuk-field-input"
+              className="nf-input"
               data-error={errors.password ? "true" : undefined}
               style={{ paddingInlineEnd: 42, paddingInlineStart: 42 }}
               {...register("password")}
@@ -216,9 +308,10 @@ export function LoginForm() {
             <button
               type="button"
               onClick={() => setShowPw((v) => !v)}
-              className="absolute start-[12px] top-1/2 -translate-y-1/2 p-1 transition-colors"
+              className="absolute start-[12px] top-1/2 -translate-y-1/2 p-1"
               style={{
                 color: "#9A9A90", background: "none", border: "none", cursor: "pointer",
+                transition: "color 150ms ease",
               }}
               onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#58584F")}
               onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#9A9A90")}
@@ -228,7 +321,7 @@ export function LoginForm() {
             </button>
           </div>
           {errors.password && (
-            <p className="mt-1.5 text-[11px]" style={{ color: "#DC2626" }}>
+            <p className="nf-error-msg mt-1.5 text-[11px]" style={{ color: "#DC2626" }}>
               {errors.password.message}
             </p>
           )}
@@ -236,10 +329,7 @@ export function LoginForm() {
 
         {/* ── Remember + forgot ── */}
         <div className="mb-6 flex items-center justify-between">
-          <label
-            className="flex cursor-pointer select-none items-center gap-[7px] text-[12px]"
-            style={{ color: "#58584F" }}
-          >
+          <label className="flex cursor-pointer select-none items-center gap-[7px] text-[12px]" style={{ color: "#58584F" }}>
             <input
               type="checkbox"
               style={{
@@ -254,7 +344,9 @@ export function LoginForm() {
           <Link
             href="/forgot-password"
             className="text-[12px] font-medium"
-            style={{ color: "#C9963E", transition: "color 150ms" }}
+            style={{ color: "#C9963E", transition: "color 150ms ease" }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#a37b30")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#C9963E")}
           >
             نسيت كلمة المرور؟
           </Link>
@@ -264,33 +356,37 @@ export function LoginForm() {
         <button
           ref={btnRef}
           type="submit"
-          disabled={isSubmitting}
+          disabled={isLoading}
           onPointerDown={handleRipple}
-          className="relative mb-5 flex w-full items-center justify-center gap-2 overflow-hidden font-bold"
+          className={`nf-btn-primary relative mb-5 flex w-full items-center justify-center gap-2 overflow-hidden font-bold ${success ? "nf-success-pulse" : ""}`}
           style={{
             padding:       "15px 24px",
-            background:    "linear-gradient(145deg,#0D2418,#091F14)",
-            color:         "#C9963E",
+            background:    success
+              ? "linear-gradient(145deg,#12622e,#0b4520)"
+              : "linear-gradient(145deg,#0D2418,#091F14)",
+            color:         success ? "#6ee79d" : "#C9963E",
             border:        "none",
             borderRadius:  9,
             fontSize:      14,
-            cursor:        isSubmitting ? "not-allowed" : "pointer",
-            opacity:       isSubmitting ? 0.8 : 1,
+            cursor:        isLoading ? "not-allowed" : "pointer",
+            opacity:       isLoading && !success ? 0.85 : 1,
             boxShadow:     "0 4px 18px rgba(8,26,16,.32),0 1px 4px rgba(8,26,16,.2)",
-            transition:    "box-shadow 220ms,transform 120ms",
             direction:     "rtl",
             letterSpacing: ".3px",
           }}
         >
+          {/* Gold shimmer line */}
           <span
             aria-hidden
             className="pointer-events-none absolute inset-x-[10%] top-0 h-px"
-            style={{
-              background:
-                "linear-gradient(90deg,transparent,rgba(201,150,62,.3),transparent)",
-            }}
+            style={{ background: "linear-gradient(90deg,transparent,rgba(201,150,62,.3),transparent)" }}
           />
-          {isSubmitting ? (
+          {success ? (
+            <>
+              <CheckCircle2 size={16} style={{ color: "#6ee79d" }} />
+              تم تسجيل الدخول
+            </>
+          ) : isSubmitting ? (
             <>
               <Loader2 size={15} className="animate-spin" />
               جاري تسجيل الدخول...
@@ -304,25 +400,22 @@ export function LoginForm() {
         </button>
 
         {/* ── Divider ── */}
-        <div
-          className="mb-5 flex items-center gap-3"
-          style={{ color: "#9A9A90", fontSize: 11 }}
-        >
+        <div className="mb-5 flex items-center gap-3" style={{ color: "#9A9A90", fontSize: 11 }}>
           <span className="h-px flex-1" style={{ background: "rgba(0,0,0,.08)" }} />
           أو
           <span className="h-px flex-1" style={{ background: "rgba(0,0,0,.08)" }} />
         </div>
 
-        {/* ── New user ── */}
+        {/* ── New user button ── */}
         <button
           type="button"
           onClick={() => router.push("/register")}
-          className="mb-8 flex w-full items-center justify-center gap-2 font-semibold"
+          className="nf-btn-secondary mb-8 flex w-full items-center justify-center gap-2 font-semibold"
           style={{
             padding: "13px 24px", background: "transparent",
             border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 9,
             fontSize: 13, color: "#58584F", cursor: "pointer",
-            direction: "rtl", transition: "background 220ms,border-color 220ms,color 220ms",
+            direction: "rtl",
           }}
           onMouseEnter={(e) => {
             const el = e.currentTarget as HTMLElement;

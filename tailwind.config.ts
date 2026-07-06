@@ -186,20 +186,47 @@ const config: Config = {
           "25%":     { transform: "skewX(1deg)" },
           "75%":     { transform: "skewX(-1deg)" },
         },
+        // ── Polish additions ─────────────────────────
+        "n-shake": {
+          "0%,100%": { transform: "translateX(0)" },
+          "15%":     { transform: "translateX(-5px)" },
+          "30%":     { transform: "translateX(5px)" },
+          "48%":     { transform: "translateX(-4px)" },
+          "64%":     { transform: "translateX(4px)" },
+          "80%":     { transform: "translateX(-2px)" },
+          "92%":     { transform: "translateX(2px)" },
+        },
+        "n-pop-in": {
+          from: { opacity: "0", transform: "scale(0.65) rotate(-8deg)" },
+          to:   { opacity: "1", transform: "scale(1)   rotate(0deg)" },
+        },
+        "n-slide-down": {
+          from: { opacity: "0", transform: "translateY(-8px) scaleY(0.96)" },
+          to:   { opacity: "1", transform: "translateY(0)    scaleY(1)" },
+        },
+        "n-success-pulse": {
+          "0%":   { transform: "scale(1)",    opacity: "1" },
+          "40%":  { transform: "scale(1.06)", opacity: "1" },
+          "100%": { transform: "scale(1)",    opacity: "0.9" },
+        },
       },
 
       // ── Animations ───────────────────────────────
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up":   "accordion-up 0.2s ease-out",
-        "n-rise":         "n-rise 0.85s var(--n-ease-out) both",
-        "n-rise-delay":   "n-rise 0.85s 0.15s var(--n-ease-out) both",
-        "n-fade":         "n-fade 0.3s ease both",
-        "n-float":        "n-float 5.5s ease-in-out infinite",
-        "n-float-b":      "n-float-b 5.5s 0.5s ease-in-out infinite",
-        "n-shimmer":      "n-shimmer 0.55s ease forwards",
-        "n-ripple":       "n-ripple 0.55s ease forwards",
-        "n-strap-sway":   "n-strap-sway 6s ease-in-out infinite",
+        "accordion-down":   "accordion-down 0.2s ease-out",
+        "accordion-up":     "accordion-up 0.2s ease-out",
+        "n-rise":           "n-rise 0.85s var(--n-ease-out) both",
+        "n-rise-delay":     "n-rise 0.85s 0.15s var(--n-ease-out) both",
+        "n-fade":           "n-fade 0.3s ease both",
+        "n-float":          "n-float 5.5s ease-in-out infinite",
+        "n-float-b":        "n-float-b 5.5s 0.5s ease-in-out infinite",
+        "n-shimmer":        "n-shimmer 0.55s ease forwards",
+        "n-ripple":         "n-ripple 0.55s ease forwards",
+        "n-strap-sway":     "n-strap-sway 6s ease-in-out infinite",
+        "n-shake":          "n-shake 0.42s cubic-bezier(.36,.07,.19,.97) both",
+        "n-pop-in":         "n-pop-in 0.22s cubic-bezier(.34,1.56,.64,1) both",
+        "n-slide-down":     "n-slide-down 0.24s cubic-bezier(.23,1,.32,1) both",
+        "n-success-pulse":  "n-success-pulse 0.35s ease both",
       },
 
       // ── Transition durations ─────────────────────
