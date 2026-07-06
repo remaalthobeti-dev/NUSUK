@@ -1,35 +1,38 @@
 import type { Metadata } from "next";
-import { Building2 } from "lucide-react";
+import Image from "next/image";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 
-export const metadata: Metadata = { title: "إعادة تعيين كلمة المرور" };
+export const metadata: Metadata = { title: "إعادة تعيين كلمة المرور — نسك" };
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 rounded-2xl nusuk-gradient flex items-center justify-center shadow-lg">
-            <Building2 className="h-8 w-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">نسك</h1>
-            <p className="text-muted-foreground mt-1">لوحة تحكم عمليات البطاقات</p>
-          </div>
+    <div
+      className="min-h-screen flex items-center justify-center p-6"
+      style={{
+        background: "hsl(45 25% 95%)",
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M16 0 L32 16 L16 32 L0 16 Z' fill='none' stroke='%23C9963E' stroke-width='0.3' opacity='0.18'/%3E%3C/svg%3E")`,
+      }}
+    >
+      <div className="w-full max-w-sm space-y-6">
+        <div className="flex items-center gap-4 justify-center">
+          <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, hsl(36 57% 51% / .5), transparent)" }} />
+          <Image src="/images/nusuk-logo.png" alt="نسك" width={48} height={50}
+            style={{ height: 50, width: "auto", objectFit: "contain" }} priority />
+          <div className="flex-1 h-px" style={{ background: "linear-gradient(to right, hsl(36 57% 51% / .5), transparent)" }} />
         </div>
 
-        <div className="bg-card border rounded-2xl shadow-xl p-8 space-y-6">
+        <div className="bg-white rounded-2xl shadow-lg border p-8 space-y-5" style={{ borderColor: "hsl(60 5% 92%)" }}>
           <div>
-            <h2 className="text-xl font-semibold text-foreground">إعادة تعيين كلمة المرور</h2>
-            <p className="text-sm text-muted-foreground mt-1">
+            <h2 className="text-xl font-bold" style={{ color: "hsl(60 5% 10%)" }}>إعادة تعيين كلمة المرور</h2>
+            <p className="text-sm mt-1" style={{ color: "hsl(60 5% 55%)" }}>
               أنشئ كلمة مرور جديدة لحسابك
             </p>
           </div>
           <ResetPasswordForm />
         </div>
 
-        <p className="text-center text-xs text-muted-foreground">
-          &copy; {new Date().getFullYear()} نسك — جميع الحقوق محفوظة
+        <p className="text-center text-xs" style={{ color: "hsl(60 5% 65%)" }}>
+          &copy; {new Date().getFullYear()} فريق بطاقات نسك — جميع الحقوق محفوظة
         </p>
       </div>
     </div>
