@@ -9,23 +9,20 @@ const CARD_H   = 687;
 
 const STYLES = `
   /*
-    Brush-paint reveal: a diagonal wipe (polygon clip-path) sweeps
-    from the top-right corner to the bottom-left corner, as if a
-    wide brush is laying down the card in one fluid stroke.
+    Diagonal mask-position sweep — the gradient edge travels in one
+    continuous movement from top-right to bottom-left with no stops.
+    mask-position interpolation is perfectly linear so there is no
+    mid-animation pause.
   */
-  @keyframes brush-reveal {
-    0%   { clip-path: polygon(100% 0%, 100% 0%, 100% 0%,  100% 0%); }
-    18%  { clip-path: polygon(100% 0%,  60% 0%, 100% 60%,  100% 0%); }
-    40%  { clip-path: polygon(100% 0%,   0% 0%, 100% 100%,  100% 0%); }
-    62%  { clip-path: polygon(100% 0%,   0% 0%,   0% 100%, 100% 100%); }
-    100% { clip-path: polygon(100% 0%,   0% 0%,   0% 100%, 100% 100%); }
+  @keyframes mask-sweep {
+    from { -webkit-mask-position: 160% 160%; mask-position: 160% 160%; }
+    to   { -webkit-mask-position: -60% -60%; mask-position: -60% -60%; }
   }
 
   /* Subtle colour bloom — desaturated → full colour */
   @keyframes colour-bloom {
-    0%   { filter: saturate(0)   brightness(1.3) blur(6px); }
-    55%  { filter: saturate(0.5) brightness(1.1) blur(1px); }
-    100% { filter: saturate(1)   brightness(1)   blur(0);   }
+    0%   { filter: saturate(0)   brightness(1.25) blur(5px); }
+    100% { filter: saturate(1)   brightness(1)    blur(0);   }
   }
 
   @keyframes card-float {
@@ -34,12 +31,17 @@ const STYLES = `
   }
 
   .nk-brush-wrap {
-    clip-path: polygon(100% 0%, 100% 0%, 100% 0%, 100% 0%);
-    animation: brush-reveal 2.8s cubic-bezier(.25,0,.1,1) 0.5s forwards;
+    -webkit-mask-image: linear-gradient(135deg, black 42%, transparent 58%);
+    mask-image:         linear-gradient(135deg, black 42%, transparent 58%);
+    -webkit-mask-size: 300% 300%;
+    mask-size:         300% 300%;
+    -webkit-mask-position: 160% 160%;
+    mask-position:         160% 160%;
+    animation: mask-sweep 3.0s cubic-bezier(.4,0,.2,1) 0.4s forwards;
   }
 
   .nk-colour-bloom {
-    animation: colour-bloom 3.2s cubic-bezier(.23,1,.32,1) 0.5s both;
+    animation: colour-bloom 3.2s cubic-bezier(.23,1,.32,1) 0.4s both;
   }
 
   .nk-card-float {
@@ -48,7 +50,7 @@ const STYLES = `
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .nk-brush-wrap   { animation: none; clip-path: none; }
+    .nk-brush-wrap   { animation: none; -webkit-mask-image: none; mask-image: none; }
     .nk-colour-bloom { animation: none; filter: none; }
     .nk-card-float   { animation: none; }
   }
