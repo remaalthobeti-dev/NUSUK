@@ -8,21 +8,9 @@ const CARD_W   = 477;
 const CARD_H   = 687;
 
 const STYLES = `
-  /*
-    Diagonal mask-position sweep — the gradient edge travels in one
-    continuous movement from top-right to bottom-left with no stops.
-    mask-position interpolation is perfectly linear so there is no
-    mid-animation pause.
-  */
-  @keyframes mask-sweep {
-    from { -webkit-mask-position: -60% -60%; mask-position: -60% -60%; }
-    to   { -webkit-mask-position: 160% 160%; mask-position: 160% 160%; }
-  }
-
-  /* Subtle colour bloom — desaturated → full colour */
-  @keyframes colour-bloom {
-    0%   { filter: saturate(0)   brightness(1.25) blur(5px); }
-    100% { filter: saturate(1)   brightness(1)    blur(0);   }
+  @keyframes card-enter {
+    0%   { opacity: 0; transform: translateY(32px) scale(.94); }
+    100% { opacity: 1; transform: translateY(0)    scale(1);   }
   }
 
   @keyframes card-float {
@@ -30,29 +18,18 @@ const STYLES = `
     50%     { transform: translateY(-10px); }
   }
 
-  .nk-brush-wrap {
-    -webkit-mask-image: linear-gradient(135deg, transparent 42%, black 58%);
-    mask-image:         linear-gradient(135deg, transparent 42%, black 58%);
-    -webkit-mask-size: 300% 300%;
-    mask-size:         300% 300%;
-    -webkit-mask-position: -60% -60%;
-    mask-position:         -60% -60%;
-    animation: mask-sweep 3.0s cubic-bezier(.4,0,.2,1) 0.4s forwards;
-  }
-
-  .nk-colour-bloom {
-    animation: colour-bloom 3.2s cubic-bezier(.23,1,.32,1) 0.4s both;
+  .nk-card-enter {
+    animation: card-enter 1.1s cubic-bezier(.23,1,.32,1) 0.3s both;
   }
 
   .nk-card-float {
-    animation: card-float 6s ease-in-out 4.0s infinite;
+    animation: card-float 6s ease-in-out 1.6s infinite;
     will-change: transform;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .nk-brush-wrap   { animation: none; -webkit-mask-image: none; mask-image: none; }
-    .nk-colour-bloom { animation: none; filter: none; }
-    .nk-card-float   { animation: none; }
+    .nk-card-enter { animation: none; opacity: 1; }
+    .nk-card-float { animation: none; }
   }
 `;
 
@@ -61,40 +38,31 @@ function DrawnCard({ cardRef }: { cardRef: React.Ref<HTMLDivElement> }) {
     <>
       <style>{STYLES}</style>
 
+      {/* Enter once, float forever */}
       <div
-        style={{ position: "relative", width: CARD_W, height: CARD_H, flexShrink: 0 }}
+        className="nk-card-enter"
+        style={{ width: CARD_W, height: CARD_H, flexShrink: 0 }}
       >
-        {/* Float — starts after paint settles */}
         <div
           ref={cardRef}
           className="nk-card-float"
-          style={{ width: "100%", height: "100%", position: "relative" }}
+          style={{
+            width: "100%", height: "100%",
+            filter:
+              "drop-shadow(0 2px 6px rgba(0,0,0,.18)) " +
+              "drop-shadow(0 12px 28px rgba(0,0,0,.20)) " +
+              "drop-shadow(0 36px 64px rgba(0,0,0,.14))",
+          }}
         >
-          {/* Diagonal brush-stroke reveal */}
-          <div className="nk-brush-wrap" style={{ width: "100%", height: "100%" }}>
-            {/* Colour bloom on top of the reveal */}
-            <div
-              className="nk-colour-bloom"
-              style={{
-                width:  "100%",
-                height: "100%",
-                filter:
-                  "drop-shadow(0 2px 6px rgba(0,0,0,.18)) " +
-                  "drop-shadow(0 12px 28px rgba(0,0,0,.20)) " +
-                  "drop-shadow(0 36px 64px rgba(0,0,0,.14))",
-              }}
-            >
-              <Image
-                src={CARD_SRC}
-                alt="بطاقة نُسك الرسمية"
-                width={CARD_W}
-                height={CARD_H}
-                style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
-                quality={100}
-                priority
-              />
-            </div>
-          </div>
+          <Image
+            src={CARD_SRC}
+            alt="بطاقة نُسك الرسمية"
+            width={CARD_W}
+            height={CARD_H}
+            style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+            quality={100}
+            priority
+          />
         </div>
       </div>
     </>
