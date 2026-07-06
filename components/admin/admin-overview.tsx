@@ -170,9 +170,7 @@ export function AdminOverview({ data, meetingsNow, upcomingMeetings, kpis }: Adm
           </div>
 
           {teams.length === 0 ? (
-            <div className="rounded-2xl border border-dashed bg-muted/10 p-16 text-center">
-              <p className="text-muted-foreground text-sm">لا توجد فرق نشطة</p>
-            </div>
+            <EmptyStateBox icon="👥" title="لا توجد فرق نشطة" />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {teams.map(({ team, employeeCount, presenceSummary, avgWorkload }) => (
@@ -209,7 +207,7 @@ export function AdminOverview({ data, meetingsNow, upcomingMeetings, kpis }: Adm
             </div>
             <div className="p-3">
               {meetingsNow.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-4">
+                <p className="text-[11px] text-muted-foreground/60 text-center py-3">
                   لا توجد اجتماعات جارية
                 </p>
               ) : (
@@ -235,7 +233,7 @@ export function AdminOverview({ data, meetingsNow, upcomingMeetings, kpis }: Adm
             </div>
             <div className="p-3">
               {upcomingMeetings.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-4">
+                <p className="text-[11px] text-muted-foreground/60 text-center py-3">
                   لا توجد اجتماعات قادمة
                 </p>
               ) : (
@@ -523,5 +521,17 @@ function QuickAction({
         <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground/50 rtl:rotate-180 shrink-0" />
       </div>
     </Link>
+  );
+}
+
+function EmptyStateBox({ icon, title }: { icon: string; title: string }) {
+  return (
+    <div
+      className="rounded-2xl border border-dashed p-12 text-center flex flex-col items-center gap-3"
+      style={{ borderColor: "hsl(var(--n-gold) / .18)", background: "hsl(var(--n-gold) / .02)" }}
+    >
+      <span className="text-3xl opacity-40">{icon}</span>
+      <p className="text-sm text-muted-foreground font-medium">{title}</p>
+    </div>
   );
 }
