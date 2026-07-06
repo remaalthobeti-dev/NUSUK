@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Shield } from "lucide-react";
 import { RegisterForm } from "@/components/auth/register-form";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Team } from "@/types/database";
 
 export const metadata: Metadata = { title: "إنشاء حساب جديد — نسك" };
@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "إنشاء حساب جديد — ن�
 export default async function RegisterPage() {
   let teams: Team[] = [];
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { data } = await supabase
       .from("teams")
       .select("id, name")
