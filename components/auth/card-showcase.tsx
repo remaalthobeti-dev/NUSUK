@@ -15,8 +15,8 @@ const STYLES = `
     mid-animation pause.
   */
   @keyframes mask-sweep {
-    from { -webkit-mask-position: 160% 160%; mask-position: 160% 160%; }
-    to   { -webkit-mask-position: -60% -60%; mask-position: -60% -60%; }
+    from { -webkit-mask-position: -60% -60%; mask-position: -60% -60%; }
+    to   { -webkit-mask-position: 160% 160%; mask-position: 160% 160%; }
   }
 
   /* Subtle colour bloom — desaturated → full colour */
@@ -31,12 +31,12 @@ const STYLES = `
   }
 
   .nk-brush-wrap {
-    -webkit-mask-image: linear-gradient(135deg, black 42%, transparent 58%);
-    mask-image:         linear-gradient(135deg, black 42%, transparent 58%);
+    -webkit-mask-image: linear-gradient(135deg, transparent 42%, black 58%);
+    mask-image:         linear-gradient(135deg, transparent 42%, black 58%);
     -webkit-mask-size: 300% 300%;
     mask-size:         300% 300%;
-    -webkit-mask-position: 160% 160%;
-    mask-position:         160% 160%;
+    -webkit-mask-position: -60% -60%;
+    mask-position:         -60% -60%;
     animation: mask-sweep 3.0s cubic-bezier(.4,0,.2,1) 0.4s forwards;
   }
 
