@@ -43,7 +43,8 @@ export function TeamStats({ summary, total, teamColor }: TeamStatsProps) {
             key={status}
             className="rounded-2xl border bg-card p-4 flex flex-col gap-1 transition-shadow duration-200 hover:shadow-sm"
           >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-1.5 bg-muted/50 shrink-0">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-1.5 shrink-0"
+              style={{ background: "hsl(var(--n-gold) / .07)" }}>
               <span
                 className={`w-3 h-3 rounded-full ${cfg.dotClass} ${
                   status === "available" ? "animate-pulse" : ""
