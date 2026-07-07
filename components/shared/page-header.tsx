@@ -49,7 +49,7 @@ export function PageHeader({
 
       {/* Title row */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="border-s-[3px] border-primary ps-4">
+        <div className="border-s-[3px] ps-4" style={{ borderColor: "hsl(var(--n-gold))" }}>
           <h1 className="text-xl font-bold text-foreground leading-tight">{title}</h1>
           {description && (
             <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
