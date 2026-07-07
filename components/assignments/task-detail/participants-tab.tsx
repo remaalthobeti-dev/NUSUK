@@ -41,7 +41,7 @@ export function ParticipantsTab({
         </h2>
 
         {participants.length === 0 ? (
-          <p className="text-sm text-muted-foreground">لا يوجد مشاركون حتى الآن.</p>
+          <p className="text-sm text-muted-foreground/60 py-2">لا يوجد مشاركون حتى الآن</p>
         ) : (
           <ul className="space-y-2">
             {participants.map((p) => (

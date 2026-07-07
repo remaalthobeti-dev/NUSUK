@@ -133,10 +133,9 @@ export function AssignTaskDialog({
               </Label>
 
               {ranked.length === 0 ? (
-                <div className="rounded-xl border border-dashed bg-muted/20 p-6 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    لا يوجد موظفون متاحون حالياً
-                  </p>
+                <div className="rounded-xl border border-dashed p-6 text-center flex flex-col items-center gap-2"
+                  style={{ borderColor: "hsl(var(--n-gold) / .18)", background: "hsl(var(--n-gold) / .02)" }}>
+                  <p className="text-sm font-medium text-muted-foreground">لا يوجد موظفون متاحون حالياً</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto scrollbar-hide">

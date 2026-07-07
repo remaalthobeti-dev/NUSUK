@@ -77,9 +77,7 @@ export function MeetingsNowSection({
           </CardHeader>
           <CardContent>
             {meetingsNow.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                لا توجد اجتماعات جارية
-              </p>
+              <p className="text-sm text-muted-foreground/60 py-3 text-center">لا توجد اجتماعات جارية</p>
             ) : (
               <div className="space-y-2">
                 {meetingsNow.map((m) => (
@@ -105,9 +103,7 @@ export function MeetingsNowSection({
           </CardHeader>
           <CardContent>
             {upcomingMeetings.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                لا توجد اجتماعات قادمة
-              </p>
+              <p className="text-sm text-muted-foreground/60 py-3 text-center">لا توجد اجتماعات قادمة</p>
             ) : (
               <div className="space-y-2">
                 {upcomingMeetings.map((m) => (

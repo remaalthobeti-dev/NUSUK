@@ -50,11 +50,12 @@ function roleLabel(eventType: string): string {
 export function ActivityTab({ entries }: Props) {
   if (entries.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-        <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center">
-          <Activity className="h-6 w-6 text-muted-foreground/40" />
+      <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center"
+          style={{ background: "hsl(var(--n-gold) / .08)", border: "1.5px solid hsl(var(--n-gold) / .18)" }}>
+          <Activity className="h-6 w-6" style={{ color: "hsl(var(--n-gold) / .5)" }} />
         </div>
-        <p className="text-sm text-muted-foreground">لا يوجد نشاط مسجل بعد.</p>
+        <p className="text-sm font-medium text-muted-foreground">لا يوجد نشاط مسجل بعد</p>
       </div>
     );
   }

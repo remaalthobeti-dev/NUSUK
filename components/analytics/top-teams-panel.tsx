@@ -23,8 +23,12 @@ export function TopTeamsPanel({ teams }: Props) {
       </div>
 
       {ranked.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
-          لا توجد بيانات
+        <div className="flex-1 flex items-center justify-center">
+          <div className="rounded-xl border border-dashed p-6 text-center flex flex-col items-center gap-2 w-full"
+            style={{ borderColor: "hsl(var(--n-gold) / .18)", background: "hsl(var(--n-gold) / .02)" }}>
+            <span className="text-2xl opacity-30">🏆</span>
+            <p className="text-sm font-medium text-muted-foreground">لا توجد بيانات بعد</p>
+          </div>
         </div>
       ) : (
         <div className="space-y-3 flex-1">

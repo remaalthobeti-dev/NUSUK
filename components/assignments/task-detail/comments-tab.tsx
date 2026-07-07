@@ -41,11 +41,12 @@ export function CommentsTab({ taskId, comments, currentEmployeeId }: Props) {
     <div className="space-y-4">
       {/* ── Comment list ── */}
       {comments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-          <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center">
-            <MessageSquare className="h-6 w-6 text-muted-foreground/40" />
+        <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center"
+            style={{ background: "hsl(var(--n-gold) / .08)", border: "1.5px solid hsl(var(--n-gold) / .18)" }}>
+            <MessageSquare className="h-6 w-6" style={{ color: "hsl(var(--n-gold) / .5)" }} />
           </div>
-          <p className="text-sm text-muted-foreground">لا توجد تعليقات بعد. كن أول من يعلّق.</p>
+          <p className="text-sm font-medium text-muted-foreground">لا توجد تعليقات بعد — كن أول من يعلّق</p>
         </div>
       ) : (
         <ul className="space-y-3">

@@ -169,9 +169,12 @@ export function NotificationBell({ employeeId }: Props) {
         {/* Notification list */}
         <div className="max-h-[360px] overflow-y-auto">
           {preview.length === 0 ? (
-            <div className="py-10 text-center text-sm text-muted-foreground">
-              <Bell className="h-8 w-8 mx-auto mb-2 text-muted-foreground/20" />
-              لا توجد إشعارات
+            <div className="py-6 px-4">
+              <div className="rounded-xl border border-dashed p-6 text-center flex flex-col items-center gap-2"
+                style={{ borderColor: "hsl(var(--n-gold) / .18)", background: "hsl(var(--n-gold) / .02)" }}>
+                <Bell className="h-7 w-7 opacity-25" style={{ color: "hsl(var(--n-gold))" }} />
+                <p className="text-sm font-medium text-muted-foreground">لا توجد إشعارات</p>
+              </div>
             </div>
           ) : (
             preview.map((n) => {

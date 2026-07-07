@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { ArrowRight, ClipboardList, Plus } from "lucide-react";
+import { ArrowRight, ClipboardList, Plus, Users } from "lucide-react";
 import Link from "next/link";
 import type { EmployeeWithPresence, Team } from "@/types/database";
 import type { AvailabilityStatus } from "@/types/database";
@@ -10,6 +10,7 @@ import { EmployeeCard } from "./employee-card";
 import { EmployeeDrawer } from "./employee-drawer";
 import { SearchFilters } from "./search-filters";
 import { AlertsPanel } from "./alerts-panel";
+import { EmptyState } from "@/components/shared/empty-state";
 import { UpdateStatusDialog } from "./update-status-dialog";
 import { AssignTaskDialog } from "./assign-task-dialog";
 import { TEAM_EMOJI } from "./status-config";
@@ -176,13 +177,11 @@ export function TeamDashboard({
       </div>
 
       {filteredEmployees.length === 0 ? (
-        <div className="rounded-2xl border border-dashed bg-muted/20 p-16 text-center">
-          <p className="text-muted-foreground">
-            {employees.length === 0
-              ? "لا يوجد موظفون في هذا الفريق"
-              : "لا توجد نتائج تطابق البحث"}
-          </p>
-        </div>
+        <EmptyState
+          icon={<Users />}
+          title={employees.length === 0 ? "لا يوجد موظفون في هذا الفريق" : "لا توجد نتائج تطابق البحث"}
+          description={employees.length > 0 ? "جرّب البحث بكلمات مختلفة أو تغيير الفلتر" : undefined}
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
           {filteredEmployees.map((emp) => (
