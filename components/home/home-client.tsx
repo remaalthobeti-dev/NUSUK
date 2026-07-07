@@ -138,7 +138,7 @@ export function HomeClient({
     alerts.push(`لديك ${unreadNotifications} إشعارات غير مقروءة`);
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-6 pb-8 stagger-enter">
       {/* ── Row 1: Greeting + Status ────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Greeting card */}

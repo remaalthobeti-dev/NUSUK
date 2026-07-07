@@ -161,10 +161,13 @@ export function TaskDetailClient({ data }: Props) {
               <Icon className="h-3.5 w-3.5" />
               {t.label}
               {t.badge != null && t.badge > 0 && (
-                <span className={cn(
-                  "text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center tabular-nums",
-                  isActiveTab ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                )}>
+                <span
+                  className="text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center tabular-nums"
+                  style={isActiveTab
+                    ? { background: "hsl(var(--n-gold))", color: "#fff" }
+                    : { background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }
+                  }
+                >
                   {t.badge}
                 </span>
               )}
