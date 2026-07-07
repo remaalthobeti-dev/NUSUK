@@ -41,9 +41,9 @@ export function StatsCard({
         <div
           className={cn(
             "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-            "bg-muted/60",
             colorClass
           )}
+          style={{ background: "hsl(var(--n-gold) / .08)" }}
         >
           {icon}
         </div>

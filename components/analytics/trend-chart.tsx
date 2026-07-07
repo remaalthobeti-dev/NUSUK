@@ -56,8 +56,11 @@ export function TrendChart({ trendData }: Props) {
       </div>
 
       {!hasData ? (
-        <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
-          لا توجد بيانات تاريخية كافية
+        <div className="flex-1 flex items-center justify-center">
+          <div className="rounded-xl border border-dashed p-6 text-center flex flex-col items-center gap-2"
+            style={{ borderColor: "hsl(var(--n-gold) / .18)", background: "hsl(var(--n-gold) / .02)" }}>
+            <p className="text-sm font-medium text-muted-foreground">لا توجد بيانات تاريخية كافية</p>
+          </div>
         </div>
       ) : (
         <div className="flex-1 min-h-0">

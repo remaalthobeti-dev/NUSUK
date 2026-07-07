@@ -384,9 +384,7 @@ export function HomeClient({
         </div>
         <div className="px-5 py-3.5">
           {!latestAnnouncement ? (
-            <p className="text-xs text-muted-foreground text-center py-3">
-              لا توجد إعلانات حالياً
-            </p>
+            <p className="text-xs text-muted-foreground/60 text-center py-3">لا توجد إعلانات حالياً</p>
           ) : (
             <div className="flex items-start gap-3">
               <div className="flex-1 min-w-0">
