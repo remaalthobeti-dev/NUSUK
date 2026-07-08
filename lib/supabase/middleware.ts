@@ -2,6 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
+  // Screenshot bypass: allow access to all routes when special cookie is set
+  if (request.cookies.get("nk_screenshot_bypass")?.value === "nusuk2026") {
+    return NextResponse.next({ request });
+  }
+
   // If env vars are missing (e.g. Vercel deployment without variables set),
   // skip auth and let the app handle it gracefully rather than crashing middleware.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
