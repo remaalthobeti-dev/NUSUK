@@ -14,6 +14,135 @@ export type Database = {
   }
   public: {
     Tables: {
+      distribution_companies: {
+        Row: {
+          id: string
+          name: string
+          type: string
+          is_active: boolean
+          sort_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          type: string
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          type?: string
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      distribution_team_configs: {
+        Row: {
+          team_id: string
+          page_role: string
+        }
+        Insert: {
+          team_id: string
+          page_role: string
+        }
+        Update: {
+          team_id?: string
+          page_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribution_team_configs_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      distribution_requests: {
+        Row: {
+          id: string
+          company_id: string
+          company_name: string
+          company_type: string
+          request_type: string
+          status: string
+          created_by: string
+          created_by_name: string
+          created_at: string
+          updated_at: string
+          processed_by: string | null
+          processed_by_name: string | null
+          processed_at: string | null
+          delegate_name: string | null
+          delegate_phone: string | null
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          company_name: string
+          company_type: string
+          request_type: string
+          status?: string
+          created_by: string
+          created_by_name: string
+          created_at?: string
+          updated_at?: string
+          processed_by?: string | null
+          processed_by_name?: string | null
+          processed_at?: string | null
+          delegate_name?: string | null
+          delegate_phone?: string | null
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          company_name?: string
+          company_type?: string
+          request_type?: string
+          status?: string
+          created_by?: string
+          created_by_name?: string
+          created_at?: string
+          updated_at?: string
+          processed_by?: string | null
+          processed_by_name?: string | null
+          processed_at?: string | null
+          delegate_name?: string | null
+          delegate_phone?: string | null
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribution_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_requests_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_requests_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activity_logs: {
         Row: {
           action: string

@@ -16,6 +16,7 @@ import {
   Building2,
   X,
   BarChart2,
+  Boxes,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -194,6 +195,14 @@ export function Sidebar({
                   })}
                 />
               )}
+
+              <SidebarItem
+                {...itemProps({
+                  href: "/dashboard/distribution",
+                  icon: Boxes,
+                  label: "توزيع نسك",
+                })}
+              />
 
               {/* Divider */}
               {!isCollapsed && (
