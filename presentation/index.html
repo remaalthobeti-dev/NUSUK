@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نسّق — منصة التشغيل الذكية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+
+/* ═══════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════ */
+:root {
+  --green:      #0D2117;
+  --green-mid:  #1A3D28;
+  --green-soft: #234D33;
+  --gold:       #C49A3C;
+  --gold-light: #D4AD5A;
+  --gold-pale:  #F0DFA8;
+  --ivory:      #F7F5EF;
+  --ivory-warm: #EDE9DC;
+  --white:      #FFFFFF;
+  --ink:        #111110;
+  --ink-soft:   #3A3A35;
+  --ink-muted:  #8A8A7F;
+  --font:       'Cairo', 'Tajawal', system-ui, sans-serif;
+  --ease-out:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:    cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-mid:   cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+/* ═══════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--green);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ═══════════════════════════════════════════
+   SLIDE ENGINE
+═══════════════════════════════════════════ */
+.slide {
+  position: fixed; inset: 0;
+  width: 100vw; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+  transform: translateY(30px);
+  overflow: hidden;
+}
+.slide.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+.slide.exit-up    { opacity: 0; transform: translateY(-30px); transition: opacity 0.4s var(--ease-in), transform 0.4s var(--ease-in); }
+.slide.exit-down  { opacity: 0; transform: translateY(30px);  transition: opacity 0.4s var(--ease-in), transform 0.4s var(--ease-in); }
+
+/* ═══════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════ */
+#nav {
+  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+  z-index: 1000;
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(13,33,23,0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(196,154,60,0.2);
+  border-radius: 50px;
+  padding: 10px 20px;
+  direction: ltr;
+}
+.nav-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(196,154,60,0.3);
+  cursor: pointer; border: none;
+  transition: all 0.3s var(--ease-out);
+  flex-shrink: 0;
+}
+.nav-dot.on {
+  width: 22px; border-radius: 4px;
+  background: var(--gold);
+}
+.nav-dot:hover { background: var(--gold-light); }
+.nav-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--gold); font-size: 16px;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; transition: background 0.2s;
+  flex-shrink: 0;
+}
+.nav-btn:hover { background: rgba(196,154,60,0.15); }
+#slide-counter {
+  color: rgba(196,154,60,0.7);
+  font-size: 11px; font-family: var(--font);
+  font-weight: 500; min-width: 36px; text-align: center;
+  direction: ltr;
+}
+
+/* ═══════════════════════════════════════════
+   PROGRESS BAR
+═══════════════════════════════════════════ */
+#progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 2px;
+  z-index: 999; background: rgba(196,154,60,0.15);
+}
+#progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  transition: width 0.5s var(--ease-out);
+}
+
+/* ═══════════════════════════════════════════
+   KEYFRAMES
+═══════════════════════════════════════════ */
+@keyframes rise    { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:none; } }
+@keyframes fade    { from { opacity:0; } to { opacity:1; } }
+@keyframes scale-in{ from { opacity:0; transform:scale(.92); } to { opacity:1; transform:scale(1); } }
+@keyframes line-in { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+@keyframes float   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes pulse-ring {
+  0%   { transform:scale(1);   opacity:.6; }
+  100% { transform:scale(1.8); opacity:0;  }
+}
+@keyframes draw-line { from{stroke-dashoffset:300} to{stroke-dashoffset:0} }
+@keyframes spin-slow  { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes glow-pulse {
+  0%,100%{ box-shadow:0 0 20px rgba(196,154,60,.2); }
+  50%     { box-shadow:0 0 40px rgba(196,154,60,.5), 0 0 80px rgba(196,154,60,.2); }
+}
+@keyframes shimmer {
+  0%{background-position:-200% center}
+  100%{background-position:200% center}
+}
+
+/* ═══════════════════════════════════════════
+   SHARED COMPONENTS
+═══════════════════════════════════════════ */
+.eyebrow {
+  font-size: 11px; font-weight: 600; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 20px; direction: rtl;
+}
+.gold-line {
+  width: 48px; height: 2px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+  margin-bottom: 28px; transform-origin: right;
+}
+.section-label {
+  writing-mode: horizontal-tb;
+  font-size: 10px; font-weight: 600; letter-spacing: 4px;
+  color: rgba(196,154,60,0.5); text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════
+   SLIDE 1 — COVER
+═══════════════════════════════════════════ */
+#s1 { background: var(--green); }
+
+.s1-bg {
+  position: absolute; inset: 0;
+  background-image: url('images/mecca.jpg');
+  background-size: cover; background-position: center 30%;
+  opacity: 0.18;
+  transform: scale(1.05);
+  transition: transform 8s ease-out;
+}
+#s1.active .s1-bg { transform: scale(1); }
+
+.s1-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 50% 100%, rgba(13,33,23,0.9) 0%, transparent 70%),
+              linear-gradient(to bottom, rgba(13,33,23,0.5) 0%, transparent 40%, rgba(13,33,23,0.7) 100%);
+}
+
+.s1-content {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center;
+  gap: 0;
+}
+
+.s1-logo-wrap {
+  width: 80px; height: 80px; border-radius: 24px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(196,154,60,0.2);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 40px;
+  backdrop-filter: blur(10px);
+  animation: scale-in .9s var(--ease-out) .3s both;
+}
+.s1-logo-wrap img { width: 52px; height: 52px; object-fit: contain; border-radius: 12px; }
+
+.s1-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 4px;
+  color: var(--gold); text-transform: uppercase;
+  margin-bottom: 24px;
+  animation: fade .8s ease .7s both;
+}
+
+.s1-title {
+  font-size: clamp(72px, 10vw, 130px);
+  font-weight: 900; color: var(--white);
+  letter-spacing: -3px; line-height: 1;
+  margin-bottom: 20px;
+  animation: rise 1s var(--ease-out) .5s both;
+}
+.s1-title span { color: var(--gold); }
+
+.s1-subtitle {
+  font-size: clamp(16px, 2vw, 22px);
+  font-weight: 300; color: rgba(255,255,255,0.65);
+  line-height: 1.6; max-width: 560px;
+  margin-bottom: 56px;
+  animation: rise .9s var(--ease-out) .75s both;
+}
+
+.s1-meta {
+  display: flex; align-items: center; gap: 20px;
+  animation: fade .8s ease 1.1s both;
+}
+.s1-divider { width: 1px; height: 28px; background: rgba(196,154,60,0.3); }
+.s1-team { font-size: 13px; font-weight: 400; color: rgba(255,255,255,0.45); }
+.s1-year { font-size: 13px; font-weight: 600; color: var(--gold); letter-spacing: 1px; }
+
+.s1-scroll-hint {
+  position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  animation: fade 1s ease 1.8s both;
+  opacity: 0.5;
+}
+.s1-scroll-hint span { font-size: 11px; color: var(--gold); letter-spacing: 2px; }
+.s1-scroll-hint svg { animation: float 2s ease-in-out infinite; }
+
+/* Decorative gold rings */
+.s1-ring {
+  position: absolute; border-radius: 50%;
+  border: 1px solid rgba(196,154,60,0.12);
+  animation: fade 1s ease 1.5s both;
+}
+.s1-ring-1 { width: 600px; height: 600px; left: 50%; top: 50%; transform: translate(-50%,-55%); }
+.s1-ring-2 { width: 900px; height: 900px; left: 50%; top: 50%; transform: translate(-50%,-55%); border-color: rgba(196,154,60,0.06); }
+
+/* ═══════════════════════════════════════════
+   SLIDE 2 — PROBLEM
+═══════════════════════════════════════════ */
+#s2 { background: var(--white); }
+
+.s2-content {
+  width: 100%; max-width: 1100px; padding: 0 80px;
+  position: relative; z-index: 2;
+}
+
+.s2-header {
+  margin-bottom: 64px;
+}
+.s2-header h2 {
+  font-size: clamp(48px, 6vw, 80px); font-weight: 900;
+  color: var(--green); line-height: 1.05; letter-spacing: -2px;
+}
+.s2-header h2 em { color: var(--gold); font-style: normal; }
+
+.s2-chaos-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px;
+  margin-bottom: 56px;
+}
+.chaos-card {
+  background: var(--ivory); border-radius: 16px;
+  padding: 24px 20px; text-align: center;
+  border: 1px solid rgba(13,33,23,0.07);
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s;
+  opacity: 0;
+}
+#s2.active .chaos-card { animation: rise .6s var(--ease-out) both; }
+#s2.active .chaos-card:nth-child(1) { animation-delay: .3s; }
+#s2.active .chaos-card:nth-child(2) { animation-delay: .4s; }
+#s2.active .chaos-card:nth-child(3) { animation-delay: .5s; }
+#s2.active .chaos-card:nth-child(4) { animation-delay: .6s; }
+#s2.active .chaos-card:nth-child(5) { animation-delay: .7s; }
+.chaos-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(13,33,23,0.08); }
+.chaos-icon { font-size: 32px; margin-bottom: 10px; display: block; }
+.chaos-label { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+
+.s2-statement {
+  padding: 40px 48px;
+  background: var(--green); border-radius: 20px;
+  position: relative; overflow: hidden;
+  opacity: 0;
+}
+#s2.active .s2-statement { animation: rise .8s var(--ease-out) .9s both; }
+.s2-statement::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.s2-statement p {
+  font-size: clamp(18px, 2.2vw, 26px); font-weight: 300;
+  color: rgba(255,255,255,0.8); line-height: 1.8;
+}
+.s2-statement strong { color: var(--gold); font-weight: 700; }
+
+/* ═══════════════════════════════════════════
+   SLIDE 3 — CHALLENGES
+═══════════════════════════════════════════ */
+#s3 { background: var(--ivory); }
+
+.s3-content {
+  width: 100%; max-width: 1100px; padding: 0 80px;
+}
+.s3-header { margin-bottom: 64px; }
+.s3-header h2 {
+  font-size: clamp(44px, 5.5vw, 72px); font-weight: 900;
+  color: var(--green); letter-spacing: -2px;
+}
+
+.challenge-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;
+}
+.challenge-card {
+  background: var(--white); border-radius: 24px;
+  padding: 40px 36px;
+  border: 1px solid rgba(13,33,23,0.06);
+  display: flex; align-items: flex-start; gap: 24px;
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s;
+  opacity: 0;
+}
+#s3.active .challenge-card { animation: rise .7s var(--ease-out) both; }
+#s3.active .challenge-card:nth-child(1) { animation-delay: .3s; }
+#s3.active .challenge-card:nth-child(2) { animation-delay: .45s; }
+#s3.active .challenge-card:nth-child(3) { animation-delay: .6s; }
+#s3.active .challenge-card:nth-child(4) { animation-delay: .75s; }
+.challenge-card:hover { transform: translateY(-6px); box-shadow: 0 20px 48px rgba(13,33,23,0.08); }
+
+.challenge-num {
+  font-size: 11px; font-weight: 700; color: var(--gold);
+  letter-spacing: 2px; min-width: 24px; padding-top: 4px;
+  font-family: var(--font); direction: ltr;
+}
+.challenge-icon-wrap {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: linear-gradient(135deg, var(--green), var(--green-mid));
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.challenge-icon-wrap svg { width: 24px; height: 24px; }
+.challenge-body h3 {
+  font-size: 19px; font-weight: 700; color: var(--green);
+  margin-bottom: 8px; line-height: 1.3;
+}
+.challenge-body p {
+  font-size: 14px; font-weight: 400; color: var(--ink-muted); line-height: 1.7;
+}
+
+/* ═══════════════════════════════════════════
+   SLIDE 4 — SOLUTION HUB
+═══════════════════════════════════════════ */
+#s4 { background: var(--green); }
+
+.s4-content {
+  width: 100%; max-width: 1200px; padding: 0 80px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+  align-items: center;
+}
+
+.s4-text { }
+.s4-text .eyebrow { color: var(--gold); }
+.s4-text h2 {
+  font-size: clamp(40px, 5vw, 64px); font-weight: 900;
+  color: var(--white); letter-spacing: -2px; line-height: 1.1;
+  margin-bottom: 24px;
+}
+.s4-text h2 span { color: var(--gold); }
+.s4-text p {
+  font-size: 16px; font-weight: 300;
+  color: rgba(255,255,255,0.6); line-height: 1.8;
+  max-width: 380px;
+}
+
+/* SVG Hub Diagram */
+.s4-hub {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+}
+#s4.active .s4-hub { animation: fade 1s var(--ease-out) .5s both; }
+
+#hub-svg { width: 100%; max-width: 460px; height: auto; overflow: visible; }
+
+.hub-center-circle {
+  filter: drop-shadow(0 0 30px rgba(196,154,60,0.4));
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════
+   SLIDE 5 — JOURNEY FLOW
+═══════════════════════════════════════════ */
+#s5 { background: var(--white); }
+
+.s5-content {
+  width: 100%; max-width: 1100px; padding: 0 80px;
+}
+.s5-header { margin-bottom: 56px; }
+.s5-header h2 {
+  font-size: clamp(40px, 5vw, 64px); font-weight: 900;
+  color: var(--green); letter-spacing: -2px;
+}
+
+.flow-track {
+  display: flex; align-items: center; gap: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  direction: rtl;
+}
+.flow-step {
+  display: flex; align-items: center; gap: 0; flex-shrink: 0;
+  opacity: 0;
+}
+#s5.active .flow-step { animation: rise .6s var(--ease-out) both; }
+#s5.active .flow-step:nth-child(1)  { animation-delay: .2s; }
+#s5.active .flow-step:nth-child(2)  { animation-delay: .3s; }
+#s5.active .flow-step:nth-child(3)  { animation-delay: .4s; }
+#s5.active .flow-step:nth-child(4)  { animation-delay: .5s; }
+#s5.active .flow-step:nth-child(5)  { animation-delay: .6s; }
+#s5.active .flow-step:nth-child(6)  { animation-delay: .7s; }
+#s5.active .flow-step:nth-child(7)  { animation-delay: .8s; }
+
+.step-node {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 0 8px;
+}
+.step-circle {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.step-circle svg { width: 26px; height: 26px; }
+.step-circle::after {
+  content: '';
+  position: absolute; inset: -4px; border-radius: 50%;
+  border: 1px solid rgba(196,154,60,0.3);
+}
+.step-label {
+  font-size: 12px; font-weight: 600; color: var(--green);
+  text-align: center; white-space: nowrap;
+}
+
+.flow-arrow {
+  width: 40px; height: 2px;
+  background: linear-gradient(90deg, rgba(13,33,23,0.15), rgba(196,154,60,0.4), rgba(13,33,23,0.15));
+  flex-shrink: 0; position: relative;
+}
+.flow-arrow::after {
+  content: '';
+  position: absolute; right: -1px; top: -3px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--gold);
+}
+
+/* ═══════════════════════════════════════════
+   SLIDE 6 — DASHBOARD MOCKUP
+═══════════════════════════════════════════ */
+#s6 { background: var(--ivory); }
+
+.s6-content {
+  width: 100%; max-width: 1200px; padding: 0 60px;
+  display: grid; grid-template-columns: 320px 1fr; gap: 60px;
+  align-items: center;
+}
+
+.s6-text .eyebrow { }
+.s6-text h2 {
+  font-size: clamp(32px, 4vw, 52px); font-weight: 900;
+  color: var(--green); letter-spacing: -1.5px; line-height: 1.15;
+  margin-bottom: 20px;
+}
+.s6-text p {
+  font-size: 15px; font-weight: 400;
+  color: var(--ink-muted); line-height: 1.8;
+  margin-bottom: 32px;
+}
+
+.feature-pills { display: flex; flex-direction: column; gap: 10px; }
+.feature-pill {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 600; color: var(--green);
+}
+.feature-pill::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--gold); flex-shrink: 0;
+}
+
+/* MacBook Mockup */
+.macbook-wrap {
+  position: relative; opacity: 0;
+}
+#s6.active .macbook-wrap { animation: scale-in .9s var(--ease-out) .4s both; }
+
+.macbook {
+  position: relative; width: 100%;
+}
+.macbook-screen-bg {
+  background: #1A1A1A; border-radius: 12px 12px 0 0;
+  padding: 8px; position: relative;
+  box-shadow: 0 40px 80px rgba(13,33,23,0.3), 0 0 0 1px rgba(255,255,255,0.08);
+}
+.macbook-screen-bg::before {
+  content: '';
+  position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+  width: 8px; height: 8px; border-radius: 50%; background: #333;
+}
+.macbook-screen {
+  width: 100%; aspect-ratio: 16/10;
+  border-radius: 6px; overflow: hidden;
+  background: #0D1117;
+}
+.macbook-screen img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+.macbook-base {
+  height: 14px; background: linear-gradient(to bottom, #2A2A2A, #1A1A1A);
+  border-radius: 0 0 4px 4px;
+}
+.macbook-foot {
+  height: 6px; background: #111;
+  border-radius: 0 0 8px 8px;
+  width: 80%; margin: 0 auto;
+}
+
+/* Callouts */
+.callout {
+  position: absolute; display: flex; align-items: center; gap: 8px;
+  background: var(--white); border-radius: 10px;
+  padding: 8px 14px; font-size: 12px; font-weight: 600; color: var(--green);
+  box-shadow: 0 4px 20px rgba(13,33,23,0.12);
+  border: 1px solid rgba(13,33,23,0.06);
+  white-space: nowrap; direction: rtl;
+  opacity: 0;
+}
+#s6.active .callout { animation: fade .5s ease both; }
+#s6.active .callout:nth-child(1) { animation-delay: 1s; }
+#s6.active .callout:nth-child(2) { animation-delay: 1.2s; }
+.callout-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+.callout-line {
+  position: absolute; background: rgba(196,154,60,0.4);
+}
+
+/* ═══════════════════════════════════════════
+   SLIDE 7 — OPERATIONS
+═══════════════════════════════════════════ */
+#s7 { background: var(--green); }
+
+.s7-content {
+  width: 100%; max-width: 1200px; padding: 0 60px;
+  display: grid; grid-template-columns: 1fr 340px; gap: 60px;
+  align-items: center;
+}
+
+.s7-mockup { position: relative; opacity: 0; }
+#s7.active .s7-mockup { animation: scale-in .9s var(--ease-out) .3s both; }
+
+.s7-text .eyebrow { }
+.s7-text h2 {
+  font-size: clamp(32px, 4vw, 52px); font-weight: 900;
+  color: var(--white); letter-spacing: -1.5px; line-height: 1.15;
+  margin-bottom: 20px;
+}
+
+.ops-stats { display: flex; flex-direction: column; gap: 20px; margin-top: 40px; }
+.ops-stat {
+  opacity: 0;
+}
+#s7.active .ops-stat { animation: rise .5s var(--ease-out) both; }
+#s7.active .ops-stat:nth-child(1) { animation-delay: .6s; }
+#s7.active .ops-stat:nth-child(2) { animation-delay: .75s; }
+#s7.active .ops-stat:nth-child(3) { animation-delay: .9s; }
+
+.ops-stat-label {
+  font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.4);
+  margin-bottom: 6px; letter-spacing: 1px;
+}
+.ops-stat-bar {
+  height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px;
+  overflow: hidden;
+}
+.ops-stat-fill {
+  height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  border-radius: 2px; transform-origin: right;
+  transition: width 1.2s var(--ease-out) 0.8s;
+  width: 0;
+}
+#s7.active .ops-stat-fill { width: var(--pct, 75%); }
+.ops-stat-value {
+  font-size: 22px; font-weight: 800; color: var(--gold);
+  margin-top: 4px; direction: ltr; text-align: right;
+}
+
+/* ═══════════════════════════════════════════
+   SLIDE 8 — AI ASSISTANT
+═══════════════════════════════════════════ */
+#s8 { background: var(--green); }
+#s8::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(196,154,60,0.05) 0%, transparent 70%);
+}
+
+.s8-content {
+  width: 100%; max-width: 1200px; padding: 0 60px;
+  display: grid; grid-template-columns: 340px 1fr; gap: 60px;
+  align-items: center; position: relative; z-index: 2;
+}
+
+.s8-text .eyebrow { }
+.s8-text h2 {
+  font-size: clamp(32px, 4vw, 52px); font-weight: 900;
+  color: var(--white); letter-spacing: -1.5px; line-height: 1.15;
+  margin-bottom: 16px;
+}
+.s8-text h2 span { color: var(--gold); }
+.s8-text p { font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.55); line-height: 1.8; }
+
+.ai-feature-list { margin-top: 36px; display: flex; flex-direction: column; gap: 14px; }
+.ai-feature {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.7);
+}
+.ai-feature-dot {
+  width: 24px; height: 24px; border-radius: 8px;
+  background: rgba(196,154,60,0.15);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+/* AI Chat Interface */
+.ai-chat {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(196,154,60,0.15);
+  border-radius: 24px;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  opacity: 0;
+}
+#s8.active .ai-chat { animation: scale-in .9s var(--ease-out) .4s both; }
+
+.ai-chat-header {
+  padding: 18px 24px;
+  background: rgba(196,154,60,0.08);
+  border-bottom: 1px solid rgba(196,154,60,0.1);
+  display: flex; align-items: center; gap: 12px; direction: rtl;
+}
+.ai-avatar {
+  width: 36px; height: 36px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.ai-chat-name { font-size: 14px; font-weight: 700; color: var(--white); }
+.ai-chat-status { font-size: 11px; color: var(--gold); font-weight: 500; display: flex; align-items: center; gap: 4px; }
+.ai-status-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ADE80; animation: pulse-ring 1.5s ease-out infinite; }
+
+.ai-chat-body { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+
+.chat-bubble { display: flex; gap: 10px; direction: rtl; }
+.chat-bubble.user { justify-content: flex-start; }
+.chat-bubble.ai   { justify-content: flex-end; flex-direction: row-reverse; }
+
+.bubble-content {
+  max-width: 80%; padding: 14px 18px;
+  border-radius: 16px; font-size: 13px; line-height: 1.65;
+}
+.chat-bubble.user .bubble-content {
+  background: rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.75);
+  border-radius: 16px 4px 16px 16px;
+}
+.chat-bubble.ai .bubble-content {
+  background: linear-gradient(135deg, rgba(196,154,60,0.15), rgba(196,154,60,0.08));
+  border: 1px solid rgba(196,154,60,0.2);
+  color: var(--white);
+  border-radius: 4px 16px 16px 16px;
+}
+
+.ai-response-stats {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
+  margin-top: 8px;
+}
+.ai-stat {
+  background: rgba(255,255,255,0.05); border-radius: 10px;
+  padding: 10px 12px; text-align: center;
+}
+.ai-stat-value { font-size: 18px; font-weight: 800; color: var(--gold); display: block; direction: ltr; }
+.ai-stat-label { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 2px; display: block; }
+
+.ai-chat-input {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(196,154,60,0.1);
+  display: flex; align-items: center; gap: 12px; direction: rtl;
+}
+.ai-input-field {
+  flex: 1; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(196,154,60,0.15);
+  border-radius: 12px; padding: 10px 16px;
+  font-size: 12px; color: rgba(255,255,255,0.4);
+  font-family: var(--font);
+}
+.ai-send-btn {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--gold); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════
+   SLIDE 9 — VALUE
+═══════════════════════════════════════════ */
+#s9 { background: var(--ivory); }
+
+.s9-content { width: 100%; max-width: 1100px; padding: 0 80px; }
+.s9-header { margin-bottom: 56px; }
+.s9-header h2 {
+  font-size: clamp(40px, 5vw, 64px); font-weight: 900;
+  color: var(--green); letter-spacing: -2px;
+}
+
+.value-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+}
+.value-card {
+  background: var(--white); border-radius: 20px;
+  padding: 36px 28px;
+  border: 1px solid rgba(13,33,23,0.05);
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s;
+  opacity: 0;
+}
+#s9.active .value-card { animation: rise .6s var(--ease-out) both; }
+#s9.active .value-card:nth-child(1) { animation-delay: .2s; }
+#s9.active .value-card:nth-child(2) { animation-delay: .3s; }
+#s9.active .value-card:nth-child(3) { animation-delay: .4s; }
+#s9.active .value-card:nth-child(4) { animation-delay: .5s; }
+#s9.active .value-card:nth-child(5) { animation-delay: .6s; }
+#s9.active .value-card:nth-child(6) { animation-delay: .7s; }
+.value-card:hover { transform: translateY(-6px); box-shadow: 0 20px 48px rgba(13,33,23,0.08); }
+
+.value-icon {
+  width: 56px; height: 56px; border-radius: 16px;
+  background: linear-gradient(135deg, var(--green), var(--green-mid));
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px;
+}
+.value-icon svg { width: 26px; height: 26px; }
+.value-card h3 { font-size: 16px; font-weight: 700; color: var(--green); margin-bottom: 8px; }
+.value-card p  { font-size: 13px; font-weight: 400; color: var(--ink-muted); line-height: 1.6; }
+
+/* ═══════════════════════════════════════════
+   SLIDE 10 — CLOSING
+═══════════════════════════════════════════ */
+#s10 { background: var(--green); }
+
+.s10-bg {
+  position: absolute; inset: 0;
+  background-image: url('images/mecca.jpg');
+  background-size: cover; background-position: center 40%;
+  opacity: 0.1;
+}
+.s10-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 80% at 50% 50%, rgba(13,33,23,0.3) 0%, rgba(13,33,23,0.85) 100%);
+}
+
+.s10-content {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center; gap: 0;
+}
+
+.s10-logo {
+  width: 64px; height: 64px; border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(196,154,60,0.2);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 40px;
+  animation: scale-in .9s var(--ease-out) .3s both;
+  opacity: 0;
+}
+#s10.active .s10-logo { opacity: 1; }
+.s10-logo img { width: 42px; height: 42px; object-fit: contain; border-radius: 10px; }
+
+.s10-quote {
+  font-size: clamp(28px, 4vw, 52px); font-weight: 300;
+  color: rgba(255,255,255,0.85); line-height: 1.6;
+  max-width: 700px; margin-bottom: 40px;
+  opacity: 0;
+}
+#s10.active .s10-quote { animation: rise 1s var(--ease-out) .5s both; }
+.s10-quote strong { color: var(--gold); font-weight: 700; display: block; font-size: clamp(36px, 5vw, 64px); }
+
+.s10-line {
+  width: 60px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 0 auto 40px; opacity: 0;
+}
+#s10.active .s10-line { animation: fade 1s ease .9s both; }
+
+.s10-thanks {
+  font-size: 18px; font-weight: 600; color: rgba(255,255,255,0.5);
+  letter-spacing: 2px; opacity: 0;
+}
+#s10.active .s10-thanks { animation: fade .8s ease 1.1s both; }
+
+.s10-team {
+  margin-top: 24px; font-size: 13px; font-weight: 400;
+  color: rgba(196,154,60,0.6); opacity: 0;
+}
+#s10.active .s10-team { animation: fade .8s ease 1.3s both; }
+
+/* ═══════════════════════════════════════════
+   SLIDE TEXT ANIMATIONS (shared)
+═══════════════════════════════════════════ */
+.anim-rise { opacity:0; }
+.anim-fade { opacity:0; }
+.active .anim-rise { animation: rise .8s var(--ease-out) both; }
+.active .anim-fade { animation: fade .8s ease both; }
+.active .anim-rise.d1 { animation-delay:.1s; }
+.active .anim-rise.d2 { animation-delay:.25s; }
+.active .anim-rise.d3 { animation-delay:.4s; }
+.active .anim-rise.d4 { animation-delay:.55s; }
+.active .anim-fade.d1 { animation-delay:.1s; }
+.active .anim-fade.d2 { animation-delay:.25s; }
+
+</style>
+</head>
+<body>
+
+<!-- ═══ PROGRESS ═══ -->
+<div id="progress"><div id="progress-fill" style="width:10%"></div></div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 1 — COVER
+═══════════════════════════════════════ -->
+<section class="slide" id="s1">
+  <div class="s1-ring s1-ring-1"></div>
+  <div class="s1-ring s1-ring-2"></div>
+  <div class="s1-bg"></div>
+  <div class="s1-vignette"></div>
+
+  <div class="s1-content">
+    <div class="s1-logo-wrap">
+      <img src="images/logo.jpg" alt="نسّق">
+    </div>
+    <div class="s1-label">Hackathon 2026 &nbsp;·&nbsp; فريق بطاقات نسك</div>
+    <h1 class="s1-title">نسّ<span>ق</span></h1>
+    <p class="s1-subtitle">منصة التشغيل الذكية لإدارة العمليات الموسمية</p>
+    <div class="s1-meta">
+      <span class="s1-team">فريق بطاقات نسك</span>
+      <div class="s1-divider"></div>
+      <span class="s1-year">2026</span>
+    </div>
+  </div>
+
+  <div class="s1-scroll-hint">
+    <svg width="16" height="20" viewBox="0 0 16 20" fill="none">
+      <path d="M8 4L8 16M8 16L4 12M8 16L12 12" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>ابدأ</span>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 2 — PROBLEM
+═══════════════════════════════════════ -->
+<section class="slide" id="s2">
+  <div class="s2-content">
+    <div class="s2-header">
+      <div class="eyebrow anim-fade d1">المشكلة</div>
+      <div class="gold-line anim-fade d2" style="transform-origin:right;animation:line-in .6s var(--ease-out) .2s both;"></div>
+      <h2 class="anim-rise d2">قبل <em>نسّق</em>...</h2>
+    </div>
+
+    <div class="s2-chaos-grid">
+      <div class="chaos-card">
+        <span class="chaos-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <rect width="36" height="36" rx="10" fill="#25D366" opacity=".15"/>
+            <path d="M18 8C12.477 8 8 12.477 8 18c0 1.82.487 3.53 1.34 5L8 28l5.18-1.32A9.963 9.963 0 0018 28c5.523 0 10-4.477 10-10S23.523 8 18 8z" stroke="#25D366" stroke-width="1.5" fill="none"/>
+            <path d="M14 17.5c.5 1.5 2 3 4 3.5" stroke="#25D366" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="chaos-label">واتساب</span>
+      </div>
+      <div class="chaos-card">
+        <span class="chaos-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <rect width="36" height="36" rx="10" fill="#217346" opacity=".15"/>
+            <rect x="9" y="9" width="18" height="18" rx="2" stroke="#217346" stroke-width="1.5" fill="none"/>
+            <path d="M9 14h18M14 14v13" stroke="#217346" stroke-width="1.5"/>
+          </svg>
+        </span>
+        <span class="chaos-label">Excel</span>
+      </div>
+      <div class="chaos-card">
+        <span class="chaos-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <rect width="36" height="36" rx="10" fill="#0D2117" opacity=".1"/>
+            <path d="M13 13c0-2.761 2.239-5 5-5s5 2.239 5 5c0 2.761-2.239 5-5 5" stroke="#0D2117" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            <path d="M13.5 28c.276-3.314 2.015-6 4.5-6s4.224 2.686 4.5 6" stroke="#0D2117" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          </svg>
+        </span>
+        <span class="chaos-label">مكالمات</span>
+      </div>
+      <div class="chaos-card">
+        <span class="chaos-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <rect width="36" height="36" rx="10" fill="#C49A3C" opacity=".15"/>
+            <rect x="8" y="10" width="20" height="16" rx="2" stroke="#C49A3C" stroke-width="1.5" fill="none"/>
+            <path d="M12 16h12M12 20h8" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="chaos-label">اجتماعات</span>
+      </div>
+      <div class="chaos-card">
+        <span class="chaos-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <rect width="36" height="36" rx="10" fill="#8A8A7F" opacity=".12"/>
+            <path d="M10 12h16M10 17h16M10 22h10" stroke="#8A8A7F" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="chaos-label">ورق وتقارير</span>
+      </div>
+    </div>
+
+    <div class="s2-statement">
+      <p>
+        أثناء موسم الحج، <strong>تتوزع العمليات بين عشرات الإدارات</strong>،
+        كل فريق يعمل في عزلة، والقرار يتأخر، والمعلومات تضيع.
+        <strong>لا توجد رؤية موحدة.</strong>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 3 — CHALLENGES
+═══════════════════════════════════════ -->
+<section class="slide" id="s3">
+  <div class="s3-content">
+    <div class="s3-header">
+      <div class="eyebrow anim-fade d1">التحديات التشغيلية</div>
+      <div class="gold-line anim-fade d2"></div>
+      <h2 class="anim-rise d2">ما الذي يعيق<br>العمل الميداني؟</h2>
+    </div>
+
+    <div class="challenge-grid">
+      <div class="challenge-card">
+        <div class="challenge-num">٠١</div>
+        <div class="challenge-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+            <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+          </svg>
+        </div>
+        <div class="challenge-body">
+          <h3>غياب الرؤية اللحظية</h3>
+          <p>لا أحد يعرف ما الذي يحدث في الميدان الآن. البيانات تصل متأخرة وغير مكتملة.</p>
+        </div>
+      </div>
+      <div class="challenge-card">
+        <div class="challenge-num">٠٢</div>
+        <div class="challenge-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="challenge-body">
+          <h3>تأخر اتخاذ القرار</h3>
+          <p>القائد يحتاج ساعات لتجميع المعلومات قبل أي قرار. الفرصة تضيع في الانتظار.</p>
+        </div>
+      </div>
+      <div class="challenge-card">
+        <div class="challenge-num">٠٣</div>
+        <div class="challenge-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+            <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3M3 16v3a2 2 0 002 2h3m10 0h3a2 2 0 002-2v-3"/>
+          </svg>
+        </div>
+        <div class="challenge-body">
+          <h3>ازدواجية الأعمال</h3>
+          <p>فريقان يؤديان نفس المهمة، بيانات مكررة، جهد مهدر، ونتائج متضاربة.</p>
+        </div>
+      </div>
+      <div class="challenge-card">
+        <div class="challenge-num">٠٤</div>
+        <div class="challenge-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+        </div>
+        <div class="challenge-body">
+          <h3>صعوبة متابعة الفرق</h3>
+          <p>مدير العمليات لا يعرف أين كل فريق وما حالته. الإدارة تعمل في الضبابية.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 4 — SOLUTION HUB
+═══════════════════════════════════════ -->
+<section class="slide" id="s4">
+  <div class="s4-content">
+    <div class="s4-text">
+      <div class="eyebrow anim-rise d1">الحل</div>
+      <div class="gold-line anim-fade d1"></div>
+      <h2 class="anim-rise d2">منصة <span>واحدة</span><br>لكل الإدارات</h2>
+      <p class="anim-rise d3" style="animation-delay:.5s;">
+        نسّق يجمع جميع فرق التشغيل في منصة موحدة.
+        رؤية كاملة، قرار فوري، تنسيق تلقائي.
+      </p>
+    </div>
+
+    <div class="s4-hub">
+      <svg id="hub-svg" viewBox="-200 -200 400 400" fill="none">
+        <!-- Connection lines -->
+        <g id="hub-lines" opacity="0">
+          <line x1="0" y1="-155" x2="0" y2="-48" stroke="rgba(196,154,60,0.25)" stroke-width="1" stroke-dasharray="4 4"/>
+          <line x1="147" y1="-48" x2="46" y2="-15" stroke="rgba(196,154,60,0.25)" stroke-width="1" stroke-dasharray="4 4"/>
+          <line x1="91" y1="126" x2="28" y2="39" stroke="rgba(196,154,60,0.25)" stroke-width="1" stroke-dasharray="4 4"/>
+          <line x1="-91" y1="126" x2="-28" y2="39" stroke="rgba(196,154,60,0.25)" stroke-width="1" stroke-dasharray="4 4"/>
+          <line x1="-147" y1="-48" x2="-46" y2="-15" stroke="rgba(196,154,60,0.25)" stroke-width="1" stroke-dasharray="4 4"/>
+          <line x1="-60" y1="-142" x2="-18" y2="-43" stroke="rgba(196,154,60,0.25)" stroke-width="1" stroke-dasharray="4 4"/>
+        </g>
+
+        <!-- Outer ring -->
+        <circle cx="0" cy="0" r="155" stroke="rgba(196,154,60,0.08)" stroke-width="1"/>
+        <circle cx="0" cy="0" r="120" stroke="rgba(196,154,60,0.05)" stroke-width="1"/>
+
+        <!-- Center: نسّق -->
+        <circle cx="0" cy="0" r="52" fill="#C49A3C" class="hub-center-circle"/>
+        <circle cx="0" cy="0" r="48" fill="url(#gold-grad)"/>
+        <text x="0" y="6" text-anchor="middle" font-family="Cairo,sans-serif" font-size="16" font-weight="900" fill="#0D2117">نسّق</text>
+
+        <!-- Dept nodes -->
+        <!-- Top -->
+        <g id="node0" opacity="0">
+          <circle cx="0" cy="-155" r="32" fill="#1A3D28" stroke="rgba(196,154,60,0.3)" stroke-width="1"/>
+          <text x="0" y="-149" text-anchor="middle" font-family="Cairo,sans-serif" font-size="8.5" font-weight="700" fill="#C49A3C">علاقات</text>
+          <text x="0" y="-139" text-anchor="middle" font-family="Cairo,sans-serif" font-size="8.5" font-weight="700" fill="#C49A3C">الشركات</text>
+        </g>
+        <!-- Top-right -->
+        <g id="node1" opacity="0">
+          <circle cx="147" cy="-48" r="30" fill="#1A3D28" stroke="rgba(196,154,60,0.3)" stroke-width="1"/>
+          <text x="147" y="-44" text-anchor="middle" font-family="Cairo,sans-serif" font-size="8.5" font-weight="700" fill="#C49A3C">المصنع</text>
+        </g>
+        <!-- Bottom-right -->
+        <g id="node2" opacity="0">
+          <circle cx="91" cy="126" r="30" fill="#1A3D28" stroke="rgba(196,154,60,0.3)" stroke-width="1"/>
+          <text x="91" y="130" text-anchor="middle" font-family="Cairo,sans-serif" font-size="8.5" font-weight="700" fill="#C49A3C">التوزيع</text>
+        </g>
+        <!-- Bottom-left -->
+        <g id="node3" opacity="0">
+          <circle cx="-91" cy="126" r="30" fill="#1A3D28" stroke="rgba(196,154,60,0.3)" stroke-width="1"/>
+          <text x="-91" y="122" text-anchor="middle" font-family="Cairo,sans-serif" font-size="8.5" font-weight="700" fill="#C49A3C">إدارة</text>
+          <text x="-91" y="134" text-anchor="middle" font-family="Cairo,sans-serif" font-size="8.5" font-weight="700" fill="#C49A3C">التشغيل</text>
+        </g>
+        <!-- Top-left -->
+        <g id="node4" opacity="0">
+          <circle cx="-147" cy="-48" r="30" fill="#1A3D28" stroke="rgba(196,154,60,0.3)" stroke-width="1"/>
+          <text x="-147" y="-44" text-anchor="middle" font-family="Cairo,sans-serif" font-size="8.5" font-weight="700" fill="#C49A3C">التقني</text>
+        </g>
+        <!-- Top-left-2 -->
+        <g id="node5" opacity="0">
+          <circle cx="-60" cy="-142" r="30" fill="#1A3D28" stroke="rgba(196,154,60,0.3)" stroke-width="1"/>
+          <text x="-60" y="-138" text-anchor="middle" font-family="Cairo,sans-serif" font-size="8.5" font-weight="700" fill="#C49A3C">لوحة</text>
+          <text x="-60" y="-128" text-anchor="middle" font-family="Cairo,sans-serif" font-size="8.5" font-weight="700" fill="#C49A3C">القيادة</text>
+        </g>
+
+        <!-- Gradient -->
+        <defs>
+          <radialGradient id="gold-grad" cx="40%" cy="40%">
+            <stop offset="0%" stop-color="#D4AD5A"/>
+            <stop offset="100%" stop-color="#C49A3C"/>
+          </radialGradient>
+        </defs>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 5 — JOURNEY FLOW
+═══════════════════════════════════════ -->
+<section class="slide" id="s5">
+  <div class="s5-content">
+    <div class="s5-header">
+      <div class="eyebrow anim-fade d1">رحلة التشغيل</div>
+      <div class="gold-line anim-fade d2"></div>
+      <h2 class="anim-rise d2">من الطلب<br>إلى التسليم</h2>
+    </div>
+
+    <div class="flow-track">
+      <div class="flow-step">
+        <div class="step-node">
+          <div class="step-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/>
+            </svg>
+          </div>
+          <span class="step-label">شركة الحج</span>
+        </div>
+        <div class="flow-arrow"></div>
+      </div>
+      <div class="flow-step">
+        <div class="step-node">
+          <div class="step-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <span class="step-label">اعتماد الطلب</span>
+        </div>
+        <div class="flow-arrow"></div>
+      </div>
+      <div class="flow-step">
+        <div class="step-node">
+          <div class="step-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+              <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2M12 12v4M10 14h4"/>
+            </svg>
+          </div>
+          <span class="step-label">الإنتاج</span>
+        </div>
+        <div class="flow-arrow"></div>
+      </div>
+      <div class="flow-step">
+        <div class="step-node">
+          <div class="step-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+              <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8zM5 17a2 2 0 104 0M17 17a2 2 0 104 0"/>
+            </svg>
+          </div>
+          <span class="step-label">التوزيع</span>
+        </div>
+        <div class="flow-arrow"></div>
+      </div>
+      <div class="flow-step">
+        <div class="step-node">
+          <div class="step-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <span class="step-label">التسليم</span>
+        </div>
+        <div class="flow-arrow"></div>
+      </div>
+      <div class="flow-step">
+        <div class="step-node">
+          <div class="step-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+          </div>
+          <span class="step-label">المتابعة</span>
+        </div>
+        <div class="flow-arrow"></div>
+      </div>
+      <div class="flow-step">
+        <div class="step-node">
+          <div class="step-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+          </div>
+          <span class="step-label">التقارير</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom tag -->
+    <div style="margin-top:48px;opacity:0;" class="anim-fade" style="animation-delay:.9s">
+      <div style="display:inline-flex;align-items:center;gap:10px;padding:12px 24px;background:var(--green);border-radius:50px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);animation:pulse-ring 1.5s ease-out infinite;"></div>
+        <span style="font-size:13px;font-weight:600;color:var(--white);">كل خطوة موثقة ومتابَعة في نسّق بشكل لحظي</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 6 — DASHBOARD MOCKUP
+═══════════════════════════════════════ -->
+<section class="slide" id="s6">
+  <div class="s6-content">
+    <div class="s6-text">
+      <div class="eyebrow anim-fade d1">المنصة</div>
+      <div class="gold-line anim-fade d2"></div>
+      <h2 class="anim-rise d2">لوحة<br>التحكم</h2>
+      <p class="anim-rise" style="animation-delay:.5s;">رؤية شاملة وفورية لكل العمليات. كل قسم، كل مهمة، كل فريق في مكان واحد.</p>
+      <div class="feature-pills anim-rise" style="animation-delay:.6s;">
+        <div class="feature-pill">مؤشرات الأداء اللحظية</div>
+        <div class="feature-pill">حالة الفرق والحضور</div>
+        <div class="feature-pill">المهام والاجتماعات</div>
+        <div class="feature-pill">تنبيهات ذكية</div>
+      </div>
+    </div>
+
+    <div class="macbook-wrap">
+      <div class="macbook">
+        <div class="macbook-screen-bg">
+          <div class="macbook-screen">
+            <img src="images/dashboard.png" alt="Dashboard">
+          </div>
+        </div>
+        <div class="macbook-base"></div>
+        <div class="macbook-foot"></div>
+      </div>
+      <!-- Callouts -->
+      <div class="callout" style="top:-18px;right:20px;">
+        <div class="callout-dot"></div>
+        رؤية لحظية ٢٤/٧
+      </div>
+      <div class="callout" style="bottom:30px;left:-10px;">
+        <div class="callout-dot"></div>
+        تحديث فوري
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 7 — OPERATIONS CENTER
+═══════════════════════════════════════ -->
+<section class="slide" id="s7">
+  <div class="s7-content">
+    <div class="s7-mockup">
+      <div class="macbook">
+        <div class="macbook-screen-bg" style="background:#111;">
+          <div class="macbook-screen">
+            <img src="images/operations.png" alt="Operations">
+          </div>
+        </div>
+        <div class="macbook-base" style="background:linear-gradient(to bottom,#222,#111);"></div>
+        <div class="macbook-foot" style="background:#0A0A0A;"></div>
+      </div>
+    </div>
+
+    <div class="s7-text">
+      <div class="eyebrow" style="color:var(--gold);">مركز العمليات</div>
+      <div class="gold-line"></div>
+      <h2>الضغط التشغيلي<br>تحت السيطرة</h2>
+
+      <div class="ops-stats">
+        <div class="ops-stat">
+          <div class="ops-stat-label">إنجاز المهام</div>
+          <div class="ops-stat-bar"><div class="ops-stat-fill" style="--pct:84%"></div></div>
+          <div class="ops-stat-value">٨٤٪</div>
+        </div>
+        <div class="ops-stat">
+          <div class="ops-stat-label">نسبة الحضور</div>
+          <div class="ops-stat-bar"><div class="ops-stat-fill" style="--pct:92%"></div></div>
+          <div class="ops-stat-value">٩٢٪</div>
+        </div>
+        <div class="ops-stat">
+          <div class="ops-stat-label">معدل الاستجابة</div>
+          <div class="ops-stat-bar"><div class="ops-stat-fill" style="--pct:97%"></div></div>
+          <div class="ops-stat-value">٩٧٪</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 8 — AI ASSISTANT
+═══════════════════════════════════════ -->
+<section class="slide" id="s8">
+  <div class="s8-content">
+    <div class="s8-text">
+      <div class="eyebrow" style="color:var(--gold);">الذكاء الاصطناعي</div>
+      <div class="gold-line"></div>
+      <h2>مساعد <span>نسّق</span><br>الذكي</h2>
+      <p>يفهم العربية، يحلّل الوضع، ويقترح القرارات قبل أن تحدث المشكلة.</p>
+
+      <div class="ai-feature-list">
+        <div class="ai-feature"><div class="ai-feature-dot">🔮</div> التنبؤ بالضغط التشغيلي</div>
+        <div class="ai-feature"><div class="ai-feature-dot">⚡</div> اكتشاف الاختناقات فوراً</div>
+        <div class="ai-feature"><div class="ai-feature-dot">📊</div> ملخص تنفيذي لحظي</div>
+        <div class="ai-feature"><div class="ai-feature-dot">💡</div> اقتراحات ذكية قابلة للتنفيذ</div>
+        <div class="ai-feature"><div class="ai-feature-dot">🗣️</div> إجابة أسئلة الإدارة</div>
+      </div>
+    </div>
+
+    <div class="ai-chat">
+      <div class="ai-chat-header">
+        <div class="ai-avatar">✦</div>
+        <div>
+          <div class="ai-chat-name">مساعد نسّق الذكي</div>
+          <div class="ai-chat-status">
+            <div class="ai-status-dot"></div>
+            متصل الآن
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-chat-body">
+        <div class="chat-bubble user">
+          <div class="bubble-content">
+            كيف وضع فرق التوزيع اليوم؟
+          </div>
+        </div>
+
+        <div class="chat-bubble ai">
+          <div class="bubble-content">
+            <p style="margin-bottom:14px;color:rgba(255,255,255,.85);">
+              تحليل فرق التوزيع — اليوم الثلاثاء ١٤ ذو الحجة:
+            </p>
+            <div class="ai-response-stats">
+              <div class="ai-stat">
+                <span class="ai-stat-value">٨٤٪</span>
+                <span class="ai-stat-label">إنجاز المهام</span>
+              </div>
+              <div class="ai-stat">
+                <span class="ai-stat-value" style="color:#F87171;">مرتفع</span>
+                <span class="ai-stat-label">ضغط الشمال</span>
+              </div>
+              <div class="ai-stat">
+                <span class="ai-stat-value">٣</span>
+                <span class="ai-stat-label">توصية إعادة توزيع</span>
+              </div>
+            </div>
+            <p style="margin-top:14px;font-size:12px;color:rgba(255,255,255,.55);line-height:1.7;">
+              ✦ أنصح بنقل ٣ موظفين من القطاع الجنوبي إلى الشمالي.<br>
+              ✦ تم إنشاء خطة توزيع جديدة تلقائياً.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-chat-input">
+        <div class="ai-input-field">اسأل مساعد نسّق...</div>
+        <div class="ai-send-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D2117" stroke-width="2.5" stroke-linecap="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 9 — VALUE
+═══════════════════════════════════════ -->
+<section class="slide" id="s9">
+  <div class="s9-content">
+    <div class="s9-header">
+      <div class="eyebrow anim-fade d1">القيمة المضافة</div>
+      <div class="gold-line anim-fade d2"></div>
+      <h2 class="anim-rise d2">لماذا نسّق؟</h2>
+    </div>
+
+    <div class="value-grid">
+      <div class="value-card">
+        <div class="value-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+        </div>
+        <h3>رفع كفاءة التشغيل</h3>
+        <p>توحيد العمليات يقضي على الازدواجية ويرفع الإنتاجية بشكل ملموس</p>
+      </div>
+      <div class="value-card">
+        <div class="value-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <h3>تسريع القرار</h3>
+        <p>البيانات اللحظية تجعل القرار يُتخذ في دقائق لا ساعات</p>
+      </div>
+      <div class="value-card">
+        <div class="value-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </div>
+        <h3>تقليل التأخير</h3>
+        <p>التنبيهات الذكية تكشف المشكلات قبل أن تتحول إلى تأخيرات مكلفة</p>
+      </div>
+      <div class="value-card">
+        <div class="value-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+        </div>
+        <h3>توحيد الإدارات</h3>
+        <p>جميع الفرق تعمل من منصة واحدة بلغة موحدة وبيانات متزامنة</p>
+      </div>
+      <div class="value-card">
+        <div class="value-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+        </div>
+        <h3>التحول الرقمي</h3>
+        <p>تحويل العمليات الورقية إلى منصة رقمية حديثة وموثوقة</p>
+      </div>
+      <div class="value-card">
+        <div class="value-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5" stroke-linecap="round">
+            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+          </svg>
+        </div>
+        <h3>تجربة الموظف</h3>
+        <p>واجهة بسيطة وسريعة تجعل كل موظف يعمل بثقة وفاعلية</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 10 — CLOSING
+═══════════════════════════════════════ -->
+<section class="slide" id="s10">
+  <div class="s10-bg"></div>
+  <div class="s10-vignette"></div>
+
+  <div class="s10-content">
+    <div class="s10-logo">
+      <img src="images/logo.jpg" alt="نسّق">
+    </div>
+
+    <div class="s10-quote">
+      حين تتناغم العمليات...
+      <strong>يصبح القرار أسرع</strong>
+    </div>
+
+    <div class="s10-line"></div>
+    <div class="s10-thanks">شكراً لكم</div>
+    <div class="s10-team">فريق بطاقات نسك &nbsp;·&nbsp; هاكاثون ٢٠٢٦</div>
+  </div>
+</section>
+
+<!-- ═══ NAVIGATION ═══ -->
+<nav id="nav">
+  <button class="nav-btn" onclick="go(cur-1)" title="السابق">&#8250;</button>
+  <div id="dots"></div>
+  <span id="slide-counter" dir="ltr">1 / 10</span>
+  <button class="nav-btn" onclick="go(cur+1)" title="التالي">&#8249;</button>
+</nav>
+
+<script>
+const TOTAL = 10;
+let cur = 1;
+
+// Build dots
+const dotsEl = document.getElementById('dots');
+dotsEl.style.cssText = 'display:flex;gap:6px;align-items:center;';
+for (let i = 1; i <= TOTAL; i++) {
+  const d = document.createElement('button');
+  d.className = 'nav-dot';
+  d.id = 'dot' + i;
+  d.onclick = () => go(i);
+  d.title = 'شريحة ' + i;
+  dotsEl.appendChild(d);
+}
+
+function go(n) {
+  n = Math.max(1, Math.min(TOTAL, n));
+  if (n === cur) return;
+
+  const oldEl = document.getElementById('s' + cur);
+  const newEl = document.getElementById('s' + n);
+
+  const dir = n > cur ? 'up' : 'down';
+  oldEl.classList.add('exit-' + dir);
+  setTimeout(() => {
+    oldEl.classList.remove('active', 'exit-up', 'exit-down');
+  }, 400);
+
+  document.getElementById('dot' + cur).classList.remove('on');
+  cur = n;
+  document.getElementById('dot' + cur).classList.add('on');
+
+  newEl.classList.add('active');
+
+  document.getElementById('slide-counter').textContent = cur + ' / ' + TOTAL;
+  document.getElementById('progress-fill').style.width = (cur / TOTAL * 100) + '%';
+
+  // Trigger hub animation on slide 4
+  if (cur === 4) animateHub();
+}
+
+function animateHub() {
+  const lines = document.getElementById('hub-lines');
+  if (lines) {
+    lines.style.opacity = '0';
+    lines.style.transition = 'opacity 0.6s ease 0.8s';
+    setTimeout(() => { lines.style.opacity = '1'; }, 100);
+  }
+  for (let i = 0; i <= 5; i++) {
+    const node = document.getElementById('node' + i);
+    if (node) {
+      node.style.opacity = '0';
+      node.style.transition = `opacity 0.5s ease ${0.3 + i * 0.15}s`;
+      setTimeout(() => { node.style.opacity = '1'; }, 50);
+    }
+  }
+}
+
+// Init
+document.getElementById('s1').classList.add('active');
+document.getElementById('dot1').classList.add('on');
+document.getElementById('progress-fill').style.width = '10%';
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp')   go(cur - 1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowDown')  go(cur + 1);
+  if (e.key === ' ') { e.preventDefault(); go(cur + 1); }
+  if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+});
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+// Touch swipe
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 50) go(dx > 0 ? cur - 1 : cur + 1);
+}, { passive: true });
+</script>
+</body>
+</html>
