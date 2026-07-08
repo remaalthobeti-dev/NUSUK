@@ -38,7 +38,7 @@ export default function LoginPage() {
         }}
       >
         <Image
-          src="/images/mecca-background.jpg"
+          src="/images/login-background.jpg"
           alt=""
           fill
           priority
@@ -81,7 +81,7 @@ export default function LoginPage() {
                 style={{ animation: "n-rise .72s cubic-bezier(.23,1,.32,1) .05s both" }}
               >
                 <Image
-                  src="/images/nusuk-logo.png"
+                  src="/images/logo-nassaq.jpg"
                   alt="بطاقة نُسك"
                   width={152}
                   height={159}

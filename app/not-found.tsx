@@ -16,7 +16,7 @@ export default function NotFound() {
         {/* Logo */}
         <div className="flex justify-center">
           <Image
-            src="/images/nusuk-logo.png"
+            src="/images/logo-nassaq.jpg"
             alt="نسك"
             width={64}
             height={67}

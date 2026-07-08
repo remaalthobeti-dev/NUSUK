@@ -13,7 +13,7 @@ export default function ForbiddenPage() {
     >
       <div className="max-w-md w-full space-y-8">
         <div className="flex justify-center">
-          <Image src="/images/nusuk-logo.png" alt="نسك" width={64} height={67}
+          <Image src="/images/logo-nassaq.jpg" alt="نسك" width={64} height={67}
             style={{ height: 64, width: "auto", objectFit: "contain", opacity: 0.65 }} />
         </div>
 

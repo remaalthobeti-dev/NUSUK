@@ -18,7 +18,7 @@ export default function RejectedPage() {
         {/* Logo */}
         <div className="flex items-center gap-4 mb-2">
           <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, hsl(36 57% 51% / .5), transparent)" }} />
-          <Image src="/images/nusuk-logo.png" alt="نسك" width={48} height={50}
+          <Image src="/images/logo-nassaq.jpg" alt="نسك" width={48} height={50}
             style={{ height: 50, width: "auto", objectFit: "contain" }} priority />
           <div className="flex-1 h-px" style={{ background: "linear-gradient(to right, hsl(36 57% 51% / .5), transparent)" }} />
         </div>

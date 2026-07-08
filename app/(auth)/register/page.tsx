@@ -36,7 +36,7 @@ export default async function RegisterPage() {
           <div className="flex items-center gap-4 mb-3">
             <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, hsl(var(--n-gold)/0.6), transparent)" }} />
             <Image
-              src="/images/nusuk-logo.png"
+              src="/images/logo-nassaq.jpg"
               alt="نسك"
               width={48}
               height={50}
