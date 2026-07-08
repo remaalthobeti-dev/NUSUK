@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import type { AdminOverviewData, OperationsKpis } from "@/lib/data/admin";
 import { STATUS_CONFIG, TEAM_EMOJI } from "@/components/dashboard/status-config";
 import type { AvailabilityStatus } from "@/types/database";
+import type { PressureLevel } from "@/components/home/factory-home-client";
 
 // ─── Status order for presence strip ─────────────────────────────────────────
 
@@ -31,15 +32,21 @@ const PRESENCE_STATS: Array<{ key: AvailabilityStatus; label: string }> = [
 interface AdminOverviewProps {
   data: AdminOverviewData;
   kpis: OperationsKpis;
+  factoryPressure?: { level: PressureLevel; updated_at: string } | null;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function AdminOverview({ data, kpis }: AdminOverviewProps) {
+export function AdminOverview({ data, kpis, factoryPressure }: AdminOverviewProps) {
   const { teams, globalStats } = data;
 
   return (
     <div className="space-y-6">
+
+      {/* ══════════════════════════════════════════════════════
+          Factory Pressure Banner
+      ══════════════════════════════════════════════════════ */}
+      <FactoryPressureBanner pressure={factoryPressure ?? null} />
 
       {/* ══════════════════════════════════════════════════════
           Section 1 — KPI command strip
@@ -344,6 +351,67 @@ function TeamCard({
         </div>
       </div>
     </Link>
+  );
+}
+
+// ─── Factory Pressure Banner ──────────────────────────────────────────────────
+
+const PRESSURE_AR: Record<PressureLevel, { label: string; emoji: string; bg: string; border: string; text: string; bar: string; barWidth: string }> = {
+  low:    { label: "منخفض", emoji: "🟢", bg: "bg-emerald-50 dark:bg-emerald-950/20", border: "border-emerald-200 dark:border-emerald-800", text: "text-emerald-700 dark:text-emerald-400", bar: "bg-emerald-500", barWidth: "30%" },
+  medium: { label: "متوسط", emoji: "🟡", bg: "bg-amber-50 dark:bg-amber-950/20",   border: "border-amber-200 dark:border-amber-800",   text: "text-amber-700 dark:text-amber-400",   bar: "bg-amber-500",   barWidth: "65%" },
+  high:   { label: "عالي",  emoji: "🔴", bg: "bg-red-50 dark:bg-red-950/20",       border: "border-red-200 dark:border-red-800",       text: "text-red-700 dark:text-red-400",       bar: "bg-red-500",     barWidth: "95%" },
+};
+
+function FactoryPressureBanner({ pressure }: { pressure: { level: PressureLevel; updated_at: string } | null }) {
+  const ago = (() => {
+    if (!pressure) return null;
+    const diff = Math.floor((Date.now() - new Date(pressure.updated_at).getTime()) / 60000);
+    if (diff < 1) return "الآن";
+    if (diff < 60) return `منذ ${diff} دقيقة`;
+    return `منذ ${Math.floor(diff / 60)} ساعة`;
+  })();
+
+  const cfg = pressure ? PRESSURE_AR[pressure.level] : null;
+
+  return (
+    <div className={cn(
+      "rounded-2xl border p-4 flex items-center gap-4",
+      cfg ? cn(cfg.bg, cfg.border) : "bg-muted/30 border-border"
+    )}>
+      {/* Icon */}
+      <div className="shrink-0 w-11 h-11 rounded-xl bg-white/60 dark:bg-black/20 border border-white/40 flex items-center justify-center text-2xl shadow-sm">
+        🏭
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1.5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">ضغط المصنع</p>
+          {ago && (
+            <span className="text-[10px] text-muted-foreground bg-background/60 border border-border/50 rounded-full px-2 py-0.5">
+              {ago}
+            </span>
+          )}
+        </div>
+        {cfg && pressure ? (
+          <>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base leading-none">{cfg.emoji}</span>
+              <p className={cn("text-lg font-bold", cfg.text)}>{cfg.label}</p>
+            </div>
+            {/* Progress bar */}
+            <div className="h-2 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden w-full max-w-[200px]">
+              <div
+                className={cn("h-full rounded-full transition-all duration-700", cfg.bar)}
+                style={{ width: cfg.barWidth }}
+              />
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground">لم يتم تحديد مستوى الضغط بعد</p>
+        )}
+      </div>
+    </div>
   );
 }
 
