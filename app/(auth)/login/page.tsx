@@ -52,12 +52,22 @@ export default function LoginPage() {
       {/* Vertical ornamental divider between card and form columns */}
       <VerticalDivider />
 
+      {/*
+        Container: exactly one viewport tall — no page scroll.
+        dvh handles mobile bar; svh as fallback for older browsers.
+        Overflow hidden prevents any child from creating page scroll.
+      */}
       <div
-        className="nusuk-auth-layout grid min-h-screen"
+        className="nusuk-auth-layout"
         style={{
           direction:           "rtl",
+          display:             "grid",
           gridTemplateColumns: "42fr 58fr",
-          /* Transparent — white comes from <body>, SVG pattern sits between */
+          /* Use 100dvh so the page is exactly the viewport — never scrolls */
+          height:              "100dvh",
+          minHeight:           "100svh",   /* older-browser fallback */
+          maxHeight:           "100dvh",
+          overflow:            "hidden",
           background:          "transparent",
           position:            "relative",
           zIndex:              2,
@@ -65,20 +75,28 @@ export default function LoginPage() {
       >
         {/* ════ FORM PANEL — right in RTL ════ */}
         <div
-          className="nusuk-form-panel relative flex items-center justify-center px-12 py-14"
-          style={{ background: "transparent" }}
+          className="nusuk-form-panel relative flex items-center justify-center"
+          style={{
+            background: "transparent",
+            /* Responsive vertical padding: shrinks on shorter viewports */
+            padding: "clamp(16px, 4dvh, 56px) clamp(20px, 4vw, 48px)",
+            /* If content is still taller (edge-case), allow inner scroll */
+            overflowY: "auto",
+          }}
         >
           <div
             className="relative z-10 w-full"
             style={{ maxWidth: 320 }}
           >
             {/* ── Official logo ── */}
-            <div className="mb-8" style={{ direction: "rtl" }}>
+            <div style={{ direction: "rtl", marginBottom: "clamp(12px, 2dvh, 32px)" }}>
 
               {/* Logo — first to appear */}
               <div
-                className="mb-4"
-                style={{ animation: "n-rise .72s cubic-bezier(.23,1,.32,1) .05s both" }}
+                style={{
+                  marginBottom: "clamp(8px, 1.5dvh, 16px)",
+                  animation: "n-rise .72s cubic-bezier(.23,1,.32,1) .05s both",
+                }}
               >
                 <Image
                   src="/images/logo-nassaq.jpg"
@@ -86,8 +104,11 @@ export default function LoginPage() {
                   width={152}
                   height={159}
                   style={{
-                    height: 162, width: "auto",
-                    objectFit: "contain", display: "block",
+                    /* Shrinks proportionally: 130px max, 11dvh on compact screens */
+                    height: "clamp(80px, 11dvh, 130px)",
+                    width: "auto",
+                    objectFit: "contain",
+                    display: "block",
                   }}
                   priority
                 />
@@ -95,21 +116,23 @@ export default function LoginPage() {
 
               {/* Gold divider */}
               <div
-                className="mb-5"
                 style={{
                   width: 32, height: 2,
                   background: "linear-gradient(90deg,#C9963E,transparent)",
                   borderRadius: 2,
+                  marginBottom: "clamp(8px, 1.5dvh, 20px)",
                   animation: "n-fade .5s ease .22s both",
                 }}
               />
 
               {/* System name */}
               <p
-                className="mb-7"
                 style={{
-                  fontSize: 17, fontWeight: 600,
-                  color: "#58584F", letterSpacing: ".15px",
+                  fontSize: "clamp(13px, 1.6dvh, 17px)",
+                  fontWeight: 600,
+                  color: "#58584F",
+                  letterSpacing: ".15px",
+                  marginBottom: "clamp(8px, 1.4dvh, 28px)",
                   animation: "n-rise .7s cubic-bezier(.23,1,.32,1) .28s both",
                 }}
               >
@@ -119,10 +142,13 @@ export default function LoginPage() {
               {/* Page heading */}
               <h1
                 style={{
-                  fontSize: 42, fontWeight: 800,
-                  color: "#1A1A17", letterSpacing: "-1px",
-                  lineHeight: 1.15, textWrap: "balance",
-                  marginBottom: 10,
+                  fontSize: "clamp(28px, 4.5dvh, 42px)",
+                  fontWeight: 800,
+                  color: "#1A1A17",
+                  letterSpacing: "-1px",
+                  lineHeight: 1.15,
+                  textWrap: "balance",
+                  marginBottom: "clamp(4px, 1dvh, 10px)",
                   animation: "n-rise .75s cubic-bezier(.23,1,.32,1) .36s both",
                 }}
               >
@@ -132,8 +158,10 @@ export default function LoginPage() {
               {/* Subtitle */}
               <p
                 style={{
-                  fontSize: 13, color: "#9A9A90",
-                  lineHeight: 1.65, fontWeight: 400,
+                  fontSize: 13,
+                  color: "#9A9A90",
+                  lineHeight: 1.65,
+                  fontWeight: 400,
                   animation: "n-rise .7s cubic-bezier(.23,1,.32,1) .44s both",
                 }}
               >
@@ -150,11 +178,10 @@ export default function LoginPage() {
 
         {/* ════ CARD PANEL — left in RTL ════ */}
         <div
-          className="nusuk-brand-panel relative flex items-start justify-center overflow-visible"
+          className="nusuk-brand-panel relative flex items-center justify-center overflow-hidden"
           style={{
             background: "transparent",
             animation:  "n-rise .9s var(--n-ease-out) both",
-            paddingTop: "0",
           }}
         >
           <CardShowcase>

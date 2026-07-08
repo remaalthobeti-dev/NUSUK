@@ -254,7 +254,7 @@ export function LoginForm() {
         )}
 
         {/* ── Email ── */}
-        <div className="mb-5">
+        <div style={{ marginBottom: "clamp(10px, 1.6dvh, 20px)" }}>
           <label htmlFor="email" className="mb-[7px] block text-[12px] font-semibold" style={{ color: "#58584F" }}>
             البريد الإلكتروني
           </label>
@@ -276,7 +276,7 @@ export function LoginForm() {
         </div>
 
         {/* ── Password ── */}
-        <div className="mb-5">
+        <div style={{ marginBottom: "clamp(10px, 1.6dvh, 20px)" }}>
           <label htmlFor="password" className="mb-[7px] block text-[12px] font-semibold" style={{ color: "#58584F" }}>
             كلمة المرور
           </label>
@@ -328,7 +328,7 @@ export function LoginForm() {
         </div>
 
         {/* ── Remember + forgot ── */}
-        <div className="mb-6 flex items-center justify-between">
+        <div style={{ marginBottom: "clamp(10px, 1.8dvh, 24px)" }} className="flex items-center justify-between">
           <label className="flex cursor-pointer select-none items-center gap-[7px] text-[12px]" style={{ color: "#58584F" }}>
             <input
               type="checkbox"
@@ -358,9 +358,10 @@ export function LoginForm() {
           type="submit"
           disabled={isLoading}
           onPointerDown={handleRipple}
-          className={`nf-btn-primary relative mb-5 flex w-full items-center justify-center gap-2 overflow-hidden font-bold ${success ? "nf-success-pulse" : ""}`}
+          className={`nf-btn-primary relative flex w-full items-center justify-center gap-2 overflow-hidden font-bold ${success ? "nf-success-pulse" : ""}`}
           style={{
             padding:       "15px 24px",
+            marginBottom:  "clamp(10px, 1.8dvh, 20px)",
             background:    success
               ? "linear-gradient(145deg,#12622e,#0b4520)"
               : "linear-gradient(145deg,#0D2418,#091F14)",
@@ -400,7 +401,7 @@ export function LoginForm() {
         </button>
 
         {/* ── Divider ── */}
-        <div className="mb-5 flex items-center gap-3" style={{ color: "#9A9A90", fontSize: 11 }}>
+        <div style={{ marginBottom: "clamp(10px, 1.8dvh, 20px)", color: "#9A9A90", fontSize: 11 }} className="flex items-center gap-3">
           <span className="h-px flex-1" style={{ background: "rgba(0,0,0,.08)" }} />
           أو
           <span className="h-px flex-1" style={{ background: "rgba(0,0,0,.08)" }} />
@@ -410,9 +411,11 @@ export function LoginForm() {
         <button
           type="button"
           onClick={() => router.push("/register")}
-          className="nf-btn-secondary mb-8 flex w-full items-center justify-center gap-2 font-semibold"
+          className="nf-btn-secondary flex w-full items-center justify-center gap-2 font-semibold"
           style={{
-            padding: "13px 24px", background: "transparent",
+            padding: "13px 24px",
+            marginBottom: "clamp(10px, 1.8dvh, 32px)",
+            background: "transparent",
             border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 9,
             fontSize: 13, color: "#58584F", cursor: "pointer",
             direction: "rtl",

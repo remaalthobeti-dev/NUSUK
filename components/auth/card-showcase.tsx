@@ -3,9 +3,10 @@
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 
-const CARD_SRC = "/images/logo-nassaq.jpg";
-const CARD_W   = 477;
-const CARD_H   = 687;
+const CARD_SRC    = "/images/logo-nassaq.jpg";
+const CARD_W      = 477;
+const CARD_H      = 687;
+const CARD_ASPECT = CARD_W / CARD_H; // ≈ 0.694
 
 const STYLES = `
   @keyframes card-enter {
@@ -27,6 +28,22 @@ const STYLES = `
     will-change: transform;
   }
 
+  /* Responsive card sizing — height drives width via aspect-ratio */
+  .nk-card-sizer {
+    /* max 687px tall, but shrink to 76% of viewport height on compact screens */
+    height: min(687px, 76dvh);
+    width: auto;
+    aspect-ratio: ${CARD_W} / ${CARD_H};
+    flex-shrink: 0;
+  }
+
+  @media (max-height: 800px) {
+    .nk-card-sizer { height: min(580px, 74dvh); }
+  }
+  @media (max-height: 700px) {
+    .nk-card-sizer { height: min(480px, 72dvh); }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .nk-card-enter { animation: none; opacity: 1; }
     .nk-card-float { animation: none; }
@@ -38,11 +55,8 @@ function DrawnCard({ cardRef }: { cardRef: React.Ref<HTMLDivElement> }) {
     <>
       <style>{STYLES}</style>
 
-      {/* Enter once, float forever */}
-      <div
-        className="nk-card-enter"
-        style={{ width: CARD_W, height: CARD_H, flexShrink: 0 }}
-      >
+      {/* Enter once, float forever — dimensions driven by .nk-card-sizer */}
+      <div className="nk-card-enter nk-card-sizer">
         <div
           ref={cardRef}
           className="nk-card-float"
@@ -108,9 +122,11 @@ export function CardShowcase({ children }: { children?: React.ReactNode }) {
         display:        "flex",
         flexDirection:  "column",
         alignItems:     "center",
+        justifyContent: "center",
         position:       "relative",
         zIndex:         1,
-        marginTop:      "-32px",
+        width:          "100%",
+        height:         "100%",
       }}
     >
       <DrawnCard cardRef={cardRef} />
