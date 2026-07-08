@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   Home,
   ClipboardList,
@@ -28,6 +29,7 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
+import { createClient } from "@/lib/supabase/client";
 
 interface NavItem {
   href: string;
@@ -62,11 +64,29 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const { employee, loading } = useAuth();
+  const [distRole, setDistRole] = useState<"distribution" | "corporate" | null>(null);
+
+  useEffect(() => {
+    if (!employee?.team_id) { setDistRole(null); return; }
+    const supabase = createClient();
+    supabase
+      .from("distribution_team_configs")
+      .select("page_role")
+      .eq("team_id", employee.team_id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setDistRole((data?.page_role as "distribution" | "corporate") ?? null);
+      });
+  }, [employee?.team_id]);
 
   const isSuperAdmin = !loading && employee?.role === "super_admin";
-  const canManage =
+  const isAdmin =
     !loading &&
     (employee?.role === "super_admin" || employee?.role === "track_manager");
+  const canManage = isAdmin;
+
+  const showDistribution = isAdmin || distRole === "distribution";
+  const showCorporate    = isAdmin || distRole === "corporate";
 
   function itemProps(item: NavItem) {
     return {
@@ -197,21 +217,25 @@ export function Sidebar({
                 />
               )}
 
-              <SidebarItem
-                {...itemProps({
-                  href: "/dashboard/distribution",
-                  icon: Boxes,
-                  label: "توزيع نسك",
-                })}
-              />
+              {showDistribution && (
+                <SidebarItem
+                  {...itemProps({
+                    href: "/dashboard/distribution",
+                    icon: Boxes,
+                    label: "توزيع نسك",
+                  })}
+                />
+              )}
 
-              <SidebarItem
-                {...itemProps({
-                  href: "/dashboard/corporate",
-                  icon: Handshake,
-                  label: "علاقات الشركات",
-                })}
-              />
+              {showCorporate && (
+                <SidebarItem
+                  {...itemProps({
+                    href: "/dashboard/corporate",
+                    icon: Handshake,
+                    label: "علاقات الشركات",
+                  })}
+                />
+              )}
 
               {/* Divider */}
               {!isCollapsed && (

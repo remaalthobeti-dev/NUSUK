@@ -9,12 +9,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getRoleLabel } from "@/lib/utils";
 import type { Employee } from "@/types/database";
+import type { DistributionPageRole } from "@/types/distribution";
+
+const DIST_ROLE_LABELS: Record<DistributionPageRole, { label: string; color: string; bg: string }> = {
+  admin:        { label: "مدير النظام",            color: "hsl(var(--n-gold))",     bg: "hsl(var(--n-gold) / .1)" },
+  distribution: { label: "فريق التوزيع",           color: "hsl(201 96% 32%)",       bg: "hsl(201 96% 32% / .1)" },
+  corporate:    { label: "فريق علاقات الشركات",    color: "hsl(142 71% 35%)",       bg: "hsl(142 71% 35% / .1)" },
+};
 
 interface ProfileFormProps {
   employee: Employee;
+  distributionRole?: DistributionPageRole | null;
 }
 
-export function ProfileForm({ employee }: ProfileFormProps) {
+export function ProfileForm({ employee, distributionRole }: ProfileFormProps) {
   const router = useRouter();
   const [fullName, setFullName] = useState(employee.full_name);
   const [jobTitle, setJobTitle] = useState(employee.job_title ?? "");
@@ -93,6 +101,22 @@ export function ProfileForm({ employee }: ProfileFormProps) {
             <Label>الصلاحية</Label>
             <Input value={getRoleLabel(employee.role)} disabled className="opacity-60" />
           </div>
+          {distributionRole && (() => {
+            const cfg = DIST_ROLE_LABELS[distributionRole];
+            return (
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label>دور توزيع نسك</Label>
+                <div className="flex items-center gap-2 h-9 px-3 rounded-md border border-input bg-muted/30">
+                  <span
+                    className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                    style={{ background: cfg.bg, color: cfg.color }}
+                  >
+                    {cfg.label}
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {profileMsg && (
