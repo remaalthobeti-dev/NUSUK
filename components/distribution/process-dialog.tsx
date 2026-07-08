@@ -148,7 +148,7 @@ export function ProcessDialog({
                           : "hsl(var(--foreground))",
                     }}
                   >
-                    تم الاستلام
+                    استلام
                   </span>
                 </button>
 
@@ -183,7 +183,7 @@ export function ProcessDialog({
                           : "hsl(var(--foreground))",
                     }}
                   >
-                    تم التوصيل
+                    توصيل
                   </span>
                 </button>
               </div>
