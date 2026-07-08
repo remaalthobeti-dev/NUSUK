@@ -52,6 +52,7 @@ import {
   updateTeamAction,
   setTeamActiveAction,
   setTeamDistributionRoleAction,
+  setTeamFactoryAction,
   createEmployeeAction,
   updateEmployeeAction,
   setEmployeeActiveAction,
@@ -172,12 +173,13 @@ function TeamsTab({
     color: TEAM_COLORS[0],
     icon: "handshake",
     distributionRole: "_none" as "_none" | "distribution" | "corporate",
+    isFactory: false,
   });
 
   function openCreate() {
     setEditing(null);
     setActionError(null);
-    setForm({ name: "", name_en: "", description: "", color: TEAM_COLORS[0], icon: "handshake", distributionRole: "_none" });
+    setForm({ name: "", name_en: "", description: "", color: TEAM_COLORS[0], icon: "handshake", distributionRole: "_none", isFactory: false });
     setDialogOpen(true);
   }
 
@@ -191,6 +193,7 @@ function TeamsTab({
       color: team.color,
       icon: team.icon ?? "handshake",
       distributionRole: team.distributionRole ?? "_none",
+      isFactory: team.isFactory,
     });
     setDialogOpen(true);
   }
@@ -218,13 +221,16 @@ function TeamsTab({
       return;
     }
 
-    // Save distribution role if editing an existing team
+    // Save distribution role and factory flag if editing an existing team
     if (editing) {
       const distRole = form.distributionRole === "_none" ? null : form.distributionRole;
-      const distResult = await setTeamDistributionRoleAction(editing.id, distRole);
-      if (distResult.error) {
+      const [distResult, factoryResult] = await Promise.all([
+        setTeamDistributionRoleAction(editing.id, distRole),
+        setTeamFactoryAction(editing.id, form.isFactory),
+      ]);
+      if (distResult.error || factoryResult.error) {
         setLoading(false);
-        setActionError(distResult.error);
+        setActionError(distResult.error ?? factoryResult.error);
         return;
       }
     }
@@ -270,6 +276,7 @@ function TeamsTab({
                 <TableHead>الوصف</TableHead>
                 <TableHead>عدد الموظفين</TableHead>
                 <TableHead>دور التوزيع</TableHead>
+                <TableHead>المصنع</TableHead>
                 <TableHead>الحالة</TableHead>
                 <TableHead>الإجراءات</TableHead>
               </TableRow>
@@ -307,6 +314,15 @@ function TeamsTab({
                     ) : team.distributionRole === "corporate" ? (
                       <Badge className="text-xs" style={{ background: "hsl(142 71% 35% / .12)", color: "hsl(142 71% 35%)", border: "1px solid hsl(142 71% 35% / .25)" }}>
                         علاقات الشركات
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {team.isFactory ? (
+                      <Badge className="text-xs" style={{ background: "hsl(271 91% 65% / .12)", color: "hsl(271 91% 45%)", border: "1px solid hsl(271 91% 65% / .25)" }}>
+                        🏭 المصنع
                       </Badge>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
@@ -441,6 +457,31 @@ function TeamsTab({
                 <p className="text-[11px] text-muted-foreground">
                   يحدد الصفحات التي تظهر في القائمة الجانبية لأعضاء هذا الفريق
                 </p>
+              </div>
+            )}
+            {editing && (
+              <div className="flex items-center justify-between rounded-xl border border-border/60 px-3 py-3">
+                <div>
+                  <p className="text-sm font-medium">🏭 فريق المصنع</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    يمنح هذا الفريق صلاحية تحديث ضغط المصنع فقط
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, isFactory: !form.isFactory })}
+                  className={cn(
+                    "relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none",
+                    form.isFactory ? "bg-primary" : "bg-muted"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform",
+                      form.isFactory ? "translate-x-5 rtl:-translate-x-5" : "translate-x-0"
+                    )}
+                  />
+                </button>
               </div>
             )}
             {actionError && (

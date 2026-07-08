@@ -47,6 +47,39 @@ export interface LatestAnnouncement {
   is_read: boolean;
 }
 
+import type { PressureLevel } from "@/components/home/factory-home-client";
+
+// ─── Factory pressure widget ──────────────────────────────────────────────────
+
+const PRESSURE_CFG: Record<PressureLevel, { label: string; emoji: string; bg: string; border: string; text: string; dot: string }> = {
+  low:    { label: "منخفض", emoji: "🟢", bg: "bg-emerald-50 dark:bg-emerald-950/20", border: "border-emerald-200 dark:border-emerald-800", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
+  medium: { label: "متوسط", emoji: "🟡", bg: "bg-amber-50 dark:bg-amber-950/20",   border: "border-amber-200 dark:border-amber-800",   text: "text-amber-700 dark:text-amber-400",   dot: "bg-amber-500" },
+  high:   { label: "عالي",  emoji: "🔴", bg: "bg-red-50 dark:bg-red-950/20",       border: "border-red-200 dark:border-red-800",       text: "text-red-700 dark:text-red-400",       dot: "bg-red-500 animate-pulse" },
+};
+
+function FactoryPressureWidget({ pressure }: { pressure: { level: PressureLevel; updated_at: string } }) {
+  const cfg = PRESSURE_CFG[pressure.level];
+  const ago = (() => {
+    const diff = Math.floor((Date.now() - new Date(pressure.updated_at).getTime()) / 60000);
+    if (diff < 1) return "الآن";
+    if (diff < 60) return `منذ ${diff} دقيقة`;
+    return `منذ ${Math.floor(diff / 60)} ساعة`;
+  })();
+  return (
+    <div className={cn("rounded-2xl border px-4 py-3.5 flex items-center gap-3", cfg.bg, cfg.border)}>
+      <span className="text-2xl leading-none shrink-0">{cfg.emoji}</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">ضغط المصنع</p>
+        <div className="flex items-center gap-2">
+          <span className={cn("w-2 h-2 rounded-full shrink-0", cfg.dot)} />
+          <p className={cn("text-base font-bold", cfg.text)}>{cfg.label}</p>
+        </div>
+      </div>
+      <p className="text-[11px] text-muted-foreground shrink-0">{ago}</p>
+    </div>
+  );
+}
+
 // ─── Hijri date helper ────────────────────────────────────────────────────────
 
 function useTodayDates() {
@@ -91,6 +124,7 @@ interface HomeClientProps {
   todaysMeetings: MeetingWithDetails[];
   latestAnnouncement: LatestAnnouncement | null;
   unreadAnnouncements: number;
+  factoryPressure?: { level: PressureLevel; updated_at: string } | null;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -106,6 +140,7 @@ export function HomeClient({
   todaysMeetings,
   latestAnnouncement,
   unreadAnnouncements,
+  factoryPressure,
 }: HomeClientProps) {
   const [greeting, setGreeting] = useState<string>("");
   const [statusOpen, setStatusOpen] = useState(false);
@@ -248,6 +283,9 @@ export function HomeClient({
         currentNote={liveNote}
         onSuccess={refetch}
       />
+
+      {/* ── Factory Pressure Indicator ──────────────────────────────────── */}
+      {factoryPressure && <FactoryPressureWidget pressure={factoryPressure} />}
 
       {/* ── Quick Actions ───────────────────────────────────────────────── */}
       <div>

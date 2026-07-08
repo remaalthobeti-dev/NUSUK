@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { HomeClient } from "@/components/home/home-client";
 import type { LatestAnnouncement } from "@/components/home/home-client";
+import { FactoryHomeClient } from "@/components/home/factory-home-client";
+import type { PressureLevel } from "@/components/home/factory-home-client";
 import { getTodaysMeetings } from "@/lib/data/meetings";
 import type { AvailabilityStatus, UserRole, Team } from "@/types/database";
 
@@ -20,6 +22,38 @@ export default async function HomePage() {
     .eq("user_id", user.id)
     .single();
   if (!emp) return null;
+
+  // Check if this employee belongs to the factory team
+  const { data: factoryConfig } = await supabase
+    .from("factory_team_configs")
+    .select("team_id")
+    .eq("team_id", emp.team_id ?? "")
+    .maybeSingle();
+
+  if (factoryConfig) {
+    // Factory team: show simplified English dashboard with pressure selector
+    const { data: pressureRow } = await supabase
+      .from("factory_pressure")
+      .select("level, updated_at")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    return (
+      <FactoryHomeClient
+        employeeName={emp.full_name}
+        currentPressure={pressureRow ? { level: pressureRow.level as PressureLevel, updated_at: pressureRow.updated_at } : null}
+      />
+    );
+  }
+
+  // Fetch factory pressure for non-factory teams to display indicator
+  const { data: factoryPressureRow } = await supabase
+    .from("factory_pressure")
+    .select("level, updated_at")
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   const { data: presence } = await supabase
     .from("employee_presence")
@@ -108,6 +142,7 @@ export default async function HomePage() {
       todaysMeetings={todaysMeetings}
       latestAnnouncement={latestAnnouncement}
       unreadAnnouncements={unreadAnnouncements}
+      factoryPressure={factoryPressureRow ? { level: factoryPressureRow.level as PressureLevel, updated_at: factoryPressureRow.updated_at } : null}
     />
   );
 }

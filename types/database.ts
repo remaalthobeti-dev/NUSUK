@@ -64,6 +64,47 @@ export type Database = {
           },
         ]
       }
+      factory_team_configs: {
+        Row: {
+          team_id: string
+        }
+        Insert: {
+          team_id: string
+        }
+        Update: {
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "factory_team_configs_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      factory_pressure: {
+        Row: {
+          id: string
+          level: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          level: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          level?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       distribution_requests: {
         Row: {
           id: string

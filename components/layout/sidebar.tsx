@@ -65,18 +65,18 @@ export function Sidebar({
   const pathname = usePathname();
   const { employee, loading } = useAuth();
   const [distRole, setDistRole] = useState<"distribution" | "corporate" | null>(null);
+  const [isFactory, setIsFactory] = useState(false);
 
   useEffect(() => {
-    if (!employee?.team_id) { setDistRole(null); return; }
+    if (!employee?.team_id) { setDistRole(null); setIsFactory(false); return; }
     const supabase = createClient();
-    supabase
-      .from("distribution_team_configs")
-      .select("page_role")
-      .eq("team_id", employee.team_id)
-      .maybeSingle()
-      .then(({ data }) => {
-        setDistRole((data?.page_role as "distribution" | "corporate") ?? null);
-      });
+    Promise.all([
+      supabase.from("distribution_team_configs").select("page_role").eq("team_id", employee.team_id).maybeSingle(),
+      supabase.from("factory_team_configs").select("team_id").eq("team_id", employee.team_id).maybeSingle(),
+    ]).then(([distRes, factoryRes]) => {
+      setDistRole((distRes.data?.page_role as "distribution" | "corporate") ?? null);
+      setIsFactory(!!factoryRes.data);
+    });
   }, [employee?.team_id]);
 
   const isSuperAdmin = !loading && employee?.role === "super_admin";
@@ -203,11 +203,13 @@ export function Sidebar({
                 </p>
               )}
 
-              {BASE_NAV.map((item) => (
-                <SidebarItem key={item.href} {...itemProps(item)} />
-              ))}
+              {BASE_NAV
+                .filter((item) => !isFactory || item.href === "/dashboard")
+                .map((item) => (
+                  <SidebarItem key={item.href} {...itemProps(item)} />
+                ))}
 
-              {canManage && (
+              {!isFactory && canManage && (
                 <SidebarItem
                   {...itemProps({
                     href: "/dashboard/analytics",
@@ -217,7 +219,7 @@ export function Sidebar({
                 />
               )}
 
-              {showDistribution && (
+              {!isFactory && showDistribution && (
                 <SidebarItem
                   {...itemProps({
                     href: "/dashboard/distribution",
@@ -227,7 +229,7 @@ export function Sidebar({
                 />
               )}
 
-              {showCorporate && (
+              {!isFactory && showCorporate && (
                 <SidebarItem
                   {...itemProps({
                     href: "/dashboard/corporate",
@@ -246,11 +248,13 @@ export function Sidebar({
               )}
               {isCollapsed && <div className="my-2" />}
 
-              {BOTTOM_NAV.map((item) => (
-                <SidebarItem key={item.href} {...itemProps(item)} />
-              ))}
+              {BOTTOM_NAV
+                .filter((item) => !isFactory || item.href === "/dashboard/profile")
+                .map((item) => (
+                  <SidebarItem key={item.href} {...itemProps(item)} />
+                ))}
 
-              {isSuperAdmin && (
+              {!isFactory && isSuperAdmin && (
                 <SidebarItem
                   {...itemProps({
                     href: "/dashboard/approvals",
@@ -264,7 +268,7 @@ export function Sidebar({
         </ScrollArea>
 
         {/* ── Settings pinned bottom ── */}
-        {isSuperAdmin && (
+        {!isFactory && isSuperAdmin && (
           <div
             className="p-3 border-t"
             style={{ borderColor: "rgba(255,255,255,0.07)" }}

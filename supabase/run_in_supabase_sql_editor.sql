@@ -376,6 +376,97 @@ ON CONFLICT (name) DO UPDATE SET
   sort_order = EXCLUDED.sort_order;
   -- created_at غير مدرج في DO UPDATE — يبقى كما هو للشركات الموجودة
 
+-- ── Factory Team Tables ──────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS factory_team_configs (
+  team_id uuid NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  PRIMARY KEY (team_id)
+);
+
+CREATE TABLE IF NOT EXISTS factory_pressure (
+  id         uuid        DEFAULT gen_random_uuid() PRIMARY KEY,
+  level      text        NOT NULL CHECK (level IN ('low', 'medium', 'high')),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  updated_by uuid        REFERENCES employees(id)
+);
+
+ALTER TABLE factory_team_configs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE factory_pressure     ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'factory_team_configs_select'
+      AND tablename  = 'factory_team_configs'
+  ) THEN
+    CREATE POLICY "factory_team_configs_select" ON factory_team_configs
+      FOR SELECT TO authenticated USING (true);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'factory_team_configs_insert'
+      AND tablename  = 'factory_team_configs'
+  ) THEN
+    CREATE POLICY "factory_team_configs_insert" ON factory_team_configs
+      FOR INSERT TO authenticated WITH CHECK (true);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'factory_team_configs_delete'
+      AND tablename  = 'factory_team_configs'
+  ) THEN
+    CREATE POLICY "factory_team_configs_delete" ON factory_team_configs
+      FOR DELETE TO authenticated USING (true);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'factory_pressure_select'
+      AND tablename  = 'factory_pressure'
+  ) THEN
+    CREATE POLICY "factory_pressure_select" ON factory_pressure
+      FOR SELECT TO authenticated USING (true);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'factory_pressure_insert'
+      AND tablename  = 'factory_pressure'
+  ) THEN
+    CREATE POLICY "factory_pressure_insert" ON factory_pressure
+      FOR INSERT TO authenticated WITH CHECK (true);
+  END IF;
+END $$;
+
+-- ── registration_requests (if not exists) ────────────────────
+
+CREATE TABLE IF NOT EXISTS registration_requests (
+  id           uuid        DEFAULT gen_random_uuid() PRIMARY KEY,
+  auth_user_id uuid        NOT NULL,
+  full_name    text        NOT NULL,
+  email        text        NOT NULL,
+  status       text        NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  updated_at   timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE registration_requests ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'reg_requests_select'
+      AND tablename  = 'registration_requests'
+  ) THEN
+    CREATE POLICY "reg_requests_select" ON registration_requests
+      FOR SELECT TO authenticated USING (true);
+  END IF;
+END $$;
+
 -- ── 5. تحقق من النتيجة ────────────────────────────────────────
 SELECT
   type,
