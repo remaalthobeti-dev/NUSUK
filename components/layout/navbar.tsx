@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useMyPresence } from "@/hooks/use-my-presence";
 import { getRoleLabel } from "@/lib/utils";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { AssistantNavButton } from "@/components/ai/assistant-nav-button";
 import { MyStatusDialog } from "@/components/shared/my-status-dialog";
 import { STATUS_CONFIG, formatTimeAgo } from "@/components/dashboard/status-config";
 import { cn } from "@/lib/utils";
@@ -92,6 +93,9 @@ export function Navbar({ onMobileMenuToggle, sidebarCollapsed }: NavbarProps) {
           <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
         </Button>
+
+        {/* AI Assistant */}
+        <AssistantNavButton />
 
         {/* Notifications */}
         <NotificationBell employeeId={employee?.id ?? null} />
