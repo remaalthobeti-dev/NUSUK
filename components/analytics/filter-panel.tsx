@@ -79,6 +79,7 @@ export function FilterPanel({ teams, onRefresh }: Props) {
                 <div className="relative">
                   <input
                     type="date"
+                    lang="en-US"
                     value={fromDate}
                     onChange={(e) => setFromDate(e.target.value)}
                     className="w-full rounded-lg border border-input bg-background px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
@@ -89,6 +90,7 @@ export function FilterPanel({ teams, onRefresh }: Props) {
                 <label className="text-[10px] text-muted-foreground mb-1 block">إلى تاريخ</label>
                 <input
                   type="date"
+                  lang="en-US"
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
                   className="w-full rounded-lg border border-input bg-background px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"

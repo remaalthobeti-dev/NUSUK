@@ -19,6 +19,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { Team } from "@/types/database";
+import { createRegistrationRequestAction } from "@/app/(auth)/register/actions";
 
 interface RegisterFormProps {
   teams: Team[];
@@ -158,7 +159,7 @@ export function RegisterForm({ teams }: RegisterFormProps) {
 
     setLoading(true);
     const supabase = createClient();
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
@@ -170,9 +171,9 @@ export function RegisterForm({ teams }: RegisterFormProps) {
         },
       },
     });
-    setLoading(false);
 
     if (signUpError) {
+      setLoading(false);
       if (signUpError.message.includes("already registered")) {
         setError("هذا البريد الإلكتروني مسجل مسبقاً");
       } else {
@@ -181,6 +182,15 @@ export function RegisterForm({ teams }: RegisterFormProps) {
       return;
     }
 
+    if (signUpData.user) {
+      await createRegistrationRequestAction({
+        authUserId: signUpData.user.id,
+        fullName: fullName.trim(),
+        email: email.trim(),
+      });
+    }
+
+    setLoading(false);
     router.push("/pending-approval");
   }
 

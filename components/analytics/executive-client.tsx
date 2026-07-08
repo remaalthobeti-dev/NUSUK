@@ -6,10 +6,7 @@ import { RefreshCw } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { HeroMetricsSection } from "./hero-metrics";
 import { TeamWorkloadChart } from "./team-workload-chart";
-import { TaskDistributionChart } from "./task-distribution-chart";
-import { TrendChart } from "./trend-chart";
 import { TopTeamsPanel } from "./top-teams-panel";
-import { OverdueTasksPanel } from "./overdue-tasks-panel";
 import { KpiIndicatorsPanel } from "./kpi-indicators-panel";
 import { FilterPanel } from "./filter-panel";
 import type { ExecutiveAnalyticsData } from "@/lib/data/analytics-executive";
@@ -103,17 +100,12 @@ export function ExecutiveClient({ data }: Props) {
           {/* Row 1: 5 KPI cards */}
           <HeroMetricsSection metrics={data.heroMetrics} teamCount={data.teamCount} />
 
-          {/* Row 2: 3 charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <TeamWorkloadChart teams={data.teamWorkloads} />
-            <TaskDistributionChart distribution={data.taskDistribution} />
-            <TrendChart trendData={data.trendData} />
-          </div>
+          {/* Row 2: team workload chart (full width) */}
+          <TeamWorkloadChart teams={data.teamWorkloads} />
 
-          {/* Row 3: 3 bottom panels */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Row 3: top teams + KPI indicators */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <TopTeamsPanel teams={data.teamWorkloads} />
-            <OverdueTasksPanel tasks={data.overdueTaskDetails} />
             <KpiIndicatorsPanel metrics={data.heroMetrics} teams={data.teamWorkloads} />
           </div>
         </div>
