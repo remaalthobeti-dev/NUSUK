@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 
-const CARD_SRC = "/images/nusuk-card.png";
+const CARD_SRC = "/images/logo-nassaq.jpg";
 const CARD_W   = 477;
 const CARD_H   = 687;
 
