@@ -1,8 +1,10 @@
 -- ============================================================
 -- توزيع بطاقة نسك — تشغيل هذا الملف كاملاً في Supabase SQL Editor
+-- متوافق 100% مع PostgreSQL / Supabase — آمن للتكرار (Idempotent)
+-- لا يحتوي على DROP / TRUNCATE / DELETE
 -- ============================================================
 
--- ── 1. إنشاء الجداول ──────────────────────────────────────────
+-- ── 1. إنشاء الجداول (IF NOT EXISTS) ─────────────────────────
 
 CREATE TABLE IF NOT EXISTS distribution_companies (
   id          uuid        DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -38,48 +40,92 @@ CREATE TABLE IF NOT EXISTS distribution_requests (
   notes             text
 );
 
--- ── 2. UNIQUE constraint + Indexes ────────────────────────────
+-- ── 2. UNIQUE constraint + Indexes (محمية بـ DO block) ────────
 
-ALTER TABLE distribution_companies
-  ADD CONSTRAINT IF NOT EXISTS distribution_companies_name_key UNIQUE (name);
+DO $$
+BEGIN
+  -- UNIQUE constraint على اسم الشركة (يمكّن UPSERT)
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'distribution_companies_name_key'
+      AND conrelid = 'distribution_companies'::regclass
+  ) THEN
+    ALTER TABLE distribution_companies
+      ADD CONSTRAINT distribution_companies_name_key UNIQUE (name);
+  END IF;
 
-CREATE INDEX IF NOT EXISTS idx_dist_companies_name ON distribution_companies (name);
-CREATE INDEX IF NOT EXISTS idx_dist_companies_type ON distribution_companies (type);
+  -- Index على name
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+    WHERE indexname = 'idx_dist_companies_name'
+  ) THEN
+    CREATE INDEX idx_dist_companies_name ON distribution_companies (name);
+  END IF;
+
+  -- Index على type
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+    WHERE indexname = 'idx_dist_companies_type'
+  ) THEN
+    CREATE INDEX idx_dist_companies_type ON distribution_companies (type);
+  END IF;
+END $$;
 
 -- ── 3. RLS ────────────────────────────────────────────────────
 
-ALTER TABLE distribution_companies      ENABLE ROW LEVEL SECURITY;
-ALTER TABLE distribution_team_configs   ENABLE ROW LEVEL SECURITY;
-ALTER TABLE distribution_requests       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE distribution_companies    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE distribution_team_configs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE distribution_requests     ENABLE ROW LEVEL SECURITY;
 
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'dist_companies_select' AND tablename = 'distribution_companies') THEN
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'dist_companies_select'
+      AND tablename  = 'distribution_companies'
+  ) THEN
     CREATE POLICY "dist_companies_select" ON distribution_companies
       FOR SELECT TO authenticated USING (is_active = true);
   END IF;
 
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'dist_team_configs_select' AND tablename = 'distribution_team_configs') THEN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'dist_team_configs_select'
+      AND tablename  = 'distribution_team_configs'
+  ) THEN
     CREATE POLICY "dist_team_configs_select" ON distribution_team_configs
       FOR SELECT TO authenticated USING (true);
   END IF;
 
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'dist_requests_select' AND tablename = 'distribution_requests') THEN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'dist_requests_select'
+      AND tablename  = 'distribution_requests'
+  ) THEN
     CREATE POLICY "dist_requests_select" ON distribution_requests
       FOR SELECT TO authenticated USING (true);
   END IF;
 
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'dist_requests_insert' AND tablename = 'distribution_requests') THEN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'dist_requests_insert'
+      AND tablename  = 'distribution_requests'
+  ) THEN
     CREATE POLICY "dist_requests_insert" ON distribution_requests
       FOR INSERT TO authenticated WITH CHECK (true);
   END IF;
 
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'dist_requests_update' AND tablename = 'distribution_requests') THEN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'dist_requests_update'
+      AND tablename  = 'distribution_requests'
+  ) THEN
     CREATE POLICY "dist_requests_update" ON distribution_requests
       FOR UPDATE TO authenticated USING (true);
   END IF;
 END $$;
 
--- ── 4. UPSERT الشركات (آمن للتكرار — لا يحذف أي بيانات) ──────
+-- ── 4. UPSERT الشركات (لا يحذف أي بيانات — آمن للتكرار) ──────
 
 INSERT INTO distribution_companies (name, type, is_active, sort_order) VALUES
   -- شركات الخارج
@@ -277,7 +323,7 @@ INSERT INTO distribution_companies (name, type, is_active, sort_order) VALUES
   ('شركة طوائف لخدمات حجاج الداخل',                                            'inside', true, 167),
   ('شركة قافلة النخبة لخدمات الحجاج',                                           'inside', true, 168),
   ('مؤسسة فهيد القرشي لخدمات حجاج الداخل',                                     'inside', true, 169),
-  ('شركة المقام الأمين لخدمات حجاق الداخل',                                     'inside', true, 170),
+  ('شركة المقام الأمين لخدمات حجاج الداخل',                                     'inside', true, 170),
   ('شركة الميقات السعودية لخدمة حجاج الداخل والعمرة المحدودة',                  'inside', true, 171),
   ('شركة سرهد لخدمات حجاج الداخل',                                             'inside', true, 172),
   ('شركة المشاعر المتحدة لخدمات حجاج الداخل المحدودة',                          'inside', true, 173),
@@ -288,14 +334,14 @@ ON CONFLICT (name) DO UPDATE SET
   type       = EXCLUDED.type,
   is_active  = EXCLUDED.is_active,
   sort_order = EXCLUDED.sort_order;
-  -- created_at محفوظ ولا يُعدَّل
+  -- created_at غير مدرج في DO UPDATE — يبقى كما هو للشركات الموجودة
 
 -- ── 5. تحقق من النتيجة ────────────────────────────────────────
 SELECT
   type,
-  count(*)        AS total,
-  min(name)       AS first_alphabetically,
-  max(name)       AS last_alphabetically
+  count(*)   AS total,
+  min(name)  AS first_alphabetically,
+  max(name)  AS last_alphabetically
 FROM distribution_companies
 WHERE is_active = true
 GROUP BY type
