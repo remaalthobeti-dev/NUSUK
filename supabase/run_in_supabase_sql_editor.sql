@@ -112,6 +112,33 @@ BEGIN
 
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
+    WHERE policyname = 'dist_team_configs_insert'
+      AND tablename  = 'distribution_team_configs'
+  ) THEN
+    CREATE POLICY "dist_team_configs_insert" ON distribution_team_configs
+      FOR INSERT TO authenticated WITH CHECK (true);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'dist_team_configs_update'
+      AND tablename  = 'distribution_team_configs'
+  ) THEN
+    CREATE POLICY "dist_team_configs_update" ON distribution_team_configs
+      FOR UPDATE TO authenticated USING (true);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'dist_team_configs_delete'
+      AND tablename  = 'distribution_team_configs'
+  ) THEN
+    CREATE POLICY "dist_team_configs_delete" ON distribution_team_configs
+      FOR DELETE TO authenticated USING (true);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
     WHERE policyname = 'dist_requests_select'
       AND tablename  = 'distribution_requests'
   ) THEN

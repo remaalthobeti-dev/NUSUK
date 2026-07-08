@@ -76,6 +76,32 @@ export async function setTeamActiveAction(
   return { error: null };
 }
 
+export async function setTeamDistributionRoleAction(
+  teamId: string,
+  role: "distribution" | "corporate" | null
+): Promise<{ error: string | null }> {
+  const { supabase, error } = await requireSuperAdmin();
+  if (!supabase) return { error };
+
+  if (role === null) {
+    const { error: dbErr } = await supabase
+      .from("distribution_team_configs")
+      .delete()
+      .eq("team_id", teamId);
+    if (dbErr) return { error: dbErr.message };
+  } else {
+    const { error: dbErr } = await supabase
+      .from("distribution_team_configs")
+      .upsert({ team_id: teamId, page_role: role }, { onConflict: "team_id" });
+    if (dbErr) return { error: dbErr.message };
+  }
+
+  revalidatePath("/dashboard/settings");
+  revalidatePath("/dashboard/distribution");
+  revalidatePath("/dashboard/corporate");
+  return { error: null };
+}
+
 // ─── Employees ────────────────────────────────────────────────────────────────
 
 export async function createEmployeeAction(form: {

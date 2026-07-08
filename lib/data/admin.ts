@@ -54,6 +54,7 @@ export interface EmployeeForSettings extends Employee {
 
 export interface TeamForSettings extends Team {
   employeeCount: number;
+  distributionRole: "distribution" | "corporate" | null;
 }
 
 export interface AuditLogEntry extends ActivityLog {
@@ -341,22 +342,22 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
 export async function getTeamsForSettings(): Promise<TeamForSettings[]> {
   const supabase = await createClient();
 
-  const { data: teams } = await supabase
-    .from("teams")
-    .select("*")
-    .order("created_at");
+  const [teamsRes, employeesRes, distConfigsRes] = await Promise.all([
+    supabase.from("teams").select("*").order("created_at"),
+    supabase.from("employees").select("id, team_id").eq("is_active", true),
+    supabase.from("distribution_team_configs").select("team_id, page_role"),
+  ]);
 
-  const { data: employees } = await supabase
-    .from("employees")
-    .select("id, team_id")
-    .eq("is_active", true);
+  const teams_ = (teamsRes.data as Team[] | null) ?? [];
+  const employees_ = (employeesRes.data as Array<{ id: string; team_id: string | null }> | null) ?? [];
+  const distConfigs = (distConfigsRes.data as Array<{ team_id: string; page_role: string }> | null) ?? [];
 
-  const teams_ = (teams as Team[] | null) ?? [];
-  const employees_ = (employees as Array<{ id: string; team_id: string | null }> | null) ?? [];
+  const distMap = new Map(distConfigs.map((c) => [c.team_id, c.page_role as "distribution" | "corporate"]));
 
   return teams_.map((team) => ({
     ...team,
     employeeCount: employees_.filter((e) => e.team_id === team.id).length,
+    distributionRole: distMap.get(team.id) ?? null,
   }));
 }
 

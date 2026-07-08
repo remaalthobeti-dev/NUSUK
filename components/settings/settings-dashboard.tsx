@@ -51,6 +51,7 @@ import {
   createTeamAction,
   updateTeamAction,
   setTeamActiveAction,
+  setTeamDistributionRoleAction,
   createEmployeeAction,
   updateEmployeeAction,
   setEmployeeActiveAction,
@@ -170,12 +171,13 @@ function TeamsTab({
     description: "",
     color: TEAM_COLORS[0],
     icon: "handshake",
+    distributionRole: "_none" as "_none" | "distribution" | "corporate",
   });
 
   function openCreate() {
     setEditing(null);
     setActionError(null);
-    setForm({ name: "", name_en: "", description: "", color: TEAM_COLORS[0], icon: "handshake" });
+    setForm({ name: "", name_en: "", description: "", color: TEAM_COLORS[0], icon: "handshake", distributionRole: "_none" });
     setDialogOpen(true);
   }
 
@@ -188,6 +190,7 @@ function TeamsTab({
       description: team.description ?? "",
       color: team.color,
       icon: team.icon ?? "handshake",
+      distributionRole: team.distributionRole ?? "_none",
     });
     setDialogOpen(true);
   }
@@ -205,15 +208,28 @@ function TeamsTab({
       icon: form.icon,
     };
 
-    const result = editing
+    const teamResult = editing
       ? await updateTeamAction(editing.id, payload)
       : await createTeamAction(payload);
 
-    setLoading(false);
-    if (result.error) {
-      setActionError(result.error);
+    if (teamResult.error) {
+      setLoading(false);
+      setActionError(teamResult.error);
       return;
     }
+
+    // Save distribution role if editing an existing team
+    if (editing) {
+      const distRole = form.distributionRole === "_none" ? null : form.distributionRole;
+      const distResult = await setTeamDistributionRoleAction(editing.id, distRole);
+      if (distResult.error) {
+        setLoading(false);
+        setActionError(distResult.error);
+        return;
+      }
+    }
+
+    setLoading(false);
     await onRefresh();
     setDialogOpen(false);
   }
@@ -253,6 +269,7 @@ function TeamsTab({
                 <TableHead>الفريق</TableHead>
                 <TableHead>الوصف</TableHead>
                 <TableHead>عدد الموظفين</TableHead>
+                <TableHead>دور التوزيع</TableHead>
                 <TableHead>الحالة</TableHead>
                 <TableHead>الإجراءات</TableHead>
               </TableRow>
@@ -281,6 +298,19 @@ function TeamsTab({
                   </TableCell>
                   <TableCell>
                     <span className="text-sm font-medium">{team.employeeCount}</span>
+                  </TableCell>
+                  <TableCell>
+                    {team.distributionRole === "distribution" ? (
+                      <Badge className="text-xs" style={{ background: "hsl(201 96% 32% / .12)", color: "hsl(201 96% 32%)", border: "1px solid hsl(201 96% 32% / .25)" }}>
+                        فريق التوزيع
+                      </Badge>
+                    ) : team.distributionRole === "corporate" ? (
+                      <Badge className="text-xs" style={{ background: "hsl(142 71% 35% / .12)", color: "hsl(142 71% 35%)", border: "1px solid hsl(142 71% 35% / .25)" }}>
+                        علاقات الشركات
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Badge
@@ -392,6 +422,27 @@ function TeamsTab({
                 ))}
               </div>
             </div>
+            {editing && (
+              <div className="space-y-1.5">
+                <Label>دور توزيع نسك</Label>
+                <Select
+                  value={form.distributionRole}
+                  onValueChange={(v) => setForm({ ...form, distributionRole: v as typeof form.distributionRole })}
+                >
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">بدون دور توزيع</SelectItem>
+                    <SelectItem value="distribution">فريق التوزيع</SelectItem>
+                    <SelectItem value="corporate">فريق علاقات الشركات</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground">
+                  يحدد الصفحات التي تظهر في القائمة الجانبية لأعضاء هذا الفريق
+                </p>
+              </div>
+            )}
             {actionError && (
               <div className="rounded-xl bg-destructive/10 border border-destructive/20 px-3 py-2.5 flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
