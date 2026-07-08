@@ -3,6 +3,7 @@
 import { useSidebar } from "@/hooks/use-sidebar";
 import { Sidebar } from "./sidebar";
 import { Navbar } from "./navbar";
+import { AssistantButton } from "@/components/ai/assistant-button";
 import { cn } from "@/lib/utils";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -39,6 +40,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <div className="p-6 page-enter">{children}</div>
         </main>
       </div>
+
+      {/* AI Assistant floating button */}
+      <AssistantButton />
     </div>
   );
 }
