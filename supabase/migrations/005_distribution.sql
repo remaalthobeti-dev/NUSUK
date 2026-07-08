@@ -65,7 +65,15 @@ CREATE POLICY "dist_requests_insert" ON distribution_requests
 CREATE POLICY "dist_requests_update" ON distribution_requests
   FOR UPDATE TO authenticated USING (true);
 
--- ── Companies seed data ───────────────────────────────────────
+-- ── Unique constraint (enables UPSERT by name) ────────────────
+ALTER TABLE distribution_companies
+  ADD CONSTRAINT IF NOT EXISTS distribution_companies_name_key UNIQUE (name);
+
+-- ── Indexes for search and filtering performance ───────────────
+CREATE INDEX IF NOT EXISTS idx_dist_companies_name ON distribution_companies (name);
+CREATE INDEX IF NOT EXISTS idx_dist_companies_type ON distribution_companies (type);
+
+-- ── Seed companies (UPSERT — idempotent, safe to re-run) ───────
 INSERT INTO distribution_companies (name, type, sort_order) VALUES
   -- شركات الخارج
   ('شركة إثراء الخير',                                                          'outside',  1),
@@ -269,4 +277,7 @@ INSERT INTO distribution_companies (name, type, sort_order) VALUES
   ('شركة الفلاح لخدمات الحجاج',                                                 'inside', 174),
   ('شركة ركب الهدى المحدودة',                                                   'inside', 175),
   ('شركة ملتقى الغدير لحجاج الداخل',                                            'inside', 176)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (name) DO UPDATE SET
+  type       = EXCLUDED.type,
+  sort_order = EXCLUDED.sort_order,
+  is_active  = EXCLUDED.is_active;

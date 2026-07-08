@@ -44,7 +44,7 @@ export async function getDistributionPageData(): Promise<DistributionPageData> {
     .from("distribution_companies")
     .select("*")
     .eq("is_active", true)
-    .order("sort_order");
+    .order("name");
 
   // Fetch requests (latest 300)
   const { data: requests, error: reqErr } = await supabase
