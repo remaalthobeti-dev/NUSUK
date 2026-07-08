@@ -10,7 +10,8 @@ const PATH = "/dashboard/distribution";
 
 export async function createDistributionRequests(
   companyIds: string[],
-  requestType: DistributionRequestType
+  requestType: DistributionRequestType,
+  center: string
 ): Promise<{ error: string | null; count?: number }> {
   const { supabase, context, error } = await requireAuthenticated();
   if (error) return { error };
@@ -36,6 +37,7 @@ export async function createDistributionRequests(
     created_by_name: context.employee.full_name,
     created_at: now,
     updated_at: now,
+    center,
   }));
 
   const { error: insertErr } = await supabase

@@ -83,7 +83,8 @@ export function ActionSidePanel({
     try {
       const result = await createDistributionRequests(
         Array.from(selectedIds),
-        requestType!
+        requestType!,
+        center!
       );
       if (result.error) {
         toast.error(result.error);

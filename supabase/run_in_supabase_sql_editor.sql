@@ -37,8 +37,21 @@ CREATE TABLE IF NOT EXISTS distribution_requests (
   processed_at      timestamptz,
   delegate_name     text,
   delegate_phone    text,
-  notes             text
+  notes             text,
+  center            text CHECK (center IN ('mecca', 'medina'))
 );
+
+-- ── 1b. Add center column to distribution_requests if not exists ──────────
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'distribution_requests' AND column_name = 'center'
+  ) THEN
+    ALTER TABLE distribution_requests ADD COLUMN center text CHECK (center IN ('mecca', 'medina'));
+  END IF;
+END $$;
 
 -- ── 2. UNIQUE constraint + Indexes (محمية بـ DO block) ────────
 

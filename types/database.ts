@@ -82,6 +82,7 @@ export type Database = {
           delegate_name: string | null
           delegate_phone: string | null
           notes: string | null
+          center: string | null
         }
         Insert: {
           id?: string
@@ -100,6 +101,7 @@ export type Database = {
           delegate_name?: string | null
           delegate_phone?: string | null
           notes?: string | null
+          center?: string | null
         }
         Update: {
           id?: string
@@ -118,6 +120,7 @@ export type Database = {
           delegate_name?: string | null
           delegate_phone?: string | null
           notes?: string | null
+          center?: string | null
         }
         Relationships: [
           {

@@ -17,6 +17,7 @@ import {
   X,
   BarChart2,
   Boxes,
+  Handshake,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -201,6 +202,14 @@ export function Sidebar({
                   href: "/dashboard/distribution",
                   icon: Boxes,
                   label: "توزيع نسك",
+                })}
+              />
+
+              <SidebarItem
+                {...itemProps({
+                  href: "/dashboard/corporate",
+                  icon: Handshake,
+                  label: "علاقات الشركات",
                 })}
               />
 

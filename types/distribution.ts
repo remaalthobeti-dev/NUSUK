@@ -1,6 +1,7 @@
 // ── Distribution page types ────────────────────────────────────────────────
 
 export type CompanyType = "inside" | "outside";
+export type DistributionCenter = "mecca" | "medina";
 export type DistributionRequestType = "new_batches" | "alert_late" | "alert_no_auth";
 export type DistributionRequestStatus = "new" | "received" | "delivered" | "reported";
 export type DistributionPageRole = "admin" | "distribution" | "corporate";
@@ -31,6 +32,7 @@ export interface DistributionRequest {
   delegate_name: string | null;
   delegate_phone: string | null;
   notes: string | null;
+  center: DistributionCenter | null;
 }
 
 export interface DistributionPageData {
@@ -89,6 +91,11 @@ export const REQUEST_STATUS_CONFIG: Record<
     bgStyle: { background: "hsl(270 60% 50% / .1)" },
     textStyle: { color: "hsl(270 60% 50%)" },
   },
+};
+
+export const CENTER_CONFIG: Record<DistributionCenter, { label: string }> = {
+  mecca:  { label: "مركز توزيع مكة" },
+  medina: { label: "مركز توزيع المدينة" },
 };
 
 // React needed for CSSProperties type — import at usage site
