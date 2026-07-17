@@ -64,6 +64,7 @@ RETURNS uuid
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = public
 AS $$
   SELECT team_id
   FROM   employees
@@ -269,12 +270,13 @@ CREATE POLICY "task_activity_insert"
 --   • Active participants — already collaborating; seeing new incoming requests
 --     is reasonable operational context within shared task ownership
 --
--- Note: task_participants has USING (true) … WRONG — it now uses the team check
--- above. The EXISTS subquery here references task_participants. PostgreSQL
--- evaluates task_participants_select for that inner read. Since the inner read
--- is: WHERE tp.task_id = task_requests.task_id AND tp.employee_id = current_employee_id()
--- — and the user's own records will always pass the team check — there is no
--- functional risk of the inner RLS blocking the outer policy from evaluating.
+-- The EXISTS subquery references task_participants. PostgreSQL evaluates
+-- task_participants_select for that inner read. The inner filter is:
+--   WHERE tp.task_id = task_requests.task_id AND tp.employee_id = current_employee_id()
+-- A participant's own record will always pass the team check (the task is in
+-- the same team as the participant by construction), so the inner RLS never
+-- blocks the outer policy from evaluating. No infinite recursion: the two
+-- policies reference different tables.
 --
 -- INSERT
 -- ──────
