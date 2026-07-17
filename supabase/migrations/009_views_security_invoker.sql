@@ -1,0 +1,75 @@
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- Migration 009: Convert analytics views to SECURITY INVOKER
+--
+-- Problem
+-- ───────
+-- PostgreSQL views default to security_invoker = false (the "security definer"
+-- model), meaning the view accesses underlying tables with the view OWNER's
+-- privileges, not the calling user's. In Supabase, migration-created views are
+-- owned by postgres — a superuser with BYPASSRLS — so every SELECT through the
+-- view silently bypasses RLS on all underlying tables.
+--
+-- The Supabase Security Advisor flags this as a vulnerability because a
+-- privilege escalation attack could in theory use the view as a bypass path.
+-- Two views were flagged:
+--
+--   public.v_employee_stats
+--   public.v_team_stats
+--
+-- Both were created in 001_baseline.sql with plain CREATE VIEW (no explicit
+-- security attribute). The SECURITY DEFINER behaviour was never intentional —
+-- it is simply the PostgreSQL pre-15 implicit default.
+--
+-- Why SECURITY INVOKER is safe here
+-- ──────────────────────────────────
+-- Both views join exclusively over four tables whose SELECT policies are:
+--
+--   teams             → USING (true)   all authenticated users see all rows
+--   employees         → USING (true)   all authenticated users see all rows
+--   employee_presence → USING (true)   all authenticated users see all rows
+--   tasks             → USING (true)   all authenticated users see all rows
+--
+-- Since every underlying SELECT policy is unconditionally permissive for
+-- authenticated users, the result set of both views is identical under either
+-- security model. Converting to security_invoker = true changes which identity
+-- PostgreSQL impersonates for the RLS check, but the outcome of that check is
+-- the same.
+--
+-- Impact analysis
+-- ───────────────
+-- • No application TypeScript code queries these views directly. They appear in
+--   types/database.ts only as generated foreign-key relationship metadata.
+-- • No RLS policy on any table references these views.
+-- • No trigger references these views.
+-- • No other view depends on these views.
+-- • Existing GRANT SELECT TO authenticated is preserved (ALTER VIEW does not
+--   touch grants).
+--
+-- Technique
+-- ─────────
+-- ALTER VIEW ... SET (security_invoker = true) was introduced in PostgreSQL 15,
+-- which Supabase uses. It modifies only the security attribute: the view
+-- definition, column list, OID, and all grants are untouched.
+-- Using ALTER VIEW rather than DROP + CREATE avoids any risk of losing
+-- dependent objects or grants.
+--
+-- Post-apply verification
+-- ───────────────────────
+-- Run in Supabase SQL editor:
+--
+--   SELECT viewname, definition
+--   FROM   pg_views
+--   WHERE  viewname IN ('v_employee_stats', 'v_team_stats');
+--
+--   SELECT relname, reloptions
+--   FROM   pg_class
+--   WHERE  relname IN ('v_employee_stats', 'v_team_stats');
+--   -- Expected: reloptions contains 'security_invoker=true' for both rows.
+--
+-- After applying, re-run the Supabase Security Advisor. The two
+-- "SECURITY DEFINER view" warnings should no longer appear.
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+
+ALTER VIEW v_employee_stats SET (security_invoker = true);
+ALTER VIEW v_team_stats     SET (security_invoker = true);
