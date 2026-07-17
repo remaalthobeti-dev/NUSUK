@@ -74,6 +74,12 @@ export function DistributionClient({ data }: Props) {
     router.refresh();
   }
 
+  function handleRequestUpdate(id: string, patch: Partial<typeof requests[number]>) {
+    setRequests((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, ...patch } : r))
+    );
+  }
+
   const tabs: Array<{ id: Tab; label: string; icon: React.ElementType }> = [];
   if (pageRole === "distribution" || pageRole === "admin") {
     tabs.push({ id: "send", label: "إجراء جديد", icon: LayoutGrid });
@@ -202,6 +208,7 @@ export function DistributionClient({ data }: Props) {
             requests={requests}
             pageRole={pageRole}
             onRefresh={() => router.refresh()}
+            onRequestUpdate={handleRequestUpdate}
           />
         )}
       </div>

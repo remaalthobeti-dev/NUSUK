@@ -87,9 +87,6 @@ export async function markRequestDelivered(
   const { supabase, context, error } = await requireAuthenticated();
   if (error) return { error };
 
-  if (!delegateName.trim()) return { error: "اسم المفوض مطلوب" };
-  if (!delegatePhone.trim()) return { error: "رقم جوال المفوض مطلوب" };
-
   const now = new Date().toISOString();
   const { error: updateErr } = await supabase
     .from("distribution_requests")

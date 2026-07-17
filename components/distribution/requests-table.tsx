@@ -8,6 +8,9 @@ import {
   Square,
   Clock,
   User,
+  Eye,
+  CheckCircle2,
+  Truck,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,31 +26,25 @@ import {
   REQUEST_STATUS_CONFIG,
 } from "@/types/distribution";
 import { ProcessDialog } from "./process-dialog";
+import { RequestDetailDialog } from "./request-detail-dialog";
 
 interface RequestsTableProps {
   requests: DistributionRequest[];
   pageRole: DistributionPageRole;
   onRefresh: () => void;
+  onRequestUpdate: (id: string, patch: Partial<DistributionRequest>) => void;
 }
 
 const STATUS_FILTERS: Array<{ value: DistributionRequestStatus | "all"; label: string }> = [
-  { value: "all", label: "الكل" },
-  { value: "new", label: "جديد" },
-  { value: "received", label: "تم الاستلام" },
+  { value: "all",       label: "الكل" },
+  { value: "new",       label: "جديد" },
+  { value: "received",  label: "تم الاستلام" },
   { value: "delivered", label: "تم التوصيل" },
-  { value: "reported", label: "تم الإبلاغ" },
-];
-
-const TYPE_FILTERS: Array<{ value: DistributionRequestType | "all"; label: string }> = [
-  { value: "all", label: "جميع الأنواع" },
-  { value: "new_batches", label: "دفعات جديدة" },
-  { value: "alert_late", label: "دفعات متأخرة" },
-  { value: "alert_no_auth", label: "لا تفويض" },
+  { value: "reported",  label: "تم الإبلاغ" },
 ];
 
 function formatDate(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString("ar-SA", {
+  return new Date(iso).toLocaleDateString("ar-SA", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -59,12 +56,11 @@ function formatDate(iso: string) {
 function TypeBadge({ type }: { type: DistributionRequestType }) {
   const cfg = REQUEST_TYPE_CONFIG[type];
   const colorMap = {
-    blue: { bg: "hsl(201 96% 32% / .1)", text: "hsl(201 96% 32%)" },
-    amber: { bg: "hsl(38 92% 50% / .1)", text: "hsl(38 82% 40%)" },
-    red: { bg: "hsl(0 84% 60% / .1)", text: "hsl(0 70% 50%)" },
+    blue:  { bg: "hsl(201 96% 32% / .1)", text: "hsl(201 96% 32%)" },
+    amber: { bg: "hsl(38 92% 50% / .1)",  text: "hsl(38 82% 40%)" },
+    red:   { bg: "hsl(0 84% 60% / .1)",   text: "hsl(0 70% 50%)" },
   } as const;
   const color = colorMap[cfg.alertColor as keyof typeof colorMap];
-
   return (
     <span
       className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap"
@@ -87,23 +83,28 @@ function StatusBadge({ status }: { status: DistributionRequestStatus }) {
   );
 }
 
-export function RequestsTable({ requests, pageRole, onRefresh }: RequestsTableProps) {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<DistributionRequestStatus | "all">("all");
-  const [typeFilter, setTypeFilter] = useState<DistributionRequestType | "all">("all");
+export function RequestsTable({
+  requests,
+  pageRole,
+  onRefresh,
+  onRequestUpdate,
+}: RequestsTableProps) {
+  const [search, setSearch]                 = useState("");
+  const [statusFilter, setStatusFilter]     = useState<DistributionRequestStatus | "all">("all");
   const [companyTypeFilter, setCompanyTypeFilter] = useState<"all" | "inside" | "outside">("all");
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedIds, setSelectedIds]       = useState<Set<string>>(new Set());
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+  const [detailRequest, setDetailRequest]   = useState<DistributionRequest | null>(null);
+  const [detailOpen, setDetailOpen]         = useState(false);
 
   const filtered = useMemo(() => {
     return requests.filter((r) => {
       if (search && !r.company_name.toLowerCase().includes(search.toLowerCase())) return false;
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
-      if (typeFilter !== "all" && r.request_type !== typeFilter) return false;
       if (companyTypeFilter !== "all" && r.company_type !== companyTypeFilter) return false;
       return true;
     });
-  }, [requests, search, statusFilter, typeFilter, companyTypeFilter]);
+  }, [requests, search, statusFilter, companyTypeFilter]);
 
   const selectedRequests = useMemo(
     () => filtered.filter((r) => selectedIds.has(r.id)),
@@ -111,7 +112,9 @@ export function RequestsTable({ requests, pageRole, onRefresh }: RequestsTablePr
   );
 
   const allSelected = filtered.length > 0 && filtered.every((r) => selectedIds.has(r.id));
-  const canProcess = pageRole === "corporate" || pageRole === "admin";
+  // Batch processing is available for admin only (distribution acts per-row)
+  const canBatch = pageRole === "admin";
+  const canAct   = pageRole === "admin" || pageRole === "distribution";
 
   function toggleRow(id: string) {
     setSelectedIds((prev) => {
@@ -127,6 +130,11 @@ export function RequestsTable({ requests, pageRole, onRefresh }: RequestsTablePr
     } else {
       setSelectedIds(new Set(filtered.map((r) => r.id)));
     }
+  }
+
+  function openDetail(req: DistributionRequest) {
+    setDetailRequest(req);
+    setDetailOpen(true);
   }
 
   const processableSelected = selectedRequests.filter((r) => r.status === "new");
@@ -184,8 +192,8 @@ export function RequestsTable({ requests, pageRole, onRefresh }: RequestsTablePr
         </div>
       </div>
 
-      {/* Batch action bar */}
-      {canProcess && processableSelected.length > 0 && (
+      {/* Batch action bar (admin only) */}
+      {canBatch && processableSelected.length > 0 && (
         <div
           className="flex items-center justify-between rounded-xl px-4 py-2.5 text-sm"
           style={{ background: "hsl(var(--n-gold) / .08)", border: "1px solid hsl(var(--n-gold) / .2)" }}
@@ -195,7 +203,7 @@ export function RequestsTable({ requests, pageRole, onRefresh }: RequestsTablePr
           </span>
           <Button
             size="sm"
-            onClick={() => setDialogOpen(true)}
+            onClick={() => setBatchDialogOpen(true)}
             style={{ background: "hsl(var(--n-dark))", color: "hsl(var(--n-ivory))" }}
           >
             معالجة المحدد
@@ -211,7 +219,7 @@ export function RequestsTable({ requests, pageRole, onRefresh }: RequestsTablePr
         >
           <SlidersHorizontal className="h-8 w-8 opacity-20" style={{ color: "hsl(var(--n-gold))" }} />
           <p className="text-sm font-medium text-muted-foreground">
-            {search || statusFilter !== "all" || typeFilter !== "all"
+            {search || statusFilter !== "all" || companyTypeFilter !== "all"
               ? "لا توجد نتائج تطابق الفلاتر"
               : "لا توجد طلبات بعد"}
           </p>
@@ -222,7 +230,7 @@ export function RequestsTable({ requests, pageRole, onRefresh }: RequestsTablePr
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ background: "hsl(var(--muted) / .3)" }}>
-                  {canProcess && (
+                  {canBatch && (
                     <th className="px-4 py-3 text-start w-10">
                       <button type="button" onClick={toggleAll}>
                         {allSelected ? (
@@ -235,9 +243,6 @@ export function RequestsTable({ requests, pageRole, onRefresh }: RequestsTablePr
                   )}
                   <th className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     الشركة
-                  </th>
-                  <th className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    النوع
                   </th>
                   <th className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     الطلب
@@ -254,34 +259,34 @@ export function RequestsTable({ requests, pageRole, onRefresh }: RequestsTablePr
                   <th className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     مُعالج بواسطة
                   </th>
-                  {processableSelected.some((r) => r.delegate_name) && (
-                    <th className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      المفوض
-                    </th>
-                  )}
+                  <th className="px-4 py-3 w-32" />
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((req) => {
-                  const isSelected = selectedIds.has(req.id);
+                  const isSelected = canBatch && selectedIds.has(req.id);
                   return (
                     <tr
                       key={req.id}
-                      className="border-t transition-colors duration-100 hover:bg-muted/30"
+                      className={cn(
+                        "border-t transition-colors duration-100",
+                        canAct
+                          ? "cursor-pointer hover:bg-muted/40"
+                          : "hover:bg-muted/20"
+                      )}
                       style={isSelected ? { background: "hsl(var(--n-gold) / .05)" } : {}}
+                      onClick={() => openDetail(req)}
                     >
-                      {canProcess && (
-                        <td className="px-4 py-3">
-                          <button type="button" onClick={() => toggleRow(req.id)}>
-                            {isSelected ? (
-                              <CheckSquare
-                                className="h-4 w-4"
-                                style={{ color: "hsl(var(--n-gold))" }}
-                              />
-                            ) : (
-                              <Square className="h-4 w-4 text-muted-foreground/40" />
-                            )}
-                          </button>
+                      {canBatch && (
+                        <td
+                          className="px-4 py-3"
+                          onClick={(e) => { e.stopPropagation(); toggleRow(req.id); }}
+                        >
+                          {isSelected ? (
+                            <CheckSquare className="h-4 w-4" style={{ color: "hsl(var(--n-gold))" }} />
+                          ) : (
+                            <Square className="h-4 w-4 text-muted-foreground/40" />
+                          )}
                         </td>
                       )}
                       <td className="px-4 py-3">
@@ -293,11 +298,6 @@ export function RequestsTable({ requests, pageRole, onRefresh }: RequestsTablePr
                             {req.company_type === "inside" ? "داخل" : "خارج"}
                           </p>
                         </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-xs text-muted-foreground">
-                          {req.company_type === "inside" ? "شركات الداخل" : "شركات الخارج"}
-                        </span>
                       </td>
                       <td className="px-4 py-3">
                         <TypeBadge type={req.request_type} />
@@ -340,16 +340,50 @@ export function RequestsTable({ requests, pageRole, onRefresh }: RequestsTablePr
                           <span className="text-xs text-muted-foreground/40">—</span>
                         )}
                       </td>
-                      {req.delegate_name && (
-                        <td className="px-4 py-3">
-                          <div>
-                            <p className="text-sm font-medium">{req.delegate_name}</p>
-                            <p className="text-xs text-muted-foreground" dir="ltr">
-                              {req.delegate_phone}
-                            </p>
-                          </div>
-                        </td>
-                      )}
+                      {/* Action column */}
+                      <td
+                        className="px-4 py-3"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center gap-2">
+                          {canAct && req.status === "new" && (
+                            <button
+                              type="button"
+                              onClick={() => openDetail(req)}
+                              className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors duration-150"
+                              style={{
+                                background: "hsl(142 71% 35% / .1)",
+                                color: "hsl(142 71% 35%)",
+                              }}
+                            >
+                              <CheckCircle2 className="h-3 w-3" />
+                              استلام
+                            </button>
+                          )}
+                          {canAct && req.status === "received" && (
+                            <button
+                              type="button"
+                              onClick={() => openDetail(req)}
+                              className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors duration-150"
+                              style={{
+                                background: "hsl(201 96% 32% / .1)",
+                                color: "hsl(201 96% 32%)",
+                              }}
+                            >
+                              <Truck className="h-3 w-3" />
+                              التوصيل
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => openDetail(req)}
+                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors duration-150"
+                          >
+                            <Eye className="h-3 w-3" />
+                            عرض
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -379,15 +413,24 @@ export function RequestsTable({ requests, pageRole, onRefresh }: RequestsTablePr
         </div>
       )}
 
-      {/* Process dialog */}
+      {/* Batch process dialog (admin only) */}
       <ProcessDialog
         requests={processableSelected}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        open={batchDialogOpen}
+        onOpenChange={setBatchDialogOpen}
         onSuccess={() => {
           setSelectedIds(new Set());
           onRefresh();
         }}
+      />
+
+      {/* Single request detail dialog */}
+      <RequestDetailDialog
+        request={detailRequest}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        pageRole={pageRole}
+        onUpdate={onRequestUpdate}
       />
     </div>
   );
