@@ -102,22 +102,19 @@ $$;
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- Explicit EXECUTE grants
+-- Explicit EXECUTE grant
 --
--- PostgreSQL's default grants EXECUTE on new functions to PUBLIC. CREATE OR
--- REPLACE preserves existing grants, so no re-grant is strictly necessary.
--- These are written out explicitly so the Security Advisor can see that the
--- grants are intentional and so future reviewers understand the access model.
+-- PostgreSQL grants EXECUTE to PUBLIC by default, so CREATE OR REPLACE
+-- preserves the existing grant. This explicit statement is written for
+-- auditability — so reviewers can see the intended audience.
 --
--- authenticated: the Supabase PostgREST role used for logged-in users.
---   These functions are called exclusively from RLS policies that are already
---   scoped to TO authenticated, so granting EXECUTE to this role is correct.
---
--- anon: the unauthenticated Supabase role. Granted so that Supabase's internal
---   policy-evaluation machinery can invoke the function even in edge cases
---   where the role has not yet been resolved; the functions themselves return
---   NULL for unauthenticated callers (auth.uid() returns NULL → no row found).
+-- Only `authenticated` is granted. These functions are referenced exclusively
+-- inside RLS policies declared `TO authenticated`. PostgreSQL only evaluates
+-- a policy's USING/WITH CHECK expression for the role(s) named in the policy's
+-- TO clause; it never calls the function for the `anon` role. Granting EXECUTE
+-- to `anon` would be misleading (implying the functions are useful to
+-- unauthenticated callers) and is not required for correct RLS evaluation.
 -- ─────────────────────────────────────────────────────────────────────────────
 
-GRANT EXECUTE ON FUNCTION current_employee_id()   TO authenticated, anon;
-GRANT EXECUTE ON FUNCTION current_employee_role() TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION current_employee_id()   TO authenticated;
+GRANT EXECUTE ON FUNCTION current_employee_role() TO authenticated;
