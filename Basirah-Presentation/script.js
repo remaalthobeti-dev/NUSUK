@@ -173,43 +173,279 @@
   );
   rings.forEach((r) => ringObserver.observe(r));
 
-  /* ---------------- Live AI conversation (Slide 4) ---------------- */
-  const chatSection = document.getElementById("slide-04");
-  const chatUser = document.getElementById("chat-user");
-  const chatTyping = document.getElementById("chat-typing");
-  const chatPlan = document.getElementById("chat-plan");
-  let chatPlayed = false;
+  /* ---------------- Live AI Demo (Slide 4) — auto-playing conversation ---------------- */
+  (function () {
+    const liveSection = document.getElementById("slide-04");
+    const thread = document.getElementById("live-thread");
+    if (!liveSection || !thread) return;
 
-  function playChat() {
-    if (!chatUser) return;
-    [chatUser, chatTyping, chatPlan].forEach((b) => b.classList.remove("in"));
-    chatPlan.querySelectorAll(".plan-chip").forEach((c) => c.classList.remove("in"));
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    let runToken = 0;
 
-    setTimeout(() => chatUser.classList.add("in"), 150);
-    setTimeout(() => chatTyping.classList.add("in"), 900);
-    setTimeout(() => {
-      chatTyping.classList.remove("in");
-      chatPlan.classList.add("in");
-      chatPlan.querySelectorAll(".plan-chip").forEach((chip) => chip.classList.add("in"));
-    }, 2500);
-  }
+    function scrollThread() {
+      thread.scrollTo({ top: thread.scrollHeight, behavior: "smooth" });
+    }
 
-  if (chatSection) {
-    const chatObserver = new IntersectionObserver(
+    function el(html) {
+      const wrap = document.createElement("div");
+      wrap.innerHTML = html.trim();
+      return wrap.firstElementChild;
+    }
+
+    async function typeUserMessage(text, token) {
+      const bubble = el(`<div class="chat-bubble user in text-sm"></div>`);
+      thread.appendChild(bubble);
+      scrollThread();
+      let i = 0;
+      while (i <= text.length) {
+        if (token !== runToken) return;
+        bubble.textContent = text.slice(0, i);
+        i++;
+        scrollThread();
+        await sleep(16);
+      }
+    }
+
+    async function showLoading(token) {
+      const loading = el(`
+        <div class="chat-bubble ai loading-bubble">
+          <div class="typing-row"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>
+          <span class="text-white/50 text-xs font-semibold">جاري تحليل البيانات...</span>
+        </div>`);
+      thread.appendChild(loading);
+      requestAnimationFrame(() => loading.classList.add("in"));
+      scrollThread();
+      await sleep(1100);
+      if (token !== runToken) return null;
+      loading.remove();
+      return true;
+    }
+
+    async function addStreamContainer() {
+      const container = el(`<div class="chat-bubble ai"><div class="space-y-2.5" data-stream></div></div>`);
+      thread.appendChild(container);
+      scrollThread();
+      return container.querySelector("[data-stream]");
+    }
+
+    async function addStreamItem(streamEl, label, token) {
+      if (token !== runToken) return;
+      const item = el(`
+        <div class="stream-item">
+          <span class="stream-check"><svg width="10" height="10" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <span class="text-white/80 text-[13px] font-medium">${label}</span>
+        </div>`);
+      streamEl.appendChild(item);
+      requestAnimationFrame(() => item.classList.add("in"));
+      scrollThread();
+      await sleep(430);
+    }
+
+    async function addMapCard(mapHtml, token) {
+      if (token !== runToken) return;
+      const card = el(`<div class="chat-bubble ai live-map-card p-0 overflow-hidden"><div class="p-4">${mapHtml}</div></div>`);
+      thread.appendChild(card);
+      requestAnimationFrame(() => card.classList.add("in"));
+      scrollThread();
+      await sleep(700);
+    }
+
+    async function addDecisionCard(items, token) {
+      if (token !== runToken) return;
+      const chips = items.map((t) => `<span class="decision-chip">${t}</span>`).join("");
+      const card = el(`
+        <div class="decision-box reveal-scale">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="icon-tile on-dark w-7 h-7"><svg width="13" height="13" viewBox="0 0 24 24"><polygon points="12 2 14.5 9.5 22 12 14.5 14.5 12 22 9.5 14.5 2 12 9.5 9.5 12 2" fill="#C9A227" stroke="none"/></svg></div>
+            <p class="text-gold font-bold text-sm">قرار بصيرة</p>
+          </div>
+          <div class="flex flex-wrap gap-2">${chips}</div>
+        </div>`);
+      thread.appendChild(card);
+      requestAnimationFrame(() => card.classList.add("in"));
+      scrollThread();
+      await sleep(1600);
+    }
+
+    async function addDivider(label, token) {
+      if (token !== runToken) return;
+      const div = el(`<div class="scenario-divider">${label}</div>`);
+      thread.appendChild(div);
+      requestAnimationFrame(() => div.classList.add("in"));
+      scrollThread();
+      await sleep(500);
+    }
+
+    async function addAssistantLine(text, token) {
+      if (token !== runToken) return;
+      const bubble = el(`<div class="chat-bubble ai in text-sm text-white/85">${text}</div>`);
+      thread.appendChild(bubble);
+      scrollThread();
+      await sleep(900);
+    }
+
+    const MAP_ACTIVATION = `
+      <p class="text-white font-bold text-xs mb-3">الخريطة التشغيلية — مركزا التفعيل</p>
+      <svg viewBox="0 0 480 190" class="w-full h-auto">
+        <g stroke="#ffffff" stroke-opacity=".06"><line x1="0" y1="40" x2="480" y2="40"/><line x1="0" y1="95" x2="480" y2="95"/><line x1="0" y1="150" x2="480" y2="150"/></g>
+        <path d="M110 70 C 180 70, 200 95, 240 95" fill="none" stroke="#C9A227" stroke-width="1" stroke-dasharray="3 6" opacity=".5"/>
+        <path d="M370 70 C 300 70, 280 95, 240 95" fill="none" stroke="#C9A227" stroke-width="1" stroke-dasharray="3 6" opacity=".5"/>
+        <g>
+          <rect x="60" y="45" width="100" height="50" rx="10" fill="rgba(255,255,255,.06)" stroke="#4ADE80" stroke-width="1.2"/>
+          <text x="110" y="65" text-anchor="middle" fill="#F6F8F6" font-size="11" font-weight="700" font-family="IBM Plex Sans Arabic">مركز 1</text>
+          <text x="110" y="82" text-anchor="middle" fill="#4ADE80" font-size="9" font-family="IBM Plex Sans Arabic">40 موظف · مستقر</text>
+        </g>
+        <g>
+          <rect x="320" y="45" width="100" height="50" rx="10" fill="rgba(180,70,58,.12)" stroke="#E0574A" stroke-width="1.2"/>
+          <circle cx="420" cy="46" r="5" fill="none" stroke="#E0574A" stroke-width="1.4" class="ring-pulse"/>
+          <circle cx="420" cy="46" r="3" fill="#E0574A"/>
+          <text x="370" y="65" text-anchor="middle" fill="#F6F8F6" font-size="11" font-weight="700" font-family="IBM Plex Sans Arabic">مركز 2</text>
+          <text x="370" y="82" text-anchor="middle" fill="#E0574A" font-size="9" font-family="IBM Plex Sans Arabic">اختناق متوقع</text>
+        </g>
+        <g transform="translate(240,110)">
+          <circle r="26" fill="#0F5C4B" stroke="#C9A227" stroke-width="1.4" class="pulse-glow"/>
+          <text text-anchor="middle" y="4" fill="#F6F8F6" font-size="10" font-weight="700" font-family="IBM Plex Sans Arabic">بصيرة</text>
+        </g>
+      </svg>`;
+
+    const MAP_TRANSPORT = `
+      <p class="text-white font-bold text-xs mb-3">الخريطة التفاعلية — المدينة ⟶ مكة</p>
+      <svg viewBox="0 0 480 190" class="w-full h-auto">
+        <path id="liveRoute" d="M40 150 C 150 40, 320 170, 440 40" fill="none" stroke="#C9A227" stroke-opacity=".25" stroke-width="3" stroke-dasharray="6 8"/>
+        <circle cx="40" cy="150" r="7" fill="#4ADE80"/>
+        <text x="40" y="172" text-anchor="middle" fill="#F6F8F6" font-size="9.5" font-family="IBM Plex Sans Arabic">المدينة</text>
+        <circle cx="440" cy="40" r="7" fill="#C9A227"/>
+        <text x="440" y="24" text-anchor="middle" fill="#F6F8F6" font-size="9.5" font-family="IBM Plex Sans Arabic">مكة</text>
+        <circle cx="255" cy="112" r="7" fill="none" stroke="#E0574A" stroke-width="1.4" class="ring-pulse"/>
+        <circle cx="255" cy="112" r="4" fill="#E0574A"/>
+        <text x="255" y="132" text-anchor="middle" fill="#E0574A" font-size="9" font-family="IBM Plex Sans Arabic">ازدحام متوقع</text>
+        <g>
+          <rect x="-11" y="-6" width="22" height="12" rx="3" fill="#0F5C4B" stroke="#C9A227" stroke-width="1"/>
+          <animateMotion dur="5s" repeatCount="indefinite" rotate="auto"><mpath href="#liveRoute"/></animateMotion>
+        </g>
+        <g>
+          <rect x="-11" y="-6" width="22" height="12" rx="3" fill="#0F5C4B" stroke="#C9A227" stroke-width="1"/>
+          <animateMotion dur="5s" begin="1.7s" repeatCount="indefinite" rotate="auto"><mpath href="#liveRoute"/></animateMotion>
+        </g>
+      </svg>`;
+
+    const MAP_FALLBACK = `
+      <p class="text-white font-bold text-xs mb-3">أفضل نقطة تشغيل بديلة — طريق الهجرة</p>
+      <svg viewBox="0 0 480 170" class="w-full h-auto">
+        <g>
+          <rect x="40" y="30" width="110" height="46" rx="10" fill="rgba(180,70,58,.12)" stroke="#E0574A" stroke-width="1.2"/>
+          <circle cx="150" cy="31" r="5" fill="none" stroke="#E0574A" stroke-width="1.4" class="ring-pulse"/>
+          <circle cx="150" cy="31" r="3" fill="#E0574A"/>
+          <text x="95" y="50" text-anchor="middle" fill="#F6F8F6" font-size="10.5" font-weight="700" font-family="IBM Plex Sans Arabic">حجاج المجاملة</text>
+          <text x="95" y="66" text-anchor="middle" fill="#E0574A" font-size="9" font-family="IBM Plex Sans Arabic">متعطل</text>
+        </g>
+        <path d="M150 55 C 230 30, 260 100, 340 100" fill="none" stroke="#C9A227" stroke-width="1.4" stroke-dasharray="4 7" class="data-line"/>
+        <g>
+          <rect x="330" y="77" width="120" height="46" rx="10" fill="rgba(201,162,39,.1)" stroke="#C9A227" stroke-width="1.4"/>
+          <g transform="translate(340,88)" stroke="#E4C766" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M6 0C2.7 0 0 2.6 0 5.8 0 10 6 16 6 16s6-6 6-10.2C12 2.6 9.3 0 6 0z"/><circle cx="6" cy="5.6" r="2" fill="#E4C766" stroke="none"/></g>
+          <text x="396" y="97" text-anchor="middle" fill="#F6F8F6" font-size="10.5" font-weight="700" font-family="IBM Plex Sans Arabic">طريق الهجرة</text>
+          <text x="390" y="113" text-anchor="middle" fill="#E4C766" font-size="9" font-family="IBM Plex Sans Arabic">نقطة بديلة مقترحة</text>
+        </g>
+      </svg>`;
+
+    async function scenarioActivation(token) {
+      await typeUserMessage("وصل لدينا 5000 حاج في المدينة. لدينا مركزان للتفعيل، بكل مركز 40 موظفًا. نريد إنهاء التفعيل خلال اليوم.", token);
+      await sleep(300);
+      if (!(await showLoading(token))) return;
+      const stream = await addStreamContainer();
+      await addStreamItem(stream, "عدد خطوط الخدمة المطلوبة", token);
+      await addStreamItem(stream, "توزيع الموظفين", token);
+      await addStreamItem(stream, "مدة الإنجاز المتوقعة", token);
+      await addStreamItem(stream, "نقاط الاختناق — تظهر على الخريطة", token);
+      if (token !== runToken) return;
+      await addMapCard(MAP_ACTIVATION, token);
+      await addStreamItem(stream, "الاحتياج الإضافي من الموارد", token);
+      await addStreamItem(stream, "توصيات لتحسين الأداء", token);
+      await addDecisionCard(["زيادة خطي خدمة إضافيين", "إعادة توزيع الموظفين", "إنهاء التفعيل خلال 7 ساعات", "تقليل الانتظار 32%"], token);
+    }
+
+    async function scenarioTransport(token) {
+      await typeUserMessage("لدينا 7000 حاج، و20 حافلة سعة كل واحدة 50 راكبًا. نريد نقلهم من المدينة إلى مكة.", token);
+      await sleep(300);
+      if (!(await showLoading(token))) return;
+      const stream = await addStreamContainer();
+      await addStreamItem(stream, "حالة الطرق", token);
+      await addStreamItem(stream, "الازدحام الحالي", token);
+      await addStreamItem(stream, "نقاط الاختناق", token);
+      await addStreamItem(stream, "زمن الرحلة", token);
+      await addStreamItem(stream, "أوقات الذروة", token);
+      await addStreamItem(stream, "عدد الرحلات المطلوبة", token);
+      if (token !== runToken) return;
+      await addMapCard(MAP_TRANSPORT, token);
+      await addAssistantLine("أفضل وقت للانطلاق، عدد الحافلات الإضافية، وأثر زيادة أو تقليل الموارد على مدة التنفيذ — تم احتسابها جميعًا.", token);
+      await addDecisionCard(["إضافة 4 حافلات", "تأخير الرحلة الثانية", "استخدام المسار الشرقي", "تقليل مدة النقل 18%"], token);
+    }
+
+    async function scenarioFallback(token) {
+      await typeUserMessage("تعطل مركز حجاج المجاملة في المدينة. ما الخطة البديلة؟", token);
+      await sleep(300);
+      if (!(await showLoading(token))) return;
+      const stream = await addStreamContainer();
+      await addStreamItem(stream, "عدد الحجاج — 8000", token);
+      await addStreamItem(stream, "البطاقات غير المفعّلة — 6400", token);
+      await addStreamItem(stream, "الرحلات القادمة — 30 حافلة كل ساعتين", token);
+      await addStreamItem(stream, "المراكز القريبة والموظفون المتوفرون", token);
+      await addStreamItem(stream, "الطقس وحالة الطرق", token);
+      if (token !== runToken) return;
+      await addMapCard(MAP_FALLBACK, token);
+      const alert = el(`
+        <div class="chat-bubble ai flex items-start gap-3 !bg-amber-400/10 !border-amber-400/30">
+          <div class="icon-tile w-8 h-8 shrink-0" style="background:rgba(251,191,36,.16); color:#FBBF24;"><svg width="15" height="15" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/><circle cx="12" cy="12" r="5"/></svg></div>
+          <p class="text-amber-200 text-xs leading-relaxed">بسبب ارتفاع درجة الحرارة، يوصي بصيرة بتنفيذ التفعيل داخل الحافلات أثناء الرحلة لتقليل تعرض الحجاج لضربات الشمس.</p>
+        </div>`);
+      thread.appendChild(alert);
+      requestAnimationFrame(() => alert.classList.add("in"));
+      scrollThread();
+      await sleep(1000);
+      await addDecisionCard(["إنشاء نقطة تفعيل مؤقتة", "إعادة توزيع 64 موظفًا", "تفعيل داخل الحافلات", "إنهاء العملية خلال 6 ساعات"], token);
+    }
+
+    async function playDemo(token) {
+      thread.innerHTML = "";
+      const welcome = el(`<div class="chat-bubble ai in text-sm text-white/90">مرحبًا، أنا بصيرة.<br>كيف يمكنني مساعدتك في التخطيط التشغيلي اليوم؟</div>`);
+      thread.appendChild(welcome);
+      scrollThread();
+      await sleep(1300);
+      if (token !== runToken) return;
+
+      await scenarioActivation(token);
+      if (token !== runToken) return;
+      await addDivider("سيناريو تالٍ", token);
+      if (token !== runToken) return;
+
+      await scenarioTransport(token);
+      if (token !== runToken) return;
+      await addDivider("سيناريو تالٍ", token);
+      if (token !== runToken) return;
+
+      await scenarioFallback(token);
+      if (token !== runToken) return;
+
+      await sleep(3200);
+      if (token !== runToken) return;
+      playDemo(token);
+    }
+
+    const liveObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && !chatPlayed) {
-            chatPlayed = true;
-            playChat();
-          } else if (!entry.isIntersecting) {
-            chatPlayed = false;
+          if (entry.isIntersecting) {
+            runToken++;
+            playDemo(runToken);
+          } else {
+            runToken++;
           }
         });
       },
-      { threshold: 0.5 }
+      { threshold: 0.4 }
     );
-    chatObserver.observe(chatSection);
-  }
+    liveObserver.observe(liveSection);
+  })();
 
   /* ---------------- Animated flow (Slide 5) ---------------- */
   const flowContainer = document.getElementById("flow-container");
