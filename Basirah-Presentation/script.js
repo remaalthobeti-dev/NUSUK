@@ -1,5 +1,5 @@
 /* ===================================================================
-   Basirah AI — Executive Presentation — Interactions
+   Basirah AI — Executive Presentation — Motion & Interactions
    =================================================================== */
 (function () {
   "use strict";
@@ -49,16 +49,65 @@
   const revealObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("in");
-        }
+        if (entry.isIntersecting) entry.target.classList.add("in");
       });
     },
     { threshold: 0.18 }
   );
   revealEls.forEach((el) => revealObserver.observe(el));
 
-  /* ---------------- Animated KPI counters (Slide 2) ---------------- */
+  /* ---------------- Draw-on-scroll SVG lines ---------------- */
+  const drawLines = document.querySelectorAll(".draw-line");
+  const drawObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) entry.target.classList.add("in");
+      });
+    },
+    { threshold: 0.3 }
+  );
+  drawLines.forEach((el) => drawObserver.observe(el));
+
+  /* ---------------- Roadmap line grow (Slide 11) ---------------- */
+  const roadmapLine = document.getElementById("roadmap-line");
+  if (roadmapLine) {
+    const roadmapObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) roadmapLine.classList.add("in");
+        });
+      },
+      { threshold: 0.3 }
+    );
+    roadmapObserver.observe(roadmapLine);
+  }
+
+  /* ---------------- Ambient particle fields ---------------- */
+  function spawnParticles(el, count) {
+    if (!el) return;
+    const w = el.clientWidth || 800;
+    const h = el.clientHeight || 600;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement("span");
+      p.className = "particle";
+      const size = 2 + Math.random() * 3;
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+      p.style.left = `${Math.random() * 100}%`;
+      p.style.top = `${20 + Math.random() * 70}%`;
+      p.style.setProperty("--dx", `${(Math.random() - 0.5) * 80}px`);
+      p.style.setProperty("--dy", `${-60 - Math.random() * 120}px`);
+      p.style.setProperty("--pmax", `${0.3 + Math.random() * 0.5}`);
+      p.style.animationDuration = `${6 + Math.random() * 8}s`;
+      p.style.animationDelay = `${Math.random() * 8}s`;
+      el.appendChild(p);
+    }
+  }
+  ["hero-particles", "s4-particles", "s14-particles", "s15-particles"].forEach(
+    (id) => spawnParticles(document.getElementById(id), 26)
+  );
+
+  /* ---------------- Animated KPI counters ---------------- */
   function formatNumber(n) {
     return n.toLocaleString("en-US");
   }
@@ -88,57 +137,78 @@
   );
   counters.forEach((c) => counterObserver.observe(c));
 
-  /* ---------------- Typewriter (Slide 4) ---------------- */
-  const typewriterEl = document.getElementById("typewriter-text");
-  const aiResponse = document.getElementById("ai-response");
-  const typewriterBox = document.getElementById("typewriter-box");
-  const fullText =
-    "لدينا 5000 حاج، مركزان للتفعيل، و40 موظفاً. نريد إنهاء التفعيل اليوم قبل الغروب.";
-  let typewriterStarted = false;
+  /* ---------------- Progress rings (Slide 9) ---------------- */
+  const rings = document.querySelectorAll(".progress-ring-fg");
+  const ringObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const pct = parseFloat(el.dataset.ring);
+          const circumference = 264;
+          const offset = circumference - (pct / 100) * circumference;
+          requestAnimationFrame(() => {
+            el.style.strokeDashoffset = offset;
+          });
+          ringObserver.unobserve(el);
+        }
+      });
+    },
+    { threshold: 0.4 }
+  );
+  rings.forEach((r) => ringObserver.observe(r));
 
-  function runTypewriter() {
-    if (typewriterStarted || !typewriterEl) return;
-    typewriterStarted = true;
-    let i = 0;
-    const speed = 38;
-    function type() {
-      if (i <= fullText.length) {
-        typewriterEl.textContent = fullText.slice(0, i);
-        i++;
-        setTimeout(type, speed);
-      } else {
-        setTimeout(() => {
-          if (aiResponse) aiResponse.style.opacity = "1";
-        }, 500);
-      }
-    }
-    type();
+  /* ---------------- Live AI conversation (Slide 4) ---------------- */
+  const chatSection = document.getElementById("slide-04");
+  const chatUser = document.getElementById("chat-user");
+  const chatTyping = document.getElementById("chat-typing");
+  const chatPlan = document.getElementById("chat-plan");
+  let chatPlayed = false;
+
+  function playChat() {
+    if (!chatUser) return;
+    [chatUser, chatTyping, chatPlan].forEach((b) => b.classList.remove("in"));
+    chatPlan.querySelectorAll(".plan-chip").forEach((c) => c.classList.remove("in"));
+
+    setTimeout(() => chatUser.classList.add("in"), 150);
+    setTimeout(() => chatTyping.classList.add("in"), 900);
+    setTimeout(() => {
+      chatTyping.classList.remove("in");
+      chatPlan.classList.add("in");
+      chatPlan.querySelectorAll(".plan-chip").forEach((chip) => chip.classList.add("in"));
+    }, 2500);
   }
-  if (typewriterBox) {
-    const twObserver = new IntersectionObserver(
+
+  if (chatSection) {
+    const chatObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            runTypewriter();
-            twObserver.unobserve(entry.target);
+          if (entry.isIntersecting && !chatPlayed) {
+            chatPlayed = true;
+            playChat();
+          } else if (!entry.isIntersecting) {
+            chatPlayed = false;
           }
         });
       },
-      { threshold: 0.4 }
+      { threshold: 0.5 }
     );
-    twObserver.observe(typewriterBox);
+    chatObserver.observe(chatSection);
   }
 
   /* ---------------- Animated flow (Slide 5) ---------------- */
   const flowContainer = document.getElementById("flow-container");
   if (flowContainer) {
     const flowNodes = Array.from(flowContainer.querySelectorAll(".flow-node"));
+    const connectors = Array.from(flowContainer.querySelectorAll(".connector"));
     let flowIndex = 0;
     let flowInterval = null;
 
     function stepFlow() {
       flowNodes.forEach((n) => n.classList.remove("active"));
+      connectors.forEach((c) => c.classList.remove("active"));
       flowNodes[flowIndex].classList.add("active");
+      if (connectors[flowIndex]) connectors[flowIndex].classList.add("active");
       flowIndex = (flowIndex + 1) % flowNodes.length;
     }
 
@@ -147,7 +217,7 @@
         entries.forEach((entry) => {
           if (entry.isIntersecting && !flowInterval) {
             stepFlow();
-            flowInterval = setInterval(stepFlow, 1400);
+            flowInterval = setInterval(stepFlow, 1300);
           } else if (!entry.isIntersecting && flowInterval) {
             clearInterval(flowInterval);
             flowInterval = null;
@@ -161,83 +231,40 @@
 
   /* ---------------- What-If scenarios (Slide 7) ---------------- */
   const scenarios = {
-    base: {
-      response: "8 ثواني",
-      risk: "منخفض",
-      riskColor: "#0F5C4B",
-      resources: "0",
-      rec: "استمرار الخطة الحالية دون تعديل",
-    },
-    surge: {
-      response: "11 ثانية",
-      risk: "متوسط",
-      riskColor: "#C9A227",
-      resources: "+6 حافلات",
-      rec: "توسيع نافذة التفعيل وإضافة نوبة عمل ثالثة",
-    },
-    closed: {
-      response: "9 ثواني",
-      risk: "مرتفع",
-      riskColor: "#B4463A",
-      resources: "+2 مركز بديل",
-      rec: "إعادة توجيه الحجاج لأقرب مركزين متاحين فورًا",
-    },
-    road: {
-      response: "10 ثواني",
-      risk: "متوسط",
-      riskColor: "#C9A227",
-      resources: "مسار بديل",
-      rec: "إعادة توجيه الحافلات عبر المسار البديل رقم 3",
-    },
-    staff: {
-      response: "9 ثواني",
-      risk: "متوسط",
-      riskColor: "#C9A227",
-      resources: "+15 موظف مؤقت",
-      rec: "استقطاب موظفين من المراكز الأقل ازدحامًا",
-    },
+    base: { response: "8 ثواني", resp: 18, risk: 18, resources: 6, rec: "استمرار الخطة الحالية دون تعديل" },
+    surge: { response: "11 ثانية", resp: 55, risk: 60, resources: 70, rec: "توسيع نافذة التفعيل وإضافة نوبة عمل ثالثة" },
+    closed: { response: "9 ثواني", resp: 40, risk: 85, resources: 55, rec: "إعادة توجيه الحجاج لأقرب مركزين متاحين فورًا" },
+    road: { response: "10 ثواني", resp: 35, risk: 50, resources: 40, rec: "إعادة توجيه الحافلات عبر المسار البديل رقم 3" },
+    staff: { response: "9 ثواني", resp: 30, risk: 55, resources: 65, rec: "استقطاب موظفين من المراكز الأقل ازدحامًا" },
   };
 
   const scenarioButtons = document.querySelectorAll(".scenario-btn");
   const sResponse = document.getElementById("s-response");
-  const sRisk = document.getElementById("s-risk");
-  const sResources = document.getElementById("s-resources");
   const sRec = document.getElementById("s-rec");
+  const barResponse = document.getElementById("bar-response");
+  const barRisk = document.getElementById("bar-risk");
+  const barResources = document.getElementById("bar-resources");
 
   function applyScenario(key) {
     const s = scenarios[key];
     if (!s || !sResponse) return;
-    sResponse.innerHTML = `${s.response.split(" ")[0]} <span class="text-sm text-primary/40">${s.response.split(" ")[1] || ""}</span>`;
-    sRisk.textContent = s.risk;
-    sRisk.style.color = s.riskColor;
-    sResources.textContent = s.resources;
+    const parts = s.response.split(" ");
+    sResponse.innerHTML = `${parts[0]} <span class="text-sm text-primary/40">${parts[1] || ""}</span>`;
     sRec.textContent = s.rec;
+    if (barResponse) barResponse.style.width = `${s.resp}%`;
+    if (barRisk) barRisk.style.width = `${s.risk}%`;
+    if (barResources) barResources.style.width = `${s.resources}%`;
   }
 
   scenarioButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       scenarioButtons.forEach((b) => {
-        b.classList.remove("active", "bg-primary", "text-white", "border-primary");
-        b.classList.add("border-primary/15", "text-primary");
+        b.classList.remove("active", "border-primary");
+        b.classList.add("border-transparent");
       });
-      btn.classList.add("active", "bg-primary", "text-white", "border-primary");
-      btn.classList.remove("border-primary/15");
+      btn.classList.add("active", "border-primary");
+      btn.classList.remove("border-transparent");
       applyScenario(btn.dataset.scenario);
     });
   });
-
-  /* ---------------- Header brand fade on scroll past hero ---------------- */
-  const header = document.querySelector("header");
-  const hero = document.getElementById("slide-01");
-  if (header && hero) {
-    const heroObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          header.classList.toggle("mix-blend-normal", true);
-        });
-      },
-      { threshold: 0.1 }
-    );
-    heroObserver.observe(hero);
-  }
 })();
