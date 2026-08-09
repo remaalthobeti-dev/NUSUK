@@ -365,7 +365,7 @@
   }
 
   /* ---------------- Ending cinematic: fade extras → keep logo + line → fade to black ---------------- */
-  const closingSlide = document.getElementById("slide-15");
+  const closingSlide = document.getElementById("slide-16");
   const endingCurtain = document.getElementById("ending-curtain");
   const endWordmark = document.getElementById("end-wordmark");
   const endCta = document.getElementById("end-cta");
@@ -407,5 +407,48 @@
       { threshold: [0, 0.25, 0.5, 0.75] }
     );
     endingObserver.observe(closingSlide);
+  }
+
+  /* ---------------- Operational Scenarios tabs/carousel (Slide 06) ---------------- */
+  const opscTabs = Array.from(document.querySelectorAll(".opsc-tab"));
+  const opscPanels = Array.from(document.querySelectorAll(".opsc-panel"));
+  const opscPrev = document.getElementById("opsc-prev");
+  const opscNext = document.getElementById("opsc-next");
+
+  if (opscTabs.length && opscPanels.length) {
+    let opscIndex = 0;
+
+    function showOpscPanel(index) {
+      opscIndex = (index + opscPanels.length) % opscPanels.length;
+      opscPanels.forEach((panel, i) => {
+        if (i === opscIndex) {
+          panel.classList.remove("hidden");
+          panel.classList.remove("in");
+          panel.style.opacity = "0";
+          panel.style.transform = "scale(.97)";
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              panel.style.opacity = "";
+              panel.style.transform = "";
+              panel.classList.add("in");
+            });
+          });
+        } else {
+          panel.classList.add("hidden");
+          panel.classList.remove("in");
+        }
+      });
+      opscTabs.forEach((tab, i) => {
+        tab.classList.toggle("active", i === opscIndex);
+        tab.classList.toggle("border-gold/60", i === opscIndex);
+        tab.classList.toggle("border-transparent", i !== opscIndex);
+      });
+    }
+
+    opscTabs.forEach((tab, i) => {
+      tab.addEventListener("click", () => showOpscPanel(i));
+    });
+    if (opscPrev) opscPrev.addEventListener("click", () => showOpscPanel(opscIndex - 1));
+    if (opscNext) opscNext.addEventListener("click", () => showOpscPanel(opscIndex + 1));
   }
 })();
