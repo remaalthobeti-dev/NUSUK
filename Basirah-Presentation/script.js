@@ -8,6 +8,21 @@
   const navDotsContainer = document.getElementById("nav-dots");
   const progressBar = document.getElementById("progress-bar");
 
+  /* ---------------- Opening cinematic curtain: fade from black → logo → hero ---------------- */
+  const introCurtain = document.getElementById("intro-curtain");
+  const curtainLogo = document.getElementById("curtain-logo");
+  if (introCurtain) {
+    document.documentElement.style.overflow = "hidden";
+    requestAnimationFrame(() => {
+      setTimeout(() => curtainLogo.classList.add("show"), 250);
+      setTimeout(() => {
+        introCurtain.classList.add("fade-out");
+        document.documentElement.style.overflow = "";
+      }, 1700);
+      setTimeout(() => introCurtain.remove(), 3000);
+    });
+  }
+
   /* ---------------- Build side navigation dots ---------------- */
   slides.forEach((slide, i) => {
     const dot = document.createElement("div");
@@ -347,5 +362,50 @@
     document.addEventListener("scroll", () => {
       if (presentationMode) updateSlideCounter();
     }, { passive: true });
+  }
+
+  /* ---------------- Ending cinematic: fade extras → keep logo + line → fade to black ---------------- */
+  const closingSlide = document.getElementById("slide-15");
+  const endingCurtain = document.getElementById("ending-curtain");
+  const endWordmark = document.getElementById("end-wordmark");
+  const endCta = document.getElementById("end-cta");
+  const endCopyright = document.getElementById("end-copyright");
+  let endingTimers = [];
+
+  function clearEndingSequence() {
+    endingTimers.forEach((t) => clearTimeout(t));
+    endingTimers = [];
+    [endCta, endCopyright, endWordmark].forEach((el) => el && el.classList.remove("hide"));
+    if (endingCurtain) endingCurtain.classList.remove("black");
+  }
+
+  function playEndingSequence() {
+    clearEndingSequence();
+    endingTimers.push(setTimeout(() => {
+      endCta && endCta.classList.add("hide");
+      endCopyright && endCopyright.classList.add("hide");
+    }, 2600));
+    endingTimers.push(setTimeout(() => {
+      endWordmark && endWordmark.classList.add("hide");
+    }, 4400));
+    endingTimers.push(setTimeout(() => {
+      endingCurtain && endingCurtain.classList.add("black");
+    }, 6200));
+  }
+
+  if (closingSlide) {
+    const endingObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+            playEndingSequence();
+          } else {
+            clearEndingSequence();
+          }
+        });
+      },
+      { threshold: [0, 0.25, 0.5, 0.75] }
+    );
+    endingObserver.observe(closingSlide);
   }
 })();

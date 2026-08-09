@@ -35,6 +35,18 @@
 </head>
 <body class="antialiased">
 
+<!-- ============ Opening Cinematic Curtain ============ -->
+<div id="intro-curtain" aria-hidden="true">
+  <div class="curtain-logo flex flex-col items-center gap-4" id="curtain-logo">
+    <svg width="72" height="72" viewBox="0 0 40 40" fill="none">
+      <rect width="40" height="40" rx="11" fill="#0F5C4B"/>
+      <path d="M20 8 L30 15 V26 L20 32 L10 26 V15 Z" stroke="#C9A227" stroke-width="1.6" fill="none"/>
+      <circle cx="20" cy="20" r="4.2" fill="#C9A227"/>
+    </svg>
+    <p class="text-white font-bold text-lg tracking-wide">بصيرة <span class="text-gold">AI</span></p>
+  </div>
+</div>
+
 <div id="progress-bar"></div>
 
 <!-- ============ Fixed Brand Header ============ -->
@@ -991,16 +1003,18 @@
       <path d="M20 8 L30 15 V26 L20 32 L10 26 V15 Z" stroke="#C9A227" stroke-width="1.6" fill="none"/>
       <circle cx="20" cy="20" r="4.2" fill="#C9A227"/>
     </svg>
-    <h2 class="reveal in text-5xl md:text-7xl font-black text-white mb-8" style="transition-delay:.1s">بصيرة <span class="text-gold-gradient">AI</span></h2>
+    <h2 id="end-wordmark" class="end-fade reveal in text-5xl md:text-7xl font-black text-white mb-8" style="transition-delay:.1s">بصيرة <span class="text-gold-gradient">AI</span></h2>
     <p class="reveal in text-gold text-xl md:text-2xl font-semibold leading-loose max-w-xl mx-auto mb-14" style="transition-delay:.2s">
-      ليس مساعدًا... بل عقل تشغيلي يقرر معك.
+      ليس مجرد مساعد ذكاء اصطناعي...<br>بل عقل تشغيلي يدعم القرار.
     </p>
-    <div class="reveal in flex flex-wrap justify-center gap-4" style="transition-delay:.3s">
+    <div id="end-cta" class="end-fade reveal in flex flex-wrap justify-center gap-4" style="transition-delay:.3s">
       <a href="#slide-01" class="btn-gold">ابدأ من جديد</a>
       <a href="mailto:hello@basirah.ai" class="btn-outline">تواصل معنا</a>
     </div>
-    <p class="reveal in text-white/25 text-xs mt-16" style="transition-delay:.4s">© 2026 بصيرة AI</p>
+    <p id="end-copyright" class="end-fade reveal in text-white/25 text-xs mt-16" style="transition-delay:.4s">© 2026 بصيرة AI</p>
   </div>
+
+  <div id="ending-curtain"></div>
 </section>
 
 </main>
