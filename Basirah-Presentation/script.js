@@ -267,4 +267,85 @@
       applyScenario(btn.dataset.scenario);
     });
   });
+
+  /* ---------------- PRESENTATION_MODE — keynote-style navigation ---------------- */
+  const presentationToggle = document.getElementById("presentation-toggle");
+  const slideCounter = document.getElementById("slide-counter");
+  let presentationMode = false;
+  let wheelLocked = false;
+  let currentSlideIndex = 0;
+
+  function getCurrentSlideIndex() {
+    let idx = 0;
+    let minDist = Infinity;
+    slides.forEach((slide, i) => {
+      const dist = Math.abs(slide.getBoundingClientRect().top);
+      if (dist < minDist) {
+        minDist = dist;
+        idx = i;
+      }
+    });
+    return idx;
+  }
+
+  function updateSlideCounter() {
+    currentSlideIndex = getCurrentSlideIndex();
+    if (slideCounter) {
+      slideCounter.textContent = `${String(currentSlideIndex + 1).padStart(2, "0")} / ${String(slides.length).padStart(2, "0")}`;
+    }
+  }
+
+  function goToSlide(index) {
+    const clamped = Math.max(0, Math.min(slides.length - 1, index));
+    slides[clamped].scrollIntoView({ behavior: "smooth", block: "start" });
+    currentSlideIndex = clamped;
+  }
+
+  function setPresentationMode(on) {
+    presentationMode = on;
+    presentationToggle.classList.toggle("active", on);
+    presentationToggle.setAttribute("aria-pressed", String(on));
+    if (slideCounter) slideCounter.classList.toggle("visible", on);
+    if (on) updateSlideCounter();
+  }
+
+  if (presentationToggle) {
+    presentationToggle.addEventListener("click", () => setPresentationMode(!presentationMode));
+
+    document.addEventListener(
+      "keydown",
+      (e) => {
+        if (!presentationMode) return;
+        if (e.key === " " || e.key === "ArrowDown" || e.key === "PageDown") {
+          e.preventDefault();
+          goToSlide(getCurrentSlideIndex() + 1);
+        } else if (e.key === "ArrowUp" || e.key === "PageUp") {
+          e.preventDefault();
+          goToSlide(getCurrentSlideIndex() - 1);
+        } else if (e.key === "Escape") {
+          setPresentationMode(false);
+        }
+      },
+      { passive: false }
+    );
+
+    document.addEventListener(
+      "wheel",
+      (e) => {
+        if (!presentationMode || wheelLocked) return;
+        if (Math.abs(e.deltaY) < 12) return;
+        e.preventDefault();
+        wheelLocked = true;
+        goToSlide(getCurrentSlideIndex() + (e.deltaY > 0 ? 1 : -1));
+        setTimeout(() => {
+          wheelLocked = false;
+        }, 900);
+      },
+      { passive: false }
+    );
+
+    document.addEventListener("scroll", () => {
+      if (presentationMode) updateSlideCounter();
+    }, { passive: true });
+  }
 })();
