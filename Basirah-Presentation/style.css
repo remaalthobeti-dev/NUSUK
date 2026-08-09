@@ -1,0 +1,295 @@
+/* ===================================================================
+   Basirah AI — Executive Presentation
+   Design System: Luxury / Executive / Glassmorphism
+   =================================================================== */
+
+:root{
+  --c-primary: #083A2F;
+  --c-primary-light: #0F5C4B;
+  --c-secondary: #0F5C4B;
+  --c-gold: #C9A227;
+  --c-gold-light: #E4C766;
+  --c-bg: #F6F8F6;
+  --c-white: #FFFFFF;
+  --c-ink: #06251E;
+  --ease-1: cubic-bezier(.16,1,.3,1);
+  --ease-2: cubic-bezier(.65,0,.35,1);
+}
+
+*{ box-sizing: border-box; }
+
+html{
+  scroll-behavior: smooth;
+}
+
+body{
+  font-family: "IBM Plex Sans Arabic", "Tajawal", sans-serif;
+  background: var(--c-bg);
+  color: var(--c-ink);
+  overflow-x: hidden;
+}
+
+/* Scroll snap container */
+.slides{
+  scroll-snap-type: y proximity;
+}
+.slide{
+  scroll-snap-align: start;
+  scroll-snap-stop: normal;
+  min-height: 100vh;
+  position: relative;
+  isolation: isolate;
+}
+
+/* ============ Scrollbar ============ */
+::-webkit-scrollbar{ width: 8px; }
+::-webkit-scrollbar-track{ background: transparent; }
+::-webkit-scrollbar-thumb{ background: var(--c-gold); border-radius: 10px; }
+
+/* ============ Glassmorphism ============ */
+.glass{
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid rgba(255,255,255,0.14);
+}
+.glass-light{
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.7);
+  box-shadow: 0 8px 40px rgba(8,58,47,0.08);
+}
+
+/* ============ Gold gradient text ============ */
+.text-gold-gradient{
+  background: linear-gradient(90deg, #C9A227 0%, #EFD98A 45%, #C9A227 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bg-mesh{
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(201,162,39,0.18), transparent 60%),
+    radial-gradient(1000px 700px at 110% 10%, rgba(15,92,75,0.35), transparent 55%),
+    radial-gradient(900px 700px at 50% 120%, rgba(8,58,47,0.5), transparent 60%),
+    linear-gradient(180deg, #062A22 0%, #083A2F 55%, #0A4437 100%);
+}
+
+/* ============ Floating / Parallax ============ */
+.float-slow{ animation: floatY 7s ease-in-out infinite; }
+.float-med{ animation: floatY 5s ease-in-out infinite; }
+.float-fast{ animation: floatY 3.4s ease-in-out infinite; }
+@keyframes floatY{
+  0%,100%{ transform: translateY(0px); }
+  50%{ transform: translateY(-16px); }
+}
+
+.pulse-glow{ animation: pulseGlow 3.2s ease-in-out infinite; }
+@keyframes pulseGlow{
+  0%,100%{ opacity:.55; filter: drop-shadow(0 0 4px rgba(201,162,39,.4)); }
+  50%{ opacity:1; filter: drop-shadow(0 0 16px rgba(201,162,39,.85)); }
+}
+
+.spin-slow{ animation: spin 24s linear infinite; }
+.spin-slow-rev{ animation: spinRev 30s linear infinite; }
+@keyframes spin{ to{ transform: rotate(360deg); } }
+@keyframes spinRev{ to{ transform: rotate(-360deg); } }
+
+/* ============ Reveal on scroll ============ */
+.reveal{
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity .9s var(--ease-1), transform .9s var(--ease-1);
+}
+.reveal.in{
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-scale{
+  opacity: 0;
+  transform: scale(.92);
+  transition: opacity .8s var(--ease-1), transform .8s var(--ease-1);
+}
+.reveal-scale.in{ opacity:1; transform: scale(1); }
+
+.stagger.in > *{ transition-delay: calc(var(--i, 0) * 90ms); }
+
+/* ============ Data flow lines (hero) ============ */
+.data-line{
+  stroke-dasharray: 6 10;
+  animation: dashFlow 1.6s linear infinite;
+}
+@keyframes dashFlow{ to{ stroke-dashoffset: -160; } }
+
+/* ============ Cards ============ */
+.card-premium{
+  background: var(--c-white);
+  border: 1px solid rgba(8,58,47,0.08);
+  border-radius: 24px;
+  box-shadow: 0 1px 2px rgba(8,58,47,.04), 0 20px 45px -20px rgba(8,58,47,.18);
+  transition: transform .5s var(--ease-1), box-shadow .5s var(--ease-1), border-color .5s;
+}
+.card-premium:hover{
+  transform: translateY(-8px);
+  box-shadow: 0 30px 60px -20px rgba(8,58,47,.28);
+  border-color: rgba(201,162,39,.4);
+}
+
+.chip{
+  display:inline-flex; align-items:center; gap:.4rem;
+  padding: .4rem .9rem;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  background: rgba(201,162,39,.12);
+  color: var(--c-gold);
+  border: 1px solid rgba(201,162,39,.35);
+}
+
+/* ============ Section label ============ */
+.eyebrow{
+  font-weight: 700;
+  font-size: .82rem;
+  letter-spacing: .12em;
+  color: var(--c-gold);
+}
+
+/* ============ Nav dots ============ */
+.nav-dots{
+  position: fixed;
+  top: 50%;
+  right: 22px;
+  transform: translateY(-50%);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.nav-dot{
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: rgba(8,58,47,.22);
+  cursor: pointer;
+  transition: all .35s var(--ease-1);
+  position: relative;
+}
+.nav-dot::after{
+  content: attr(data-label);
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--c-primary);
+  background: var(--c-white);
+  padding: 4px 10px;
+  border-radius: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+  box-shadow: 0 4px 14px rgba(0,0,0,.12);
+}
+.nav-dot:hover::after{ opacity: 1; }
+.nav-dot.active{
+  background: var(--c-gold);
+  width: 11px; height: 11px;
+  box-shadow: 0 0 0 4px rgba(201,162,39,.2);
+}
+
+/* ============ Progress bar ============ */
+#progress-bar{
+  position: fixed;
+  top:0; right:0; left:0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--c-gold), var(--c-gold-light));
+  transform-origin: right;
+  transform: scaleX(0);
+  z-index: 70;
+}
+
+/* ============ Buttons ============ */
+.btn-gold{
+  background: linear-gradient(135deg, #C9A227, #E4C766);
+  color: #083A2F;
+  font-weight: 700;
+  border-radius: 14px;
+  padding: .9rem 1.9rem;
+  transition: transform .35s var(--ease-1), box-shadow .35s var(--ease-1);
+  box-shadow: 0 12px 30px -10px rgba(201,162,39,.55);
+}
+.btn-gold:hover{ transform: translateY(-3px); box-shadow: 0 18px 40px -10px rgba(201,162,39,.7); }
+
+.btn-outline{
+  border: 1.5px solid rgba(246,248,246,.35);
+  color: #F6F8F6;
+  border-radius: 14px;
+  padding: .9rem 1.9rem;
+  font-weight: 600;
+  transition: all .35s var(--ease-1);
+}
+.btn-outline:hover{ background: rgba(246,248,246,.1); border-color: rgba(246,248,246,.7); }
+
+/* ============ Typewriter cursor ============ */
+.caret{
+  display:inline-block;
+  width: 2px;
+  background: var(--c-gold);
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink{ 50%{ opacity:0; } }
+
+/* ============ Journey line (Slide 3) ============ */
+.journey-line{
+  position: absolute;
+  top: 34px;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, rgba(8,58,47,.25) 0 8px, transparent 8px 16px);
+}
+
+/* ============ Flow (Slide 5) ============ */
+.flow-node{
+  transition: transform .5s var(--ease-1), box-shadow .5s var(--ease-1);
+}
+.flow-node.active{
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 20px 50px -15px rgba(201,162,39,.55);
+  border-color: var(--c-gold) !important;
+}
+
+/* ============ KPI counter ============ */
+.kpi-value{ font-variant-numeric: tabular-nums; }
+
+/* ============ Comparison table ============ */
+.compare-table td, .compare-table th{
+  vertical-align: middle;
+}
+.check-yes{ color: #0F5C4B; }
+.check-mid{ color: #C9A227; }
+.check-no{ color: #B4463A; }
+
+/* ============ Utility ============ */
+.divider-gold{
+  width: 64px;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--c-gold), transparent);
+}
+
+.noise{
+  position:absolute; inset:0;
+  opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  pointer-events:none;
+}
+
+@media (max-width: 768px){
+  .nav-dots{ display:none; }
+}

@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>بصيرة AI — العقل التشغيلي الذكي للحج</title>
+<meta name="description" content="منصة تعتمد على الذكاء الاصطناعي لتحويل احتياجات الجهات العاملة في الحج إلى خطط تشغيل تنفيذية ذكية خلال ثوانٍ.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['IBM Plex Sans Arabic', 'Tajawal', 'sans-serif'],
+        },
+        colors: {
+          primary: { DEFAULT: '#083A2F', light: '#0F5C4B' },
+          secondary: '#0F5C4B',
+          gold: { DEFAULT: '#C9A227', light: '#E4C766' },
+          bgsoft: '#F6F8F6',
+        },
+        boxShadow: {
+          gold: '0 20px 45px -20px rgba(201,162,39,0.45)',
+        }
+      }
+    }
+  }
+</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="antialiased">
+
+<div id="progress-bar"></div>
+
+<!-- ============ Fixed Brand Header ============ -->
+<header class="fixed top-0 inset-x-0 z-50 pointer-events-none">
+  <div class="max-w-7xl mx-auto px-6 md:px-10 py-5 flex items-center justify-between pointer-events-auto">
+    <div class="flex items-center gap-3">
+      <svg width="38" height="38" viewBox="0 0 40 40" fill="none">
+        <rect width="40" height="40" rx="11" fill="#083A2F"/>
+        <path d="M20 8 L30 15 V26 L20 32 L10 26 V15 Z" stroke="#C9A227" stroke-width="1.6" fill="none"/>
+        <circle cx="20" cy="20" r="4.2" fill="#C9A227"/>
+      </svg>
+      <div class="leading-tight hidden sm:block">
+        <p class="font-bold text-primary text-sm tracking-wide" id="brand-name-header">بصيرة <span class="text-gold">AI</span></p>
+        <p class="text-[10px] text-primary/60 font-medium" id="brand-tag-header">العقل التشغيلي الذكي للحج</p>
+      </div>
+    </div>
+    <nav class="glass-light rounded-full px-2 py-2 hidden lg:flex items-center gap-1 text-xs font-semibold text-primary/70">
+      <a href="#slide-01" class="px-3 py-1.5 rounded-full hover:bg-primary hover:text-white transition-all">البداية</a>
+      <a href="#slide-05" class="px-3 py-1.5 rounded-full hover:bg-primary hover:text-white transition-all">كيف يعمل</a>
+      <a href="#slide-08" class="px-3 py-1.5 rounded-full hover:bg-primary hover:text-white transition-all">لوحة القيادة</a>
+      <a href="#slide-13" class="px-3 py-1.5 rounded-full hover:bg-primary hover:text-white transition-all">المقارنة</a>
+      <a href="#slide-15" class="px-3 py-1.5 rounded-full bg-gold text-primary hover:brightness-105 transition-all">تواصل معنا</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ Side Navigation Dots ============ -->
+<div class="nav-dots" id="nav-dots"></div>
+
+<main class="slides">
+
+<!-- =========================================================
+     SLIDE 01 — HERO
+========================================================= -->
+<section id="slide-01" class="slide bg-mesh flex items-center overflow-hidden" data-nav="الرئيسية">
+  <div class="noise"></div>
+
+  <!-- Ambient orbs -->
+  <div class="absolute -top-40 -left-40 w-[520px] h-[520px] rounded-full bg-gold/10 blur-3xl float-slow"></div>
+  <div class="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full bg-secondary/30 blur-3xl float-med"></div>
+
+  <div class="relative z-10 max-w-7xl mx-auto px-6 md:px-10 pt-28 pb-16 grid lg:grid-cols-2 gap-16 items-center w-full">
+
+    <!-- Text -->
+    <div class="text-right">
+      <div class="chip reveal in mb-6">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" fill="#C9A227"/></svg>
+        الجيل القادم من العمليات الذكية للحج
+      </div>
+      <h1 class="reveal in text-5xl md:text-7xl font-black text-white leading-[1.1] mb-6">
+        بصيرة <span class="text-gold-gradient">AI</span>
+      </h1>
+      <p class="reveal in text-xl md:text-2xl text-gold font-semibold mb-6" style="transition-delay:.1s">
+        العقل التشغيلي الذكي للحج
+      </p>
+      <p class="reveal in text-white/75 text-lg leading-loose max-w-xl mb-10" style="transition-delay:.2s">
+        منصة تعتمد على الذكاء الاصطناعي لتحويل احتياجات الجهات العاملة في الحج
+        إلى خطط تشغيل تنفيذية ذكية خلال ثوانٍ.
+      </p>
+      <div class="reveal in flex flex-wrap gap-4" style="transition-delay:.3s">
+        <a href="#slide-04" class="btn-gold">شاهد الحل يعمل</a>
+        <a href="#slide-02" class="btn-outline">استكشف الأرقام</a>
+      </div>
+
+      <div class="reveal in mt-14 flex items-center gap-8 text-white/70" style="transition-delay:.4s">
+        <div>
+          <p class="text-2xl font-bold text-white">&lt;10<span class="text-gold text-base">ث</span></p>
+          <p class="text-xs">لبناء خطة تشغيل كاملة</p>
+        </div>
+        <div class="w-px h-10 bg-white/15"></div>
+        <div>
+          <p class="text-2xl font-bold text-white">99.2%</p>
+          <p class="text-xs">دقة في القرار التشغيلي</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Operations Room / Dashboard Illustration -->
+    <div class="relative reveal-scale in" style="transition-delay:.2s">
+      <div class="relative glass rounded-[28px] p-4 md:p-6 shadow-2xl">
+        <svg viewBox="0 0 560 460" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="meccaGlow" cx="50%" cy="35%" r="65%">
+              <stop offset="0%" stop-color="#C9A227" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#C9A227" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="panelGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#0F5C4B"/>
+              <stop offset="100%" stop-color="#083A2F"/>
+            </linearGradient>
+          </defs>
+
+          <!-- backdrop city / Mecca silhouette -->
+          <rect x="0" y="0" width="560" height="460" rx="18" fill="#062A22"/>
+          <circle cx="280" cy="150" r="150" fill="url(#meccaGlow)"/>
+
+          <!-- Kaaba abstract -->
+          <g transform="translate(230,90)" class="float-slow">
+            <rect x="0" y="0" width="90" height="90" fill="#0B231C" stroke="#C9A227" stroke-width="1.5"/>
+            <rect x="0" y="60" width="90" height="14" fill="#C9A227" opacity=".8"/>
+            <rect x="0" y="0" width="90" height="90" fill="none" stroke="#C9A227" stroke-opacity=".3" stroke-width="6"/>
+          </g>
+
+          <!-- buses -->
+          <g class="float-med">
+            <rect x="70" y="230" width="46" height="22" rx="5" fill="#0F5C4B" stroke="#C9A227" stroke-width="1"/>
+            <circle cx="80" cy="254" r="4" fill="#C9A227"/>
+            <circle cx="106" cy="254" r="4" fill="#C9A227"/>
+          </g>
+          <g class="float-fast">
+            <rect x="150" y="260" width="46" height="22" rx="5" fill="#0F5C4B" stroke="#C9A227" stroke-width="1"/>
+            <circle cx="160" cy="284" r="4" fill="#C9A227"/>
+            <circle cx="186" cy="284" r="4" fill="#C9A227"/>
+          </g>
+
+          <!-- centers -->
+          <g class="float-slow">
+            <rect x="380" y="220" width="60" height="46" rx="6" fill="#0F5C4B" stroke="#C9A227" stroke-width="1"/>
+            <rect x="392" y="232" width="14" height="14" fill="#C9A227" opacity=".6"/>
+            <rect x="414" y="232" width="14" height="14" fill="#C9A227" opacity=".6"/>
+          </g>
+
+          <!-- pilgrims dots -->
+          <g fill="#E4C766">
+            <circle cx="120" cy="200" r="3"/>
+            <circle cx="135" cy="210" r="3"/>
+            <circle cx="150" cy="198" r="3"/>
+            <circle cx="330" cy="205" r="3"/>
+            <circle cx="345" cy="215" r="3"/>
+            <circle cx="360" cy="200" r="3"/>
+          </g>
+
+          <!-- data lines toward AI core -->
+          <g stroke="#C9A227" stroke-width="1.4" fill="none" opacity=".85">
+            <path class="data-line" d="M95 240 C 180 320, 220 340, 280 360"/>
+            <path class="data-line" d="M175 270 C 220 330, 240 345, 280 360"/>
+            <path class="data-line" d="M410 240 C 360 320, 320 340, 280 360"/>
+            <path class="data-line" d="M280 130 C 280 220, 280 300, 280 360"/>
+          </g>
+
+          <!-- AI Core -->
+          <g transform="translate(280,375)">
+            <circle r="34" fill="url(#panelGrad)" stroke="#C9A227" stroke-width="1.5" class="pulse-glow"/>
+            <circle r="20" fill="none" stroke="#C9A227" stroke-width="1" opacity=".5" class="spin-slow"/>
+            <text text-anchor="middle" y="5" fill="#C9A227" font-size="12" font-weight="700" font-family="IBM Plex Sans Arabic">AI</text>
+          </g>
+
+          <!-- dashboard panel -->
+          <g transform="translate(24,20)">
+            <rect width="150" height="86" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(201,162,39,.35)"/>
+            <text x="12" y="22" fill="#E4C766" font-size="10" font-family="IBM Plex Sans Arabic" font-weight="700">غرفة العمليات</text>
+            <rect x="12" y="32" width="126" height="6" rx="3" fill="#C9A227" opacity=".8"/>
+            <rect x="12" y="44" width="90" height="6" rx="3" fill="#C9A227" opacity=".5"/>
+            <rect x="12" y="56" width="110" height="6" rx="3" fill="#C9A227" opacity=".3"/>
+            <circle cx="20" cy="72" r="3" fill="#4ADE80"/>
+            <text x="30" y="76" fill="#F6F8F6" font-size="9" font-family="IBM Plex Sans Arabic">مباشر الآن</text>
+          </g>
+        </svg>
+      </div>
+      <div class="absolute -bottom-6 -right-6 glass rounded-2xl px-5 py-3 text-white text-xs font-semibold shadow-xl float-med">
+        ⚡ خطة تشغيل جاهزة خلال ثوانٍ
+      </div>
+    </div>
+  </div>
+
+  <div class="absolute bottom-6 inset-x-0 flex justify-center text-white/50 text-xs">
+    <div class="flex flex-col items-center gap-2 animate-bounce">
+      <span>مرر للأسفل</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 02 — SCALE OF HAJJ
+========================================================= -->
+<section id="slide-02" class="slide bg-bgsoft flex items-center py-24" data-nav="حجم العملية">
+  <div class="max-w-7xl mx-auto px-6 md:px-10 w-full">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <p class="eyebrow reveal in">فهم حجم التحدي</p>
+      <h2 class="reveal in text-4xl md:text-6xl font-black text-primary mt-3 leading-tight" style="transition-delay:.08s">
+        الحج... أكبر عملية تشغيل <br class="hidden md:block"> موسمية في العالم
+      </h2>
+      <div class="divider-gold mx-auto mt-6"></div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 stagger in">
+      <div class="card-premium p-8 text-center reveal in" style="--i:0">
+        <svg class="mx-auto mb-4" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#0F5C4B" stroke-width="1.6"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <p class="kpi-value text-4xl md:text-5xl font-black text-primary" data-count="2000000">0</p>
+        <p class="text-primary/60 font-semibold mt-2">حاج</p>
+      </div>
+      <div class="card-premium p-8 text-center reveal in" style="--i:1">
+        <svg class="mx-auto mb-4" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#0F5C4B" stroke-width="1.6"><path d="M20 7h-9M20 12H4M20 17H10"/></svg>
+        <p class="kpi-value text-4xl md:text-5xl font-black text-primary" data-count="150000">0</p>
+        <p class="text-primary/60 font-semibold mt-2">موظف تشغيل</p>
+      </div>
+      <div class="card-premium p-8 text-center reveal in" style="--i:2">
+        <svg class="mx-auto mb-4" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#0F5C4B" stroke-width="1.6"><rect x="3" y="7" width="18" height="10" rx="2"/><circle cx="7.5" cy="19" r="1.6"/><circle cx="16.5" cy="19" r="1.6"/></svg>
+        <p class="kpi-value text-4xl md:text-5xl font-black text-primary" data-count="25000">0</p>
+        <p class="text-primary/60 font-semibold mt-2">حافلة</p>
+      </div>
+      <div class="card-premium p-8 text-center reveal in" style="--i:3">
+        <svg class="mx-auto mb-4" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#0F5C4B" stroke-width="1.6"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M9 13h1M14 9h1M14 13h1"/></svg>
+        <p class="kpi-value text-4xl md:text-5xl font-black text-primary" data-count="1200">0</p>
+        <p class="text-primary/60 font-semibold mt-2">مركز تشغيلي</p>
+      </div>
+    </div>
+
+    <p class="reveal in text-center text-primary/60 max-w-2xl mx-auto mt-12 leading-loose" style="transition-delay:.3s">
+      ملايين البشر، عشرات آلاف المركبات، آلاف المراكز — تُدار خلال أيام معدودة،
+      وأي قرار متأخر بدقائق قد يُترجم إلى ازدحام يمتد لساعات.
+    </p>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 03 — THE PROBLEM
+========================================================= -->
+<section id="slide-03" class="slide bg-white flex items-center py-24" data-nav="المشكلة">
+  <div class="max-w-7xl mx-auto px-6 md:px-10 w-full">
+    <div class="grid lg:grid-cols-2 gap-16 items-center">
+      <div>
+        <p class="eyebrow reveal in">الواقع الحالي</p>
+        <h2 class="reveal in text-4xl md:text-5xl font-black text-primary mt-3 mb-6 leading-tight" style="transition-delay:.08s">المشكلة</h2>
+        <p class="reveal in text-primary/70 text-lg leading-loose mb-8" style="transition-delay:.15s">
+          التخطيط الحالي لعمليات الحج لا يزال يعتمد على أدوات وأساليب يدوية بطيئة،
+          غير قابلة للتوسّع أمام حجم وتعقيد العملية.
+        </p>
+        <div class="space-y-4">
+          <div class="flex items-center gap-4 reveal in" style="transition-delay:.2s">
+            <div class="w-11 h-11 rounded-xl bg-primary/5 flex items-center justify-center text-primary font-bold">01</div>
+            <p class="font-semibold text-primary">جداول Excel معقّدة ومتناثرة</p>
+          </div>
+          <div class="flex items-center gap-4 reveal in" style="transition-delay:.25s">
+            <div class="w-11 h-11 rounded-xl bg-primary/5 flex items-center justify-center text-primary font-bold">02</div>
+            <p class="font-semibold text-primary">الاعتماد على الخبرة الشخصية</p>
+          </div>
+          <div class="flex items-center gap-4 reveal in" style="transition-delay:.3s">
+            <div class="w-11 h-11 rounded-xl bg-primary/5 flex items-center justify-center text-primary font-bold">03</div>
+            <p class="font-semibold text-primary">اجتماعات تنسيق متكررة وطويلة</p>
+          </div>
+          <div class="flex items-center gap-4 reveal in" style="transition-delay:.35s">
+            <div class="w-11 h-11 rounded-xl bg-primary/5 flex items-center justify-center text-primary font-bold">04</div>
+            <p class="font-semibold text-primary">حسابات يدوية عرضة للخطأ</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Journey showing delay -->
+      <div class="relative reveal in" style="transition-delay:.2s">
+        <p class="text-center text-primary/50 font-semibold mb-10 text-sm">رحلة اتخاذ القرار التقليدية</p>
+        <div class="relative pt-8">
+          <div class="journey-line"></div>
+          <div class="flex justify-between">
+            <div class="flex flex-col items-center gap-3 w-1/5">
+              <div class="w-16 h-16 rounded-2xl bg-bgsoft border border-primary/10 flex items-center justify-center text-2xl shadow-sm">📊</div>
+              <p class="text-[11px] text-center font-semibold text-primary/70">جمع البيانات</p>
+              <span class="text-[10px] text-gold font-bold">يوم 1</span>
+            </div>
+            <div class="flex flex-col items-center gap-3 w-1/5">
+              <div class="w-16 h-16 rounded-2xl bg-bgsoft border border-primary/10 flex items-center justify-center text-2xl shadow-sm">📈</div>
+              <p class="text-[11px] text-center font-semibold text-primary/70">Excel يدوي</p>
+              <span class="text-[10px] text-gold font-bold">يوم 2</span>
+            </div>
+            <div class="flex flex-col items-center gap-3 w-1/5">
+              <div class="w-16 h-16 rounded-2xl bg-bgsoft border border-primary/10 flex items-center justify-center text-2xl shadow-sm">🧑‍🤝‍🧑</div>
+              <p class="text-[11px] text-center font-semibold text-primary/70">اجتماعات</p>
+              <span class="text-[10px] text-gold font-bold">يوم 3</span>
+            </div>
+            <div class="flex flex-col items-center gap-3 w-1/5">
+              <div class="w-16 h-16 rounded-2xl bg-bgsoft border border-primary/10 flex items-center justify-center text-2xl shadow-sm">🧮</div>
+              <p class="text-[11px] text-center font-semibold text-primary/70">مراجعة يدوية</p>
+              <span class="text-[10px] text-gold font-bold">يوم 4</span>
+            </div>
+            <div class="flex flex-col items-center gap-3 w-1/5">
+              <div class="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center text-2xl shadow-sm">⏱️</div>
+              <p class="text-[11px] text-center font-semibold text-red-500">قرار متأخر</p>
+              <span class="text-[10px] text-red-400 font-bold">يوم 5+</span>
+            </div>
+          </div>
+        </div>
+        <div class="mt-10 glass-light rounded-2xl p-6 text-center">
+          <p class="text-primary/70 text-sm">متوسط الوقت لإنتاج خطة تشغيل واحدة</p>
+          <p class="text-4xl font-black text-primary mt-1">3-5 <span class="text-lg font-bold text-primary/50">أيام</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 04 — THE SOLUTION
+========================================================= -->
+<section id="slide-04" class="slide bg-mesh flex items-center py-24 overflow-hidden" data-nav="الحل">
+  <div class="noise"></div>
+  <div class="max-w-6xl mx-auto px-6 md:px-10 w-full relative z-10">
+    <div class="text-center mb-14">
+      <p class="eyebrow reveal in">التحول الذكي</p>
+      <h2 class="reveal in text-4xl md:text-5xl font-black text-white mt-3" style="transition-delay:.08s">الحل: بصيرة AI</h2>
+      <p class="reveal in text-white/60 mt-4 max-w-xl mx-auto" style="transition-delay:.15s">
+        فقط اكتب احتياجك التشغيلي بلغة طبيعية... ودَع الذكاء الاصطناعي يبني الخطة كاملة.
+      </p>
+    </div>
+
+    <div class="glass rounded-[28px] p-6 md:p-10 max-w-3xl mx-auto reveal-scale in" style="transition-delay:.2s">
+      <div class="flex items-center gap-2 mb-6">
+        <span class="w-3 h-3 rounded-full bg-red-400/70"></span>
+        <span class="w-3 h-3 rounded-full bg-yellow-400/70"></span>
+        <span class="w-3 h-3 rounded-full bg-green-400/70"></span>
+        <span class="text-white/40 text-xs mr-3">بصيرة AI — محادثة تشغيلية</span>
+      </div>
+
+      <div class="bg-white/5 rounded-2xl p-5 md:p-7 min-h-[130px] text-lg md:text-xl leading-loose text-white font-medium" id="typewriter-box">
+        <span id="typewriter-text"></span><span class="caret">&nbsp;</span>
+      </div>
+
+      <div id="ai-response" class="mt-6 opacity-0 transition-opacity duration-700 grid sm:grid-cols-4 gap-3">
+        <div class="bg-white/8 border border-gold/30 rounded-xl p-3 text-center">
+          <p class="text-gold text-[11px] font-bold mb-1">الحافلات</p>
+          <p class="text-white font-bold">42 رحلة</p>
+        </div>
+        <div class="bg-white/8 border border-gold/30 rounded-xl p-3 text-center">
+          <p class="text-gold text-[11px] font-bold mb-1">التوزيع</p>
+          <p class="text-white font-bold">مركزان متوازيان</p>
+        </div>
+        <div class="bg-white/8 border border-gold/30 rounded-xl p-3 text-center">
+          <p class="text-gold text-[11px] font-bold mb-1">الموظفون</p>
+          <p class="text-white font-bold">40 / 3 نوبات</p>
+        </div>
+        <div class="bg-white/8 border border-gold/30 rounded-xl p-3 text-center">
+          <p class="text-gold text-[11px] font-bold mb-1">الإنجاز</p>
+          <p class="text-white font-bold">قبل الغروب ✓</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="reveal in text-center text-white/40 text-sm mt-8" style="transition-delay:.3s">
+      خطة تشغيل تنفيذية كاملة — بُنيت خلال ثوانٍ، لا أيام.
+    </p>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 05 — HOW BASIRAH THINKS
+========================================================= -->
+<section id="slide-05" class="slide bg-bgsoft flex items-center py-24" data-nav="كيف يفكر">
+  <div class="max-w-7xl mx-auto px-6 md:px-10 w-full">
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <p class="eyebrow reveal in">المحرك الذكي</p>
+      <h2 class="reveal in text-4xl md:text-5xl font-black text-primary mt-3" style="transition-delay:.08s">كيف يفكر بصيرة AI</h2>
+    </div>
+
+    <div class="flex flex-col lg:flex-row items-center justify-between gap-4" id="flow-container">
+      <div class="flow-node card-premium p-6 w-full lg:w-1/6 text-center border-2 border-transparent" data-step="0">
+        <div class="text-3xl mb-3">📥</div>
+        <p class="font-bold text-primary text-sm">Inputs</p>
+        <p class="text-[11px] text-primary/50 mt-1">بيانات الحجاج والموارد</p>
+      </div>
+      <svg class="hidden lg:block w-10 h-6 text-gold shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4 L4 10 L8 10 L8 20 L16 20 L16 10 L20 10 Z" transform="rotate(90 12 12) translate(0,0)"/></svg>
+      <svg class="lg:hidden w-6 h-6 text-gold" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4 L4 10 L8 10 L8 20 L16 20 L16 10 L20 10 Z" transform="rotate(180 12 12)"/></svg>
+
+      <div class="flow-node card-premium p-6 w-full lg:w-1/6 text-center border-2 border-transparent" data-step="1">
+        <div class="text-3xl mb-3">🧠</div>
+        <p class="font-bold text-primary text-sm">LLM</p>
+        <p class="text-[11px] text-primary/50 mt-1">فهم اللغة والسياق</p>
+      </div>
+      <svg class="hidden lg:block w-10 h-6 text-gold shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4 L4 10 L8 10 L8 20 L16 20 L16 10 L20 10 Z" transform="rotate(90 12 12)"/></svg>
+      <svg class="lg:hidden w-6 h-6 text-gold" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4 L4 10 L8 10 L8 20 L16 20 L16 10 L20 10 Z" transform="rotate(180 12 12)"/></svg>
+
+      <div class="flow-node card-premium p-6 w-full lg:w-1/6 text-center border-2 border-transparent" data-step="2">
+        <div class="text-3xl mb-3">🎲</div>
+        <p class="font-bold text-primary text-sm">Simulation</p>
+        <p class="text-[11px] text-primary/50 mt-1">محاكاة السيناريوهات</p>
+      </div>
+      <svg class="hidden lg:block w-10 h-6 text-gold shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4 L4 10 L8 10 L8 20 L16 20 L16 10 L20 10 Z" transform="rotate(90 12 12)"/></svg>
+      <svg class="lg:hidden w-6 h-6 text-gold" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4 L4 10 L8 10 L8 20 L16 20 L16 10 L20 10 Z" transform="rotate(180 12 12)"/></svg>
+
+      <div class="flow-node card-premium p-6 w-full lg:w-1/6 text-center border-2 border-transparent" data-step="3">
+        <div class="text-3xl mb-3">⚙️</div>
+        <p class="font-bold text-primary text-sm">Optimization</p>
+        <p class="text-[11px] text-primary/50 mt-1">أفضل توزيع للموارد</p>
+      </div>
+      <svg class="hidden lg:block w-10 h-6 text-gold shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4 L4 10 L8 10 L8 20 L16 20 L16 10 L20 10 Z" transform="rotate(90 12 12)"/></svg>
+      <svg class="lg:hidden w-6 h-6 text-gold" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4 L4 10 L8 10 L8 20 L16 20 L16 10 L20 10 Z" transform="rotate(180 12 12)"/></svg>
+
+      <div class="flow-node card-premium p-6 w-full lg:w-1/6 text-center border-2 border-transparent" data-step="4">
+        <div class="text-3xl mb-3">🎯</div>
+        <p class="font-bold text-primary text-sm">Decision Engine</p>
+        <p class="text-[11px] text-primary/50 mt-1">اتخاذ القرار الأمثل</p>
+      </div>
+      <svg class="hidden lg:block w-10 h-6 text-gold shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4 L4 10 L8 10 L8 20 L16 20 L16 10 L20 10 Z" transform="rotate(90 12 12)"/></svg>
+      <svg class="lg:hidden w-6 h-6 text-gold" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4 L4 10 L8 10 L8 20 L16 20 L16 10 L20 10 Z" transform="rotate(180 12 12)"/></svg>
+
+      <div class="flow-node p-6 w-full lg:w-1/6 text-center border-2 border-gold rounded-3xl bg-primary text-white shadow-gold" data-step="5">
+        <div class="text-3xl mb-3">📋</div>
+        <p class="font-bold text-sm">Operational Plan</p>
+        <p class="text-[11px] text-white/60 mt-1">خطة تنفيذية جاهزة</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 06 — REAL EXAMPLE
+========================================================= -->
+<section id="slide-06" class="slide bg-white flex items-center py-24" data-nav="مثال فعلي">
+  <div class="max-w-7xl mx-auto px-6 md:px-10 w-full">
+    <div class="grid lg:grid-cols-2 gap-16 items-center">
+      <div>
+        <p class="eyebrow reveal in">حالة تطبيقية</p>
+        <h2 class="reveal in text-4xl md:text-5xl font-black text-primary mt-3 mb-6" style="transition-delay:.08s">مثال فعلي</h2>
+        <div class="flex flex-wrap gap-3 mb-8">
+          <span class="chip reveal in" style="transition-delay:.12s">👥 7000 حاج</span>
+          <span class="chip reveal in" style="transition-delay:.16s">🚌 20 حافلة</span>
+          <span class="chip reveal in" style="transition-delay:.2s">💺 50 راكب/حافلة</span>
+        </div>
+        <p class="reveal in text-primary/70 leading-loose" style="transition-delay:.24s">
+          يحلل بصيرة AI هذه المدخلات فورًا ليُخرج خطة تشغيل دقيقة تراعي
+          الطاقة الاستيعابية، الزمن، ومستوى الازدحام المتوقع في كل نقطة.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-5 stagger in">
+        <div class="card-premium p-6 reveal in" style="--i:0">
+          <p class="text-primary/50 text-xs font-bold mb-2">عدد الرحلات</p>
+          <p class="text-3xl font-black text-primary">14 <span class="text-sm font-bold text-primary/40">رحلة</span></p>
+          <div class="mt-3 h-1.5 bg-primary/10 rounded-full overflow-hidden"><div class="h-full bg-secondary rounded-full" style="width:70%"></div></div>
+        </div>
+        <div class="card-premium p-6 reveal in" style="--i:1">
+          <p class="text-primary/50 text-xs font-bold mb-2">أفضل توقيت</p>
+          <p class="text-3xl font-black text-primary">4:00 <span class="text-sm font-bold text-primary/40">فجرًا</span></p>
+          <div class="mt-3 h-1.5 bg-primary/10 rounded-full overflow-hidden"><div class="h-full bg-gold rounded-full" style="width:90%"></div></div>
+        </div>
+        <div class="card-premium p-6 reveal in" style="--i:2">
+          <p class="text-primary/50 text-xs font-bold mb-2">نسبة الازدحام المتوقع</p>
+          <p class="text-3xl font-black text-primary">12<span class="text-sm font-bold text-primary/40">%</span></p>
+          <div class="mt-3 h-1.5 bg-primary/10 rounded-full overflow-hidden"><div class="h-full bg-green-500 rounded-full" style="width:12%"></div></div>
+        </div>
+        <div class="card-premium p-6 reveal in" style="--i:3">
+          <p class="text-primary/50 text-xs font-bold mb-2">المدة الكلية</p>
+          <p class="text-3xl font-black text-primary">3.5 <span class="text-sm font-bold text-primary/40">ساعة</span></p>
+          <div class="mt-3 h-1.5 bg-primary/10 rounded-full overflow-hidden"><div class="h-full bg-secondary rounded-full" style="width:55%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 07 — WHAT IF
+========================================================= -->
+<section id="slide-07" class="slide bg-bgsoft flex items-center py-24" data-nav="ماذا لو">
+  <div class="max-w-6xl mx-auto px-6 md:px-10 w-full">
+    <div class="text-center max-w-2xl mx-auto mb-14">
+      <p class="eyebrow reveal in">تحليل السيناريوهات اللحظي</p>
+      <h2 class="reveal in text-4xl md:text-5xl font-black text-primary mt-3" style="transition-delay:.08s">What If — ماذا لو؟</h2>
+      <p class="reveal in text-primary/60 mt-4" style="transition-delay:.15s">اختر سيناريو، وشاهد كيف يعيد بصيرة AI بناء الخطة فورًا.</p>
+    </div>
+
+    <div class="flex flex-wrap justify-center gap-3 mb-10" id="scenario-buttons">
+      <button class="scenario-btn active px-5 py-2.5 rounded-full font-bold text-sm border-2 border-primary bg-primary text-white transition-all" data-scenario="base">الوضع الطبيعي</button>
+      <button class="scenario-btn px-5 py-2.5 rounded-full font-bold text-sm border-2 border-primary/15 text-primary transition-all" data-scenario="surge">زيادة الحجاج +30%</button>
+      <button class="scenario-btn px-5 py-2.5 rounded-full font-bold text-sm border-2 border-primary/15 text-primary transition-all" data-scenario="closed">إغلاق مركز</button>
+      <button class="scenario-btn px-5 py-2.5 rounded-full font-bold text-sm border-2 border-primary/15 text-primary transition-all" data-scenario="road">تعطل طريق</button>
+      <button class="scenario-btn px-5 py-2.5 rounded-full font-bold text-sm border-2 border-primary/15 text-primary transition-all" data-scenario="staff">نقص الموظفين</button>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="card-premium p-6 text-center">
+        <p class="text-primary/50 text-xs font-bold mb-2">زمن الاستجابة</p>
+        <p class="text-3xl font-black text-primary" id="s-response">8 <span class="text-sm text-primary/40">ثواني</span></p>
+      </div>
+      <div class="card-premium p-6 text-center">
+        <p class="text-primary/50 text-xs font-bold mb-2">مستوى المخاطرة</p>
+        <p class="text-3xl font-black" id="s-risk">منخفض</p>
+      </div>
+      <div class="card-premium p-6 text-center">
+        <p class="text-primary/50 text-xs font-bold mb-2">الموارد الإضافية المطلوبة</p>
+        <p class="text-3xl font-black text-primary" id="s-resources">0</p>
+      </div>
+      <div class="card-premium p-6 text-center">
+        <p class="text-primary/50 text-xs font-bold mb-2">التوصية</p>
+        <p class="text-sm font-bold text-primary mt-2 leading-relaxed" id="s-rec">استمرار الخطة الحالية دون تعديل</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 08 — DASHBOARD
+========================================================= -->
+<section id="slide-08" class="slide bg-primary flex items-center py-24 overflow-hidden" data-nav="لوحة القيادة">
+  <div class="noise"></div>
+  <div class="max-w-7xl mx-auto px-6 md:px-10 w-full relative z-10">
+    <div class="text-center mb-10">
+      <p class="eyebrow reveal in">مباشر الآن</p>
+      <h2 class="reveal in text-4xl md:text-5xl font-black text-white mt-3" style="transition-delay:.08s">لوحة القيادة التشغيلية</h2>
+    </div>
+
+    <div class="grid lg:grid-cols-4 gap-5">
+      <!-- KPIs column -->
+      <div class="lg:col-span-1 grid grid-cols-2 lg:grid-cols-1 gap-4">
+        <div class="glass rounded-2xl p-5 reveal in">
+          <p class="text-white/50 text-[11px] font-bold">الحجاج المخدومون</p>
+          <p class="text-2xl font-black text-white mt-1">6,842</p>
+          <p class="text-green-400 text-[11px] mt-1">▲ 4.2%</p>
+        </div>
+        <div class="glass rounded-2xl p-5 reveal in" style="transition-delay:.05s">
+          <p class="text-white/50 text-[11px] font-bold">كفاءة الحافلات</p>
+          <p class="text-2xl font-black text-white mt-1">94%</p>
+          <p class="text-green-400 text-[11px] mt-1">▲ 1.8%</p>
+        </div>
+        <div class="glass rounded-2xl p-5 reveal in" style="transition-delay:.1s">
+          <p class="text-white/50 text-[11px] font-bold">المراكز النشطة</p>
+          <p class="text-2xl font-black text-white mt-1">18 / 20</p>
+          <p class="text-gold text-[11px] mt-1">مستقر</p>
+        </div>
+        <div class="glass rounded-2xl p-5 reveal in" style="transition-delay:.15s">
+          <p class="text-white/50 text-[11px] font-bold">التنبيهات النشطة</p>
+          <p class="text-2xl font-black text-white mt-1">2</p>
+          <p class="text-red-400 text-[11px] mt-1">تتطلب انتباه</p>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="lg:col-span-2 grid gap-5">
+        <div class="glass rounded-2xl p-6 reveal in" style="transition-delay:.1s">
+          <p class="text-white font-bold text-sm mb-4">تدفّق الحجاج عبر الوقت</p>
+          <svg viewBox="0 0 400 120" class="w-full h-28">
+            <polyline points="0,100 40,80 80,85 120,55 160,60 200,30 240,40 280,20 320,28 360,10 400,18" fill="none" stroke="#C9A227" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <polygon points="0,100 40,80 80,85 120,55 160,60 200,30 240,40 280,20 320,28 360,10 400,18 400,120 0,120" fill="url(#chartFade)"/>
+            <defs>
+              <linearGradient id="chartFade" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#C9A227" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#C9A227" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="glass rounded-2xl p-6 reveal in" style="transition-delay:.15s">
+          <p class="text-white font-bold text-sm mb-4">توزيع الموارد حسب المركز</p>
+          <div class="space-y-3">
+            <div>
+              <div class="flex justify-between text-[11px] text-white/60 mb-1"><span>مركز المشاعر</span><span>82%</span></div>
+              <div class="h-2 bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-gold rounded-full" style="width:82%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-[11px] text-white/60 mb-1"><span>مركز المطار</span><span>65%</span></div>
+              <div class="h-2 bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-gold rounded-full" style="width:65%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-[11px] text-white/60 mb-1"><span>مركز الفنادق</span><span>91%</span></div>
+              <div class="h-2 bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-gold rounded-full" style="width:91%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline / Alerts -->
+      <div class="lg:col-span-1 glass rounded-2xl p-6 reveal in" style="transition-delay:.2s">
+        <p class="text-white font-bold text-sm mb-4">الجدول الزمني والتنبيهات</p>
+        <div class="space-y-4 text-[11px]">
+          <div class="flex gap-3">
+            <span class="w-2 h-2 mt-1 rounded-full bg-red-400 shrink-0"></span>
+            <p class="text-white/70"><span class="text-white font-bold">اختناق محتمل</span> — مركز الفنادق خلال 40 دقيقة</p>
+          </div>
+          <div class="flex gap-3">
+            <span class="w-2 h-2 mt-1 rounded-full bg-yellow-400 shrink-0"></span>
+            <p class="text-white/70"><span class="text-white font-bold">توصية</span> — إعادة توزيع 3 حافلات لمركز المشاعر</p>
+          </div>
+          <div class="flex gap-3">
+            <span class="w-2 h-2 mt-1 rounded-full bg-green-400 shrink-0"></span>
+            <p class="text-white/70"><span class="text-white font-bold">تم التنفيذ</span> — نوبة الموظفين الثانية بدأت بنجاح</p>
+          </div>
+          <div class="flex gap-3">
+            <span class="w-2 h-2 mt-1 rounded-full bg-gold shrink-0"></span>
+            <p class="text-white/70"><span class="text-white font-bold">تحليل</span> — الكفاءة العامة أعلى من المعدل بـ 6%</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 09 — VALUE
+========================================================= -->
+<section id="slide-09" class="slide bg-white flex items-center py-24" data-nav="القيمة">
+  <div class="max-w-7xl mx-auto px-6 md:px-10 w-full">
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <p class="eyebrow reveal in">أثر ملموس</p>
+      <h2 class="reveal in text-4xl md:text-5xl font-black text-primary mt-3" style="transition-delay:.08s">القيمة المُضافة</h2>
+    </div>
+
+    <div class="grid md:grid-cols-4 gap-6">
+      <div class="card-premium p-8 text-center reveal in">
+        <p class="text-primary/50 text-xs font-bold mb-4">وقت التخطيط</p>
+        <div class="flex items-center justify-center gap-2">
+          <span class="text-lg text-primary/30 line-through">ساعات</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          <span class="text-lg font-black text-gold">ثوانٍ</span>
+        </div>
+      </div>
+      <div class="card-premium p-8 text-center reveal in" style="transition-delay:.05s">
+        <p class="text-primary/50 text-xs font-bold mb-4">الكفاءة التشغيلية</p>
+        <p class="text-4xl font-black text-primary">+38<span class="text-lg text-gold">%</span></p>
+      </div>
+      <div class="card-premium p-8 text-center reveal in" style="transition-delay:.1s">
+        <p class="text-primary/50 text-xs font-bold mb-4">توفير التكاليف</p>
+        <p class="text-4xl font-black text-primary">-27<span class="text-lg text-gold">%</span></p>
+      </div>
+      <div class="card-premium p-8 text-center reveal in" style="transition-delay:.15s">
+        <p class="text-primary/50 text-xs font-bold mb-4">دقة القرار</p>
+        <p class="text-4xl font-black text-primary">99.2<span class="text-lg text-gold">%</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 10 — STAKEHOLDERS
+========================================================= -->
+<section id="slide-10" class="slide bg-bgsoft flex items-center py-24" data-nav="المستفيدون">
+  <div class="max-w-7xl mx-auto px-6 md:px-10 w-full">
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <p class="eyebrow reveal in">شبكة الشراكة</p>
+      <h2 class="reveal in text-4xl md:text-5xl font-black text-primary mt-3" style="transition-delay:.08s">الجهات المستفيدة</h2>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="card-premium p-7 flex items-center gap-4 reveal in"><div class="text-3xl">🕋</div><p class="font-bold text-primary">وزارة الحج والعمرة</p></div>
+      <div class="card-premium p-7 flex items-center gap-4 reveal in" style="transition-delay:.05s"><div class="text-3xl">🏢</div><p class="font-bold text-primary">شركات الخدمة</p></div>
+      <div class="card-premium p-7 flex items-center gap-4 reveal in" style="transition-delay:.1s"><div class="text-3xl">🚌</div><p class="font-bold text-primary">شركات النقل</p></div>
+      <div class="card-premium p-7 flex items-center gap-4 reveal in" style="transition-delay:.15s"><div class="text-3xl">🖥️</div><p class="font-bold text-primary">غرف العمليات</p></div>
+      <div class="card-premium p-7 flex items-center gap-4 reveal in" style="transition-delay:.2s"><div class="text-3xl">🏛️</div><p class="font-bold text-primary">مراكز التفعيل</p></div>
+      <div class="card-premium p-7 flex items-center gap-4 reveal in" style="transition-delay:.25s"><div class="text-3xl">🗺️</div><p class="font-bold text-primary">جهات التوزيع</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 11 — EXPANSION
+========================================================= -->
+<section id="slide-11" class="slide bg-primary flex items-center py-24 overflow-hidden" data-nav="التوسع">
+  <div class="noise"></div>
+  <div class="max-w-6xl mx-auto px-6 md:px-10 w-full relative z-10">
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <p class="eyebrow reveal in">ما بعد الحج</p>
+      <h2 class="reveal in text-4xl md:text-5xl font-black text-white mt-3" style="transition-delay:.08s">آفاق التوسع</h2>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="glass rounded-2xl p-7 text-center reveal in"><div class="text-3xl mb-3">🕌</div><p class="font-bold text-white">العمرة</p></div>
+      <div class="glass rounded-2xl p-7 text-center reveal in" style="transition-delay:.05s"><div class="text-3xl mb-3">✈️</div><p class="font-bold text-white">المطارات</p></div>
+      <div class="glass rounded-2xl p-7 text-center reveal in" style="transition-delay:.1s"><div class="text-3xl mb-3">🎤</div><p class="font-bold text-white">المؤتمرات</p></div>
+      <div class="glass rounded-2xl p-7 text-center reveal in" style="transition-delay:.15s"><div class="text-3xl mb-3">🎪</div><p class="font-bold text-white">الفعاليات</p></div>
+      <div class="glass rounded-2xl p-7 text-center reveal in" style="transition-delay:.2s"><div class="text-3xl mb-3">🏟️</div><p class="font-bold text-white">الرياضة</p></div>
+      <div class="glass rounded-2xl p-7 text-center reveal in" style="transition-delay:.25s"><div class="text-3xl mb-3">👥</div><p class="font-bold text-white">إدارة الحشود</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 12 — TECHNOLOGIES
+========================================================= -->
+<section id="slide-12" class="slide bg-white flex items-center py-24" data-nav="التقنيات">
+  <div class="max-w-7xl mx-auto px-6 md:px-10 w-full">
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <p class="eyebrow reveal in">البنية التقنية</p>
+      <h2 class="reveal in text-4xl md:text-5xl font-black text-primary mt-3" style="transition-delay:.08s">التقنيات المستخدمة</h2>
+    </div>
+    <div class="grid sm:grid-cols-3 lg:grid-cols-4 gap-5">
+      <div class="card-premium p-6 text-center reveal in"><p class="font-bold text-primary text-sm">LLM</p></div>
+      <div class="card-premium p-6 text-center reveal in" style="transition-delay:.04s"><p class="font-bold text-primary text-sm">Machine Learning</p></div>
+      <div class="card-premium p-6 text-center reveal in" style="transition-delay:.08s"><p class="font-bold text-primary text-sm">Simulation</p></div>
+      <div class="card-premium p-6 text-center reveal in" style="transition-delay:.12s"><p class="font-bold text-primary text-sm">Optimization</p></div>
+      <div class="card-premium p-6 text-center reveal in" style="transition-delay:.16s"><p class="font-bold text-primary text-sm">GIS</p></div>
+      <div class="card-premium p-6 text-center reveal in" style="transition-delay:.2s"><p class="font-bold text-primary text-sm">Cloud</p></div>
+      <div class="card-premium p-6 text-center reveal in" style="transition-delay:.24s"><p class="font-bold text-primary text-sm">Analytics</p></div>
+      <div class="card-premium p-6 text-center reveal in" style="transition-delay:.28s"><p class="font-bold text-primary text-sm">Real-time Data</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 13 — COMPETITIVE ADVANTAGE
+========================================================= -->
+<section id="slide-13" class="slide bg-bgsoft flex items-center py-24" data-nav="المقارنة">
+  <div class="max-w-6xl mx-auto px-6 md:px-10 w-full">
+    <div class="text-center max-w-2xl mx-auto mb-14">
+      <p class="eyebrow reveal in">لماذا بصيرة AI</p>
+      <h2 class="reveal in text-4xl md:text-5xl font-black text-primary mt-3" style="transition-delay:.08s">الميزة التنافسية</h2>
+    </div>
+
+    <div class="card-premium overflow-x-auto reveal in">
+      <table class="compare-table w-full text-sm min-w-[640px]">
+        <thead>
+          <tr class="border-b border-primary/10">
+            <th class="text-right p-5 font-bold text-primary/50">المعيار</th>
+            <th class="p-5 font-bold text-primary/70">Excel</th>
+            <th class="p-5 font-bold text-primary/70">Power BI</th>
+            <th class="p-5 font-bold text-primary/70">ChatGPT</th>
+            <th class="p-5 font-bold text-primary bg-gold/10 rounded-t-xl">بصيرة AI</th>
+          </tr>
+        </thead>
+        <tbody class="text-center">
+          <tr class="border-b border-primary/5">
+            <td class="text-right p-4 font-semibold text-primary">فهم اللغة الطبيعية</td>
+            <td class="check-no">✕</td><td class="check-no">✕</td><td class="check-yes">✓</td>
+            <td class="bg-gold/5 check-yes font-bold">✓</td>
+          </tr>
+          <tr class="border-b border-primary/5">
+            <td class="text-right p-4 font-semibold text-primary">محاكاة تشغيلية حقيقية</td>
+            <td class="check-no">✕</td><td class="check-mid">جزئي</td><td class="check-no">✕</td>
+            <td class="bg-gold/5 check-yes font-bold">✓</td>
+          </tr>
+          <tr class="border-b border-primary/5">
+            <td class="text-right p-4 font-semibold text-primary">تحسين الموارد (Optimization)</td>
+            <td class="check-no">✕</td><td class="check-mid">جزئي</td><td class="check-no">✕</td>
+            <td class="bg-gold/5 check-yes font-bold">✓</td>
+          </tr>
+          <tr class="border-b border-primary/5">
+            <td class="text-right p-4 font-semibold text-primary">لوحات قيادة لحظية</td>
+            <td class="check-no">✕</td><td class="check-yes">✓</td><td class="check-no">✕</td>
+            <td class="bg-gold/5 check-yes font-bold">✓</td>
+          </tr>
+          <tr class="border-b border-primary/5">
+            <td class="text-right p-4 font-semibold text-primary">سيناريوهات "ماذا لو"</td>
+            <td class="check-mid">يدوي</td><td class="check-mid">جزئي</td><td class="check-mid">جزئي</td>
+            <td class="bg-gold/5 check-yes font-bold">✓</td>
+          </tr>
+          <tr>
+            <td class="text-right p-4 font-semibold text-primary">مصمم لعمليات الحج</td>
+            <td class="check-no">✕</td><td class="check-no">✕</td><td class="check-no">✕</td>
+            <td class="bg-gold/5 check-yes font-bold rounded-b-xl">✓</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 14 — VISION
+========================================================= -->
+<section id="slide-14" class="slide bg-mesh flex items-center py-24 overflow-hidden" data-nav="الرؤية">
+  <div class="noise"></div>
+  <div class="absolute inset-0 flex items-center justify-center opacity-20">
+    <div class="w-[600px] h-[600px] rounded-full border border-gold/40 spin-slow"></div>
+    <div class="absolute w-[420px] h-[420px] rounded-full border border-gold/30 spin-slow-rev"></div>
+  </div>
+  <div class="max-w-4xl mx-auto px-6 md:px-10 w-full relative z-10 text-center">
+    <p class="eyebrow reveal in">إلى أين نتجه</p>
+    <h2 class="reveal in text-3xl md:text-5xl font-black text-white mt-4 leading-tight" style="transition-delay:.1s">
+      أن تصبح <span class="text-gold-gradient">بصيرة AI</span>
+    </h2>
+    <p class="reveal in text-2xl md:text-4xl font-bold text-white/90 mt-4" style="transition-delay:.2s">العقل التشغيلي</p>
+    <p class="reveal in text-white/60 text-lg mt-6 max-w-xl mx-auto leading-loose" style="transition-delay:.3s">
+      لإدارة أكبر العمليات الموسمية في العالم — بدقة، وسرعة، وثقة كاملة في القرار.
+    </p>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 15 — CLOSING
+========================================================= -->
+<section id="slide-15" class="slide bg-primary flex items-center overflow-hidden relative" data-nav="الختام">
+  <div class="noise"></div>
+  <div class="absolute inset-0">
+    <svg class="w-full h-full opacity-20" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <radialGradient id="closingGlow" cx="50%" cy="30%" r="60%">
+          <stop offset="0%" stop-color="#C9A227" stop-opacity=".5"/>
+          <stop offset="100%" stop-color="#C9A227" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect width="800" height="600" fill="#062A22"/>
+      <circle cx="400" cy="200" r="260" fill="url(#closingGlow)"/>
+      <g transform="translate(350,140)" class="float-slow">
+        <rect x="0" y="0" width="100" height="100" fill="#0B231C" stroke="#C9A227" stroke-width="1.5"/>
+        <rect x="0" y="66" width="100" height="16" fill="#C9A227" opacity=".8"/>
+      </g>
+      <g stroke="#C9A227" stroke-opacity=".25">
+        <line x1="0" y1="450" x2="800" y2="450"/>
+        <line x1="0" y1="480" x2="800" y2="480"/>
+        <line x1="0" y1="510" x2="800" y2="510"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="relative z-10 max-w-4xl mx-auto px-6 md:px-10 text-center w-full">
+    <svg width="64" height="64" viewBox="0 0 40 40" fill="none" class="mx-auto mb-8 reveal-scale in">
+      <rect width="40" height="40" rx="11" fill="#0F5C4B"/>
+      <path d="M20 8 L30 15 V26 L20 32 L10 26 V15 Z" stroke="#C9A227" stroke-width="1.6" fill="none"/>
+      <circle cx="20" cy="20" r="4.2" fill="#C9A227"/>
+    </svg>
+    <h2 class="reveal in text-4xl md:text-6xl font-black text-white mb-6" style="transition-delay:.1s">بصيرة <span class="text-gold-gradient">AI</span></h2>
+    <p class="reveal in text-white/60 text-xl md:text-2xl leading-loose max-w-2xl mx-auto mb-3" style="transition-delay:.2s">
+      ليس مجرد مساعد ذكاء اصطناعي...
+    </p>
+    <p class="reveal in text-gold text-2xl md:text-3xl font-bold leading-loose max-w-2xl mx-auto mb-12" style="transition-delay:.3s">
+      بل عقل تشغيلي يساعد الجهات على اتخاذ القرار.
+    </p>
+    <div class="reveal in flex flex-wrap justify-center gap-4" style="transition-delay:.4s">
+      <a href="#slide-01" class="btn-gold">ابدأ من جديد</a>
+      <a href="mailto:hello@basirah.ai" class="btn-outline">تواصل معنا</a>
+    </div>
+    <p class="reveal in text-white/30 text-xs mt-16" style="transition-delay:.5s">© 2026 بصيرة AI — جميع الحقوق محفوظة</p>
+  </div>
+</section>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
