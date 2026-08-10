@@ -148,7 +148,7 @@
 <!-- =========================================================
      SLIDE 02 — SCALE OF HAJJ (LIVING SCENE)
 ========================================================= -->
-<section id="slide-02" class="slide bg-primary flex items-center py-16 overflow-hidden vignette" data-nav="حجم العملية">
+<section id="slide-02" class="slide bg-primary flex items-center py-10 overflow-hidden vignette" data-nav="حجم العملية">
   <div class="noise"></div>
   <div class="absolute -top-32 right-1/4 w-[500px] h-[500px] rounded-full bg-gold/10 blur-3xl float-slow"></div>
 
@@ -407,7 +407,8 @@
           <!-- live connection line: selected bus -> Basirah hub -->
           <path id="selectedConnLine" d="" fill="none" stroke="#E4C766" stroke-width="1" stroke-dasharray="3 5" opacity="0"/>
 
-          <!-- selection pulse ring around the pinned bus -->
+          <!-- persistent gold glow + pulse ring around the pinned (paused) bus -->
+          <circle id="selectedGlow" r="15" fill="#C9A227" opacity="0" class="selected-glow" style="filter:blur(4px)"/>
           <circle id="selectedPulse" r="12" fill="none" stroke="#E4C766" stroke-width="1.4" class="selected-pulse" opacity="0"/>
 
           <!-- Basirah operations hub -->
@@ -425,23 +426,56 @@
       </div>
     </div>
 
-    <!-- compact stat strip -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-4 text-center stagger in divide-x divide-white/10 lg:divide-x mt-5">
-      <div class="reveal in" style="--i:0">
-        <p class="kpi-value text-2xl md:text-3xl font-black text-white" data-count="2000000">0</p>
-        <p class="text-white/50 text-xs font-semibold mt-1">حاج</p>
+    <!-- bottom statistics cards -->
+    <div class="grid lg:grid-cols-6 gap-3 mt-4 stagger in">
+      <div class="glass rounded-2xl p-4 lg:col-span-1 reveal in" style="--i:0">
+        <p class="stat-card-title">تنبيهات ذكية</p>
+        <div class="alert-item">
+          <span class="w-2 h-2 rounded-full bg-red-400 mt-1 shrink-0"></span>
+          <p class="text-white/75 text-[11px] leading-relaxed">ازدحام على طريق الهجرة — يقترح بصيرة تحويل 12 حافلة</p>
+        </div>
+        <div class="alert-item">
+          <span class="w-2 h-2 rounded-full bg-gold mt-1 shrink-0"></span>
+          <p class="text-white/75 text-[11px] leading-relaxed">ارتفاع الحرارة قرب مركز الهجرة</p>
+        </div>
       </div>
-      <div class="reveal in" style="--i:1">
-        <p class="kpi-value text-2xl md:text-3xl font-black text-white" data-count="150000">0</p>
-        <p class="text-white/50 text-xs font-semibold mt-1">موظف تشغيل</p>
+
+      <div class="glass rounded-2xl p-4 lg:col-span-1 reveal in" style="--i:1">
+        <p class="stat-card-title">الحوادث</p>
+        <div class="alert-item">
+          <span class="w-2 h-2 rounded-full bg-red-400 mt-1 shrink-0 animate-pulse"></span>
+          <div><p class="text-white text-[11px] font-bold">حادث بسيط — الطريق السريع</p><p class="text-white/40 text-[10px] mt-0.5">منذ 7 دقائق</p></div>
+        </div>
       </div>
-      <div class="reveal in" style="--i:2">
-        <p class="kpi-value text-2xl md:text-3xl font-black text-white" data-count="25000">0</p>
-        <p class="text-white/50 text-xs font-semibold mt-1">حافلة</p>
+
+      <div class="glass rounded-2xl p-4 lg:col-span-1 flex flex-col items-center reveal in" style="--i:2">
+        <p class="stat-card-title self-start">توزيع الحافلات حسب المسار</p>
+        <div class="w-20 h-20 rounded-full my-2" id="donut-route"></div>
+        <div class="space-y-1.5 self-start w-full">
+          <div class="donut-chip"><span class="dot" style="background:#4ADE80"></span>طريق الهجرة<span id="donut-route-a" class="mr-auto text-white"></span></div>
+          <div class="donut-chip"><span class="dot" style="background:#E4C766"></span>المسار البديل<span id="donut-route-b" class="mr-auto text-white"></span></div>
+        </div>
       </div>
-      <div class="reveal in" style="--i:3">
-        <p class="kpi-value text-2xl md:text-3xl font-black text-white" data-count="1200">0</p>
-        <p class="text-white/50 text-xs font-semibold mt-1">مركز تشغيلي</p>
+
+      <div class="glass rounded-2xl p-4 lg:col-span-1 flex flex-col items-center reveal in" style="--i:3">
+        <p class="stat-card-title self-start">الحافلات حسب الحالة</p>
+        <div class="w-20 h-20 rounded-full my-2" id="donut-status"></div>
+        <div class="space-y-1.5 self-start w-full">
+          <div class="donut-chip"><span class="dot" style="background:#4ADE80"></span>في الطريق<span id="donut-status-a" class="mr-auto text-white"></span></div>
+          <div class="donut-chip"><span class="dot" style="background:#E8A33D"></span>متوقفة<span id="donut-status-b" class="mr-auto text-white"></span></div>
+        </div>
+      </div>
+
+      <div class="glass rounded-2xl p-4 lg:col-span-2 reveal in" style="--i:4">
+        <p class="stat-card-title">تدفق الحجاج اليوم</p>
+        <svg viewBox="0 0 300 90" class="w-full h-20">
+          <polyline points="0,70 30,60 60,64 90,40 120,45 150,20 180,28 210,15 240,22 270,8 300,14" fill="none" stroke="#C9A227" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <polygon points="0,70 30,60 60,64 90,40 120,45 150,20 180,28 210,15 240,22 270,8 300,14 300,90 0,90" fill="url(#flowFade)" opacity=".55"/>
+          <defs><linearGradient id="flowFade" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#C9A227" stop-opacity=".4"/><stop offset="100%" stop-color="#C9A227" stop-opacity="0"/></linearGradient></defs>
+        </svg>
+        <div class="flex justify-between text-[9px] text-white/30 font-semibold mt-1">
+          <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>
+        </div>
       </div>
     </div>
   </div>

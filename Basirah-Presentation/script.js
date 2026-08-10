@@ -132,6 +132,7 @@
     const altRouteLabel = document.getElementById("altRouteLabel");
     const busesLayer = document.getElementById("layer-buses");
     const selectedPulse = document.getElementById("selectedPulse");
+    const selectedGlow = document.getElementById("selectedGlow");
     const selectedConnLine = document.getElementById("selectedConnLine");
     const tripPanel = document.getElementById("trip-panel");
     const tripPanelTitle = document.getElementById("trip-panel-title");
@@ -211,6 +212,7 @@
       g.setAttribute("class", "bus-icon");
       g.setAttribute("data-bus", bus.id);
       g.innerHTML = `
+        <circle r="17" fill="transparent"/>
         <g class="bus-body">
           <rect x="-9" y="-5" width="18" height="10" rx="3" fill="#0F5C4B" stroke="#C9A227" stroke-width="1"/>
           <circle cx="-5" cy="6" r="2" fill="#083A2F" stroke="#E4C766" stroke-width=".6"/>
@@ -265,17 +267,28 @@
       tripPanel.classList.add("open");
     }
     function selectBus(bus) {
-      if (selectedBus && selectedBus.el) selectedBus.el.classList.remove("selected");
+      if (selectedBus && selectedBus.el) {
+        selectedBus.el.classList.remove("selected");
+        selectedBus.paused = false;
+      }
       selectedBus = bus;
+      bus.paused = true;
       bus.el.classList.add("selected");
       openTripPanel(bus);
+      selectedGlow.setAttribute("cx", bus.x);
+      selectedGlow.setAttribute("cy", bus.y);
+      selectedGlow.setAttribute("opacity", "1");
     }
     function deselectBus() {
-      if (selectedBus && selectedBus.el) selectedBus.el.classList.remove("selected");
+      if (selectedBus && selectedBus.el) {
+        selectedBus.el.classList.remove("selected");
+        selectedBus.paused = false;
+      }
       selectedBus = null;
       tripPanel.classList.remove("open");
       selectedPulse.setAttribute("opacity", "0");
       selectedConnLine.setAttribute("opacity", "0");
+      selectedGlow.setAttribute("opacity", "0");
     }
     if (tripPanelClose) tripPanelClose.addEventListener("click", deselectBus);
 
@@ -326,6 +339,10 @@
     }
 
     /* ---- KPI ticker ---- */
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
     function updateKpis() {
       const active = buses.filter((b) => b.status !== "وصلت").length;
       const pilgrims = buses.reduce((s, b) => s + b.pilgrims, 0);
@@ -333,6 +350,22 @@
       if (kpiActiveBuses) kpiActiveBuses.textContent = active;
       if (kpiPilgrims) kpiPilgrims.textContent = pilgrims.toLocaleString("en-US");
       if (kpiDelay) kpiDelay.textContent = `${avgDelay}%`;
+
+      const onHijrah = buses.filter((b) => !b.usingAlt).length;
+      const onAlt = buses.length - onHijrah;
+      const pctHijrah = Math.round((onHijrah / buses.length) * 100);
+      const donutRoute = document.getElementById("donut-route");
+      if (donutRoute) donutRoute.style.background = `conic-gradient(#4ADE80 0% ${pctHijrah}%, #E4C766 ${pctHijrah}% 100%)`;
+      setText("donut-route-a", onHijrah);
+      setText("donut-route-b", onAlt);
+
+      const onRoad = buses.filter((b) => b.status === "في الطريق").length;
+      const stopped = buses.length - onRoad;
+      const pctRoad = Math.round((onRoad / buses.length) * 100);
+      const donutStatus = document.getElementById("donut-status");
+      if (donutStatus) donutStatus.style.background = `conic-gradient(#4ADE80 0% ${pctRoad}%, #E8A33D ${pctRoad}% 100%)`;
+      setText("donut-status-a", onRoad);
+      setText("donut-status-b", stopped);
     }
     updateKpis();
 
@@ -380,6 +413,7 @@
       const dt = lastTime ? now - lastTime : 16;
       lastTime = now;
       buses.forEach((bus) => {
+        if (bus.paused) return;
         bus.frac += bus.speedFrac * dt;
         if (bus.frac > 1) bus.frac -= 1;
         const path = bus.usingAlt ? altRoutePath : mainRoutePath;
