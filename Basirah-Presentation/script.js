@@ -39,12 +39,13 @@
     }
 
     function scrollThread() {
-      heroThread.scrollTo({ top: heroThread.scrollHeight, behavior: "smooth" });
+      heroThread.scrollTop = heroThread.scrollHeight;
     }
 
     async function typeAssistant(text, myToken) {
-      const bubble = el(`<div class="chat-bubble ai in text-sm"></div>`);
+      const bubble = el(`<div class="chat-bubble ai text-sm"></div>`);
       heroThread.appendChild(bubble);
+      requestAnimationFrame(() => bubble.classList.add("in"));
       scrollThread();
       let i = 0;
       while (i <= text.length) {
@@ -57,8 +58,9 @@
     }
 
     async function typeUser(text, myToken) {
-      const bubble = el(`<div class="chat-bubble user in text-sm"></div>`);
+      const bubble = el(`<div class="chat-bubble user text-sm"></div>`);
       heroThread.appendChild(bubble);
+      requestAnimationFrame(() => bubble.classList.add("in"));
       scrollThread();
       let i = 0;
       while (i <= text.length) {

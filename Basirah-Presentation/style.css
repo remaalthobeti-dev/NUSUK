@@ -650,6 +650,17 @@ p{ line-height: 1.9; text-wrap: pretty; }
 .chat-thread-scroll::-webkit-scrollbar{ width: 5px; }
 .chat-thread-scroll::-webkit-scrollbar-thumb{ background: rgba(201,162,39,.4); border-radius: 10px; }
 
+/* Hero conversation: content-driven height, no forced empty space, no top fade
+   (short, finite thread — scrolling is a rare safety net, not the norm). */
+.hero-thread{
+  max-height: min(62vh, 460px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 4px 2px 2px;
+}
+.hero-thread::-webkit-scrollbar{ width: 5px; }
+.hero-thread::-webkit-scrollbar-thumb{ background: rgba(201,162,39,.4); border-radius: 10px; }
+
 .stream-item{
   display: flex;
   align-items: flex-start;
