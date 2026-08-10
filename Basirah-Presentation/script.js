@@ -214,9 +214,11 @@
       g.innerHTML = `
         <circle r="17" fill="transparent"/>
         <g class="bus-body">
-          <rect x="-9" y="-5" width="18" height="10" rx="3" fill="#0F5C4B" stroke="#C9A227" stroke-width="1"/>
-          <circle cx="-5" cy="6" r="2" fill="#083A2F" stroke="#E4C766" stroke-width=".6"/>
-          <circle cx="5" cy="6" r="2" fill="#083A2F" stroke="#E4C766" stroke-width=".6"/>
+          <rect x="-10" y="-5.5" width="20" height="11" rx="3.5" fill="#0F5C4B" stroke="#C9A227" stroke-width="1"/>
+          <rect x="-6" y="-3.5" width="9" height="4" rx="1" fill="#E4C766" opacity=".35"/>
+          <polygon points="10,-3.5 15,0 10,3.5" fill="#E4C766"/>
+          <circle cx="-5.5" cy="6.5" r="2.1" fill="#083A2F" stroke="#E4C766" stroke-width=".6"/>
+          <circle cx="5.5" cy="6.5" r="2.1" fill="#083A2F" stroke="#E4C766" stroke-width=".6"/>
         </g>`;
       g.addEventListener("click", () => selectBus(bus));
       busesLayer.appendChild(g);

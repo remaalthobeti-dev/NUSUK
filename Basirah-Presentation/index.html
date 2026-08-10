@@ -241,26 +241,45 @@
         </div>
 
         <div class="map-legend">
-          <p>مستوى الازدحام</p>
+          <p>مفتاح الخريطة</p>
           <div class="legend-scale">
             <span style="background:#4ADE80"></span><span style="background:#E5D34C"></span>
             <span style="background:#E8A33D"></span><span style="background:#E0574A"></span>
           </div>
           <div class="legend-labels"><span>منخفض</span><span>مرتفع جدًا</span></div>
+          <div class="legend-symbols">
+            <span><i style="background:#4ADE80"></i>مركز تشغيل</span>
+            <span><i style="background:#C9A227;border-radius:3px"></i>نقطة تفتيش</span>
+            <span><i style="background:#4ADE80;opacity:.6"></i>نقطة تجمع</span>
+            <span><i class="line" style="border-color:#C9A227"></i>مسار أساسي</span>
+            <span><i class="line dashed" style="border-color:#4ADE80"></i>مسار بديل</span>
+          </div>
         </div>
 
         <svg viewBox="0 0 900 480" class="ops-map-svg" id="ops-map" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <radialGradient id="terrainGlow1" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#0F5C4B" stop-opacity=".45"/>
+              <stop offset="0%" stop-color="#0F5C4B" stop-opacity=".4"/>
               <stop offset="100%" stop-color="#0F5C4B" stop-opacity="0"/>
             </radialGradient>
-            <linearGradient id="roadGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#E4C766"/>
+            <linearGradient id="roadHeatGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#4ADE80"/>
+              <stop offset="32%" stop-color="#8FD16A"/>
+              <stop offset="46%" stop-color="#E5D34C"/>
+              <stop offset="55%" stop-color="#E0574A"/>
+              <stop offset="64%" stop-color="#E8A33D"/>
               <stop offset="100%" stop-color="#C9A227"/>
             </linearGradient>
+            <radialGradient id="hotspotGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#E0574A" stop-opacity=".85"/>
+              <stop offset="60%" stop-color="#E0574A" stop-opacity=".28"/>
+              <stop offset="100%" stop-color="#E0574A" stop-opacity="0"/>
+            </radialGradient>
             <filter id="heatBlur" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="14"/>
+              <feGaussianBlur stdDeviation="12"/>
+            </filter>
+            <filter id="softGlow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="3"/>
             </filter>
           </defs>
 
@@ -268,7 +287,12 @@
           <rect x="0" y="0" width="900" height="480" fill="#062A22"/>
           <circle cx="180" cy="90" r="220" fill="url(#terrainGlow1)"/>
           <circle cx="720" cy="420" r="240" fill="url(#terrainGlow1)"/>
-          <g stroke="#ffffff" stroke-opacity=".05">
+          <!-- soft mountain ridges for terrain depth -->
+          <g opacity=".22" filter="url(#heatBlur)">
+            <polygon points="0,340 120,270 260,320 380,255 520,310 660,260 820,300 900,270 900,480 0,480" fill="#0A3128"/>
+            <polygon points="0,180 160,140 320,190 480,130 640,175 820,120 900,150 900,0 0,0" fill="#0A3128"/>
+          </g>
+          <g stroke="#ffffff" stroke-opacity=".045">
             <line x1="0" y1="60" x2="900" y2="60"/><line x1="0" y1="140" x2="900" y2="140"/>
             <line x1="0" y1="220" x2="900" y2="220"/><line x1="0" y1="300" x2="900" y2="300"/>
             <line x1="0" y1="380" x2="900" y2="380"/><line x1="0" y1="460" x2="900" y2="460"/>
@@ -276,120 +300,170 @@
             <line x1="440" y1="0" x2="440" y2="480"/><line x1="600" y1="0" x2="600" y2="480"/>
             <line x1="760" y1="0" x2="760" y2="480"/>
           </g>
+          <!-- faint secondary roads for map realism -->
+          <g stroke="#ffffff" stroke-opacity=".07" fill="none" stroke-width="1.4">
+            <path d="M0,210 C 140,230 260,180 420,205"/>
+            <path d="M520,90 C 620,130 700,110 900,160"/>
+            <path d="M480,460 C 560,410 640,440 760,400"/>
+          </g>
 
           <!-- everything below scales together with map zoom -->
           <g id="map-viewport">
 
-          <!-- congestion heat blobs (layer) -->
+          <!-- congestion heatmap (layer) -->
           <g id="layer-congestion">
-            <ellipse cx="450" cy="255" rx="95" ry="48" fill="#E0574A" opacity=".3" filter="url(#heatBlur)"/>
-            <ellipse cx="300" cy="165" rx="55" ry="32" fill="#E5D34C" opacity=".2" filter="url(#heatBlur)"/>
-            <ellipse cx="640" cy="345" rx="60" ry="34" fill="#E8A33D" opacity=".2" filter="url(#heatBlur)"/>
+            <ellipse cx="450" cy="255" rx="70" ry="36" fill="url(#hotspotGrad)" opacity=".95" filter="url(#heatBlur)"/>
+            <ellipse cx="300" cy="165" rx="42" ry="24" fill="#E5D34C" opacity=".16" filter="url(#heatBlur)"/>
+            <ellipse cx="640" cy="345" rx="46" ry="26" fill="#E8A33D" opacity=".16" filter="url(#heatBlur)"/>
+            <!-- congestion callout -->
+            <g transform="translate(560,232)" font-family="IBM Plex Sans Arabic">
+              <line x1="-58" y1="8" x2="-14" y2="20" stroke="#E0574A" stroke-width="1" stroke-dasharray="2 3" opacity=".6"/>
+              <rect x="-58" y="-16" width="128" height="34" rx="8" fill="rgba(15,25,22,.85)" stroke="#E0574A" stroke-width="1.2"/>
+              <text x="6" y="-2" text-anchor="middle" fill="#F6F8F6" font-size="9" font-weight="700">منطقة ازدحام</text>
+              <text x="6" y="11" text-anchor="middle" fill="#E0574A" font-size="8">تأخير متوقع 18 دقيقة</text>
+            </g>
           </g>
 
-          <!-- alternate route: المسار البديل (hidden by default) -->
-          <path id="altRoute" d="M150,60 C 320,140 380,195 480,190 C 600,180 680,300 750,420" fill="none" stroke="#4ADE80" stroke-width="3" stroke-dasharray="2 9" opacity="0"/>
-          <text id="altRouteLabel" x="450" y="172" text-anchor="middle" fill="#4ADE80" font-size="10" font-weight="700" font-family="IBM Plex Sans Arabic" opacity="0">المسار البديل</text>
+          <!-- alternate route: المسار البديل (faint by default, highlighted after Basirah's suggestion) -->
+          <path id="altRoute" d="M150,60 C 320,140 380,195 480,190 C 600,180 680,300 750,420" fill="none" stroke="#4ADE80" stroke-width="3" stroke-linecap="round" stroke-dasharray="1 10" opacity=".18"/>
+          <text id="altRouteLabel" x="450" y="172" text-anchor="middle" fill="#4ADE80" font-size="10" font-weight="700" font-family="IBM Plex Sans Arabic" opacity="0">مسار بديل — توفير 18 دقيقة</text>
 
           <!-- main route: طريق الهجرة -->
-          <path id="mainRoute" d="M150,60 C 300,150 350,250 450,260 C 550,270 650,320 750,420" fill="none" stroke="#0B231C" stroke-width="11" stroke-linecap="round"/>
-          <path id="mainRouteLine" d="M150,60 C 300,150 350,250 450,260 C 550,270 650,320 750,420" fill="none" stroke="url(#roadGrad)" stroke-width="2" stroke-dasharray="8 8" opacity=".85" class="data-line"/>
-          <text x="330" y="195" text-anchor="middle" fill="#E4C766" font-size="10" font-weight="700" font-family="IBM Plex Sans Arabic" transform="rotate(28 330 195)">طريق الهجرة</text>
+          <path id="mainRoute" d="M150,60 C 300,150 350,250 450,260 C 550,270 650,320 750,420" fill="none" stroke="#04140F" stroke-width="14" stroke-linecap="round"/>
+          <path d="M150,60 C 300,150 350,250 450,260 C 550,270 650,320 750,420" fill="none" stroke="#0B231C" stroke-width="10" stroke-linecap="round"/>
+          <path d="M150,60 C 300,150 350,250 450,260 C 550,270 650,320 750,420" fill="none" stroke="url(#roadHeatGrad)" stroke-width="10" stroke-linecap="round" opacity=".22" filter="url(#softGlow)"/>
+          <path id="mainRouteLine" d="M150,60 C 300,150 350,250 450,260 C 550,270 650,320 750,420" fill="none" stroke="url(#roadHeatGrad)" stroke-width="2.6" stroke-dasharray="9 7" stroke-linecap="round" opacity=".95" class="data-line"/>
+          <g transform="translate(255,178) rotate(24)"><rect x="-38" y="-11" width="76" height="18" rx="9" fill="rgba(6,42,34,.75)"/><text text-anchor="middle" y="4" fill="#E4C766" font-size="9" font-weight="700" font-family="IBM Plex Sans Arabic">طريق الهجرة</text></g>
 
           <!-- direction chevrons -->
           <g class="route-arrow" fill="#E4C766">
-            <polygon points="0,-4 5,0 0,4" transform="translate(255,148) rotate(58)"/>
-            <polygon points="0,-4 5,0 0,4" transform="translate(430,258) rotate(20)"/>
-            <polygon points="0,-4 5,0 0,4" transform="translate(610,300) rotate(48)"/>
+            <polygon points="0,-4 6,0 0,4" transform="translate(210,110) rotate(58)"/>
+            <polygon points="0,-4 6,0 0,4" transform="translate(390,252) rotate(15)"/>
+            <polygon points="0,-4 6,0 0,4" transform="translate(600,296) rotate(48)"/>
+            <polygon points="0,-4 6,0 0,4" transform="translate(715,392) rotate(38)"/>
           </g>
 
           <!-- endpoints -->
-          <g>
-            <circle cx="150" cy="60" r="7" fill="#4ADE80"/>
-            <circle cx="150" cy="60" r="7" fill="none" stroke="#4ADE80" stroke-width="1.2" class="ring-pulse"/>
-            <text x="150" y="42" text-anchor="middle" fill="#F6F8F6" font-size="12" font-weight="700" font-family="IBM Plex Sans Arabic">المدينة المنورة</text>
+          <g font-family="IBM Plex Sans Arabic">
+            <circle cx="150" cy="60" r="8" fill="#4ADE80"/>
+            <circle cx="150" cy="60" r="8" fill="none" stroke="#4ADE80" stroke-width="1.2" class="ring-pulse"/>
+            <rect x="90" y="30" width="120" height="20" rx="10" fill="rgba(6,42,34,.7)"/>
+            <text x="150" y="44" text-anchor="middle" fill="#F6F8F6" font-size="12" font-weight="700">المدينة المنورة</text>
           </g>
-          <g>
-            <circle cx="750" cy="420" r="7" fill="#C9A227"/>
-            <circle cx="750" cy="420" r="7" fill="none" stroke="#C9A227" stroke-width="1.2" class="ring-pulse" style="animation-delay:.9s"/>
-            <text x="750" y="445" text-anchor="middle" fill="#F6F8F6" font-size="12" font-weight="700" font-family="IBM Plex Sans Arabic">مكة المكرمة</text>
+          <g font-family="IBM Plex Sans Arabic">
+            <circle cx="750" cy="420" r="8" fill="#C9A227"/>
+            <circle cx="750" cy="420" r="8" fill="none" stroke="#C9A227" stroke-width="1.2" class="ring-pulse" style="animation-delay:.9s"/>
+            <rect x="690" y="432" width="120" height="20" rx="10" fill="rgba(6,42,34,.7)"/>
+            <text x="750" y="446" text-anchor="middle" fill="#F6F8F6" font-size="12" font-weight="700">مكة المكرمة</text>
           </g>
 
-          <!-- operation centers (stat cards) -->
+          <!-- operation centers: compact card offset from the road + leader line to an on-road marker -->
           <g id="layer-centers" font-family="IBM Plex Sans Arabic">
-            <g transform="translate(215,120)">
-              <rect x="-46" y="-30" width="92" height="58" rx="10" fill="rgba(255,255,255,.07)" stroke="#4ADE80" stroke-width="1.2" class="center-glow"/>
-              <text text-anchor="middle" y="-14" fill="#F6F8F6" font-size="9.5" font-weight="700">مركز المدينة</text>
-              <text text-anchor="middle" y="1" fill="#4ADE80" font-size="13" font-weight="800">85%</text>
-              <text text-anchor="middle" y="15" fill="rgba(246,248,246,.55)" font-size="7.5">124 موظف · 3,820 حاج</text>
+            <g>
+              <circle cx="195" cy="108" r="4" fill="#4ADE80"/>
+              <line x1="195" y1="108" x2="150" y2="88" stroke="#4ADE80" stroke-width="1" stroke-dasharray="2 3" opacity=".7"/>
+              <g transform="translate(95,80)">
+                <rect x="-52" y="-19" width="104" height="38" rx="9" fill="rgba(8,20,17,.82)" stroke="#4ADE80" stroke-width="1.1" class="center-glow"/>
+                <text x="-40" y="-3" fill="#F6F8F6" font-size="9" font-weight="700">مركز المدينة</text>
+                <text x="40" y="-3" text-anchor="end" fill="#4ADE80" font-size="10" font-weight="800">85%</text>
+                <text x="-40" y="11" fill="rgba(246,248,246,.5)" font-size="7">124 موظف · 3,820 حاج</text>
+              </g>
             </g>
-            <g transform="translate(480,215)">
-              <rect x="-46" y="-30" width="92" height="58" rx="10" fill="rgba(255,255,255,.07)" stroke="#E4C766" stroke-width="1.2" class="center-glow" style="animation-delay:.6s"/>
-              <text text-anchor="middle" y="-14" fill="#F6F8F6" font-size="9.5" font-weight="700">مركز الهجرة</text>
-              <text text-anchor="middle" y="1" fill="#E4C766" font-size="13" font-weight="800">78%</text>
-              <text text-anchor="middle" y="15" fill="rgba(246,248,246,.55)" font-size="7.5">156 موظف · 5,210 حاج</text>
+            <g>
+              <circle cx="425" cy="232" r="4" fill="#E4C766"/>
+              <line x1="425" y1="232" x2="368" y2="190" stroke="#E4C766" stroke-width="1" stroke-dasharray="2 3" opacity=".7"/>
+              <g transform="translate(330,168)">
+                <rect x="-54" y="-19" width="108" height="38" rx="9" fill="rgba(8,20,17,.82)" stroke="#E4C766" stroke-width="1.1" class="center-glow" style="animation-delay:.6s"/>
+                <text x="-42" y="-3" fill="#F6F8F6" font-size="9" font-weight="700">مركز الهجرة</text>
+                <text x="42" y="-3" text-anchor="end" fill="#E4C766" font-size="10" font-weight="800">78%</text>
+                <text x="-42" y="11" fill="rgba(246,248,246,.5)" font-size="7">156 موظف · 5,210 حاج</text>
+              </g>
             </g>
-            <g transform="translate(690,365)">
-              <rect x="-46" y="-30" width="92" height="58" rx="10" fill="rgba(255,255,255,.07)" stroke="#4ADE80" stroke-width="1.2" class="center-glow" style="animation-delay:1.2s"/>
-              <text text-anchor="middle" y="-14" fill="#F6F8F6" font-size="9.5" font-weight="700">مركز الشميسي</text>
-              <text text-anchor="middle" y="1" fill="#4ADE80" font-size="13" font-weight="800">92%</text>
-              <text text-anchor="middle" y="15" fill="rgba(246,248,246,.55)" font-size="7.5">98 موظف · 2,940 حاج</text>
+            <g>
+              <circle cx="655" cy="352" r="4" fill="#4ADE80"/>
+              <line x1="655" y1="352" x2="600" y2="400" stroke="#4ADE80" stroke-width="1" stroke-dasharray="2 3" opacity=".7"/>
+              <g transform="translate(545,420)">
+                <rect x="-52" y="-19" width="104" height="38" rx="9" fill="rgba(8,20,17,.82)" stroke="#4ADE80" stroke-width="1.1" class="center-glow" style="animation-delay:1.2s"/>
+                <text x="-40" y="-3" fill="#F6F8F6" font-size="9" font-weight="700">مركز الشميسي</text>
+                <text x="40" y="-3" text-anchor="end" fill="#4ADE80" font-size="10" font-weight="800">92%</text>
+                <text x="-40" y="11" fill="rgba(246,248,246,.5)" font-size="7">98 موظف · 2,940 حاج</text>
+              </g>
             </g>
           </g>
 
-          <!-- checkpoints -->
+          <!-- checkpoints: numbered shield badges offset from the road with leader lines -->
           <g id="layer-checkpoints" font-family="IBM Plex Sans Arabic">
-            <g transform="translate(250,140)">
-              <circle r="10" fill="rgba(201,162,39,.16)" stroke="#C9A227" stroke-width="1.3"/>
-              <path d="M-3.5,0 L3.5,0 M0,-3.5 L0,3.5" stroke="#E4C766" stroke-width="1.2"/>
-              <text text-anchor="middle" y="24" fill="#E4C766" font-size="8" font-weight="700">نقطة تفتيش 1</text>
-              <text text-anchor="middle" y="34" fill="rgba(246,248,246,.45)" font-size="7">3 دقائق · طبيعي</text>
+            <g>
+              <circle cx="245" cy="133" r="3.5" fill="#C9A227"/>
+              <line x1="245" y1="133" x2="285" y2="105" stroke="#C9A227" stroke-width="1" stroke-dasharray="2 3" opacity=".7"/>
+              <g transform="translate(315,90)">
+                <rect x="-46" y="-15" width="92" height="30" rx="8" fill="rgba(8,20,17,.82)" stroke="#C9A227" stroke-width="1.1"/>
+                <circle cx="-30" cy="0" r="9" fill="rgba(201,162,39,.2)" stroke="#C9A227" stroke-width="1"/>
+                <text x="-30" y="3.5" text-anchor="middle" fill="#E4C766" font-size="9" font-weight="800">1</text>
+                <text x="-13" y="-2" fill="#F6F8F6" font-size="8" font-weight="700">نقطة تفتيش</text>
+                <text x="-13" y="9" fill="rgba(246,248,246,.5)" font-size="7">3 دقائق · طبيعي</text>
+              </g>
             </g>
-            <g transform="translate(380,215)">
-              <circle r="10" fill="rgba(201,162,39,.16)" stroke="#C9A227" stroke-width="1.3"/>
-              <path d="M-3.5,0 L3.5,0 M0,-3.5 L0,3.5" stroke="#E4C766" stroke-width="1.2"/>
-              <text text-anchor="middle" y="24" fill="#E4C766" font-size="8" font-weight="700">نقطة تفتيش 2</text>
-              <text text-anchor="middle" y="34" fill="#E8A33D" font-size="7">5 دقائق · ازدحام متوسط</text>
+            <g>
+              <circle cx="375" cy="212" r="3.5" fill="#C9A227"/>
+              <line x1="375" y1="212" x2="420" y2="248" stroke="#C9A227" stroke-width="1" stroke-dasharray="2 3" opacity=".7"/>
+              <g transform="translate(452,262)">
+                <rect x="-46" y="-15" width="92" height="30" rx="8" fill="rgba(8,20,17,.82)" stroke="#C9A227" stroke-width="1.1"/>
+                <circle cx="-30" cy="0" r="9" fill="rgba(201,162,39,.2)" stroke="#C9A227" stroke-width="1"/>
+                <text x="-30" y="3.5" text-anchor="middle" fill="#E4C766" font-size="9" font-weight="800">2</text>
+                <text x="-13" y="-2" fill="#F6F8F6" font-size="8" font-weight="700">نقطة تفتيش</text>
+                <text x="-13" y="9" fill="#E8A33D" font-size="7">5 دقائق · ازدحام</text>
+              </g>
             </g>
-            <g transform="translate(560,295)">
-              <circle r="10" fill="rgba(201,162,39,.16)" stroke="#C9A227" stroke-width="1.3"/>
-              <path d="M-3.5,0 L3.5,0 M0,-3.5 L0,3.5" stroke="#E4C766" stroke-width="1.2"/>
-              <text text-anchor="middle" y="24" fill="#E4C766" font-size="8" font-weight="700">نقطة تفتيش 3</text>
-              <text text-anchor="middle" y="34" fill="rgba(246,248,246,.45)" font-size="7">2 دقيقة · طبيعي</text>
+            <g>
+              <circle cx="565" cy="298" r="3.5" fill="#C9A227"/>
+              <line x1="565" y1="298" x2="605" y2="268" stroke="#C9A227" stroke-width="1" stroke-dasharray="2 3" opacity=".7"/>
+              <g transform="translate(637,254)">
+                <rect x="-46" y="-15" width="92" height="30" rx="8" fill="rgba(8,20,17,.82)" stroke="#C9A227" stroke-width="1.1"/>
+                <circle cx="-30" cy="0" r="9" fill="rgba(201,162,39,.2)" stroke="#C9A227" stroke-width="1"/>
+                <text x="-30" y="3.5" text-anchor="middle" fill="#E4C766" font-size="9" font-weight="800">3</text>
+                <text x="-13" y="-2" fill="#F6F8F6" font-size="8" font-weight="700">نقطة تفتيش</text>
+                <text x="-13" y="9" fill="rgba(246,248,246,.5)" font-size="7">2 دقيقة · طبيعي</text>
+              </g>
             </g>
-            <g transform="translate(690,365)">
-              <circle r="10" fill="rgba(201,162,39,.16)" stroke="#C9A227" stroke-width="1.3"/>
-              <path d="M-3.5,0 L3.5,0 M0,-3.5 L0,3.5" stroke="#E4C766" stroke-width="1.2"/>
-              <text text-anchor="middle" y="-16" fill="#E4C766" font-size="8" font-weight="700">نقطة تفتيش 4</text>
-              <text text-anchor="middle" y="-6" fill="rgba(246,248,246,.45)" font-size="7">3 دقائق · طبيعي</text>
+            <g>
+              <circle cx="702" cy="372" r="3.5" fill="#C9A227"/>
+              <line x1="702" y1="372" x2="672" y2="340" stroke="#C9A227" stroke-width="1" stroke-dasharray="2 3" opacity=".7"/>
+              <g transform="translate(648,308)">
+                <rect x="-46" y="-15" width="92" height="30" rx="8" fill="rgba(8,20,17,.82)" stroke="#C9A227" stroke-width="1.1"/>
+                <circle cx="-30" cy="0" r="9" fill="rgba(201,162,39,.2)" stroke="#C9A227" stroke-width="1"/>
+                <text x="-30" y="3.5" text-anchor="middle" fill="#E4C766" font-size="9" font-weight="800">4</text>
+                <text x="-13" y="-2" fill="#F6F8F6" font-size="8" font-weight="700">نقطة تفتيش</text>
+                <text x="-13" y="9" fill="rgba(246,248,246,.5)" font-size="7">3 دقائق · طبيعي</text>
+              </g>
             </g>
           </g>
 
           <!-- gathering points -->
           <g id="layer-gathering" font-family="IBM Plex Sans Arabic">
-            <g transform="translate(330,182)">
-              <circle r="7" fill="rgba(15,92,75,.4)" stroke="#4ADE80" stroke-width="1.1"/>
-              <path d="M-2.6,1.8 a2.6,2.6 0 1 1 5.2,0" stroke="#4ADE80" stroke-width="1" fill="none"/>
-              <text text-anchor="middle" y="-11" fill="#4ADE80" font-size="7.5" font-weight="700">نقطة تجمع</text>
+            <g transform="translate(215,190)">
+              <circle r="6" fill="rgba(15,92,75,.5)" stroke="#4ADE80" stroke-width="1.1"/>
+              <path d="M-2.3,1.6 a2.3,2.3 0 1 1 4.6,0" stroke="#4ADE80" stroke-width=".9" fill="none"/>
+              <text text-anchor="middle" y="-10" fill="#4ADE80" font-size="7" font-weight="700">نقطة تجمع</text>
             </g>
-            <g transform="translate(610,332)">
-              <circle r="7" fill="rgba(15,92,75,.4)" stroke="#4ADE80" stroke-width="1.1"/>
-              <path d="M-2.6,1.8 a2.6,2.6 0 1 1 5.2,0" stroke="#4ADE80" stroke-width="1" fill="none"/>
-              <text text-anchor="middle" y="-11" fill="#4ADE80" font-size="7.5" font-weight="700">نقطة تجمع</text>
+            <g transform="translate(520,268)">
+              <circle r="6" fill="rgba(15,92,75,.5)" stroke="#4ADE80" stroke-width="1.1"/>
+              <path d="M-2.3,1.6 a2.3,2.3 0 1 1 4.6,0" stroke="#4ADE80" stroke-width=".9" fill="none"/>
+              <text text-anchor="middle" y="-10" fill="#4ADE80" font-size="7" font-weight="700">نقطة تجمع</text>
             </g>
           </g>
 
           <!-- temperature badges (heat layer) -->
           <g id="layer-heat" font-family="IBM Plex Sans Arabic">
-            <g transform="translate(150,95)">
+            <g transform="translate(180,55)">
               <rect x="-16" y="-11" width="32" height="20" rx="10" fill="rgba(74,222,128,.16)" stroke="#4ADE80" stroke-width="1"/>
               <text text-anchor="middle" y="4" fill="#4ADE80" font-size="9" font-weight="700">34°</text>
             </g>
-            <g transform="translate(450,225)">
+            <g transform="translate(500,255)">
               <rect x="-16" y="-11" width="32" height="20" rx="10" fill="rgba(224,87,74,.18)" stroke="#E0574A" stroke-width="1"/>
               <text text-anchor="middle" y="4" fill="#E0574A" font-size="9" font-weight="700">45°</text>
             </g>
-            <g transform="translate(750,395)">
+            <g transform="translate(800,378)">
               <rect x="-16" y="-11" width="32" height="20" rx="10" fill="rgba(232,163,61,.18)" stroke="#E8A33D" stroke-width="1"/>
               <text text-anchor="middle" y="4" fill="#E8A33D" font-size="9" font-weight="700">39°</text>
             </g>
@@ -397,10 +471,14 @@
 
           <!-- incidents -->
           <g id="layer-incidents" font-family="IBM Plex Sans Arabic">
-            <g transform="translate(560,300)">
-              <circle r="8" fill="rgba(224,87,74,.2)" stroke="#E0574A" stroke-width="1.3" class="ring-pulse"/>
-              <path d="M0,-4 L0,1 M0,3.2 L0,3.3" stroke="#E0574A" stroke-width="1.4" stroke-linecap="round"/>
-              <text text-anchor="middle" y="22" fill="#E0574A" font-size="8">تنبيه طفيف</text>
+            <g transform="translate(605,325)">
+              <circle r="4" fill="#E0574A"/>
+              <line x1="605" y1="325" x2="640" y2="300" stroke="#E0574A" stroke-width="1" stroke-dasharray="2 3" opacity=".7" transform="translate(-605,-325)"/>
+              <g transform="translate(35,-45)">
+                <rect x="-40" y="-13" width="80" height="24" rx="7" fill="rgba(8,20,17,.82)" stroke="#E0574A" stroke-width="1.1"/>
+                <circle cx="-24" cy="0" r="6" fill="rgba(224,87,74,.25)" stroke="#E0574A" stroke-width="1" class="ring-pulse"/>
+                <text x="4" y="3.5" text-anchor="middle" fill="#F6F8F6" font-size="7.5" font-weight="700">تنبيه طفيف</text>
+              </g>
             </g>
           </g>
 

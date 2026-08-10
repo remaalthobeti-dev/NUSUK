@@ -746,8 +746,8 @@ p{ line-height: 1.9; text-wrap: pretty; }
 .ops-map-svg{ display: block; width: 100%; height: auto; }
 
 .bus-icon{ cursor: pointer; }
-.bus-icon .bus-body{ transform-origin: center; }
-.bus-icon.selected .bus-body rect{ stroke: #C9A227; stroke-width: 1.4; }
+.bus-icon .bus-body{ transform-origin: center; filter: drop-shadow(0 0 2.5px rgba(228,199,102,.55)); }
+.bus-icon.selected .bus-body rect:first-child{ stroke: #C9A227; stroke-width: 1.4; }
 
 .trip-panel{
   position: absolute;
@@ -842,7 +842,12 @@ p{ line-height: 1.9; text-wrap: pretty; }
 .map-legend p{ font-size: .58rem; font-weight: 700; color: rgba(246,248,246,.4); margin-bottom: .3rem; }
 .map-legend .legend-scale{ display: flex; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: .55rem; }
 .map-legend .legend-scale span{ flex: 1; }
-.map-legend .legend-labels{ display: flex; justify-content: space-between; font-size: .48rem; color: rgba(246,248,246,.35); font-weight: 700; }
+.map-legend .legend-labels{ display: flex; justify-content: space-between; font-size: .48rem; color: rgba(246,248,246,.35); font-weight: 700; margin-bottom: .5rem; }
+.map-legend .legend-symbols{ display: flex; flex-direction: column; gap: .3rem; padding-top: .4rem; border-top: 1px solid rgba(255,255,255,.08); }
+.map-legend .legend-symbols span{ display: flex; align-items: center; gap: .4rem; font-size: .55rem; font-weight: 600; color: rgba(246,248,246,.6); }
+.map-legend .legend-symbols i{ display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.map-legend .legend-symbols i.line{ width: 14px; height: 0; border-radius: 0; border-top: 2px solid; border-color: inherit; background: none !important; }
+.map-legend .legend-symbols i.line.dashed{ border-top-style: dashed; }
 
 /* ---- live pulse / glow accents on the map ---- */
 .selected-pulse{ animation: ringPulse 1.6s ease-out infinite; transform-origin: center; }
