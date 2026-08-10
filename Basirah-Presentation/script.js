@@ -119,27 +119,32 @@
     heroObserver.observe(heroSection);
   })();
 
-  /* ---------------- Operations Map (Slide 02) — live control-room map ---------------- */
+  /* ---------------- Operations Map (Slide 02) — live command & control center ---------------- */
   (function () {
     const opsSection = document.getElementById("slide-02");
     const svg = document.getElementById("ops-map");
     if (!opsSection || !svg) return;
 
     const mapWrap = document.getElementById("ops-map-wrap");
+    const mapViewport = document.getElementById("map-viewport");
     const mainRoutePath = document.getElementById("mainRoute");
     const altRoutePath = document.getElementById("altRoute");
+    const altRouteLabel = document.getElementById("altRouteLabel");
     const busesLayer = document.getElementById("layer-buses");
-    const popupEl = document.getElementById("bus-popup");
+    const selectedPulse = document.getElementById("selectedPulse");
+    const selectedConnLine = document.getElementById("selectedConnLine");
     const tripPanel = document.getElementById("trip-panel");
     const tripPanelTitle = document.getElementById("trip-panel-title");
     const tripPanelBody = document.getElementById("trip-panel-body");
     const tripPanelClose = document.getElementById("trip-panel-close");
     const suggestBtn = document.getElementById("basirah-suggest-btn");
     const suggestionBanner = document.getElementById("suggestion-banner");
-    const suggestionText = document.getElementById("suggestion-text");
     const kpiActiveBuses = document.getElementById("kpi-active-buses");
     const kpiPilgrims = document.getElementById("kpi-pilgrims");
     const kpiDelay = document.getElementById("kpi-delay");
+    const zoomInBtn = document.getElementById("map-zoom-in");
+    const zoomOutBtn = document.getElementById("map-zoom-out");
+    const zoomResetBtn = document.getElementById("map-zoom-reset");
 
     const STAFF_NAMES = [
       "عبدالله الحربي", "فيصل العتيبي", "سعود القحطاني", "ناصر الزهراني",
@@ -147,6 +152,14 @@
       "سلطان المطيري", "عبدالعزيز الرشيدي", "فهد العنزي", "يوسف الشهري",
     ];
     const STATUS_POOL = ["في الطريق", "في الطريق", "في الطريق", "متوقفة عند نقطة تفتيش"];
+    const CAPACITY = 50;
+    const CHECKPOINTS = [
+      { name: "نقطة تفتيش 1", frac: 0.22 },
+      { name: "نقطة تفتيش 2", frac: 0.42 },
+      { name: "نقطة تفتيش 3", frac: 0.66 },
+      { name: "نقطة تفتيش 4", frac: 0.86 },
+    ];
+    const HUB_POINT = { x: 830, y: 450 };
 
     function pad(n) {
       return String(n).padStart(2, "0");
@@ -156,6 +169,14 @@
     }
     function randBetween(min, max) {
       return Math.round(min + Math.random() * (max - min));
+    }
+    function lastCheckpoint(bus) {
+      if (bus.usingAlt) return "تجاوز طريق الهجرة";
+      let passed = null;
+      for (const cp of CHECKPOINTS) {
+        if (bus.frac >= cp.frac) passed = cp;
+      }
+      return passed ? passed.name : "لم يصل بعد";
     }
 
     const BUS_COUNT = 12;
@@ -167,7 +188,7 @@
       const etaMin = (depMin + 20) % 60;
       buses.push({
         id: `BUS-${pad(i + 1)}`,
-        pilgrims: randBetween(38, 52),
+        pilgrims: randBetween(38, CAPACITY),
         staff: STAFF_NAMES[i % STAFF_NAMES.length],
         phone: randPhone(),
         departure: `${pad(depHour)}:${pad(depMin)} ص`,
@@ -195,9 +216,7 @@
           <circle cx="-5" cy="6" r="2" fill="#083A2F" stroke="#E4C766" stroke-width=".6"/>
           <circle cx="5" cy="6" r="2" fill="#083A2F" stroke="#E4C766" stroke-width=".6"/>
         </g>`;
-      g.addEventListener("mouseenter", () => showPopup(bus));
-      g.addEventListener("mouseleave", hidePopup);
-      g.addEventListener("click", () => openTripPanel(bus));
+      g.addEventListener("click", () => selectBus(bus));
       busesLayer.appendChild(g);
       bus.el = g;
     });
@@ -205,100 +224,98 @@
     let mainLen = mainRoutePath.getTotalLength();
     let altLen = altRoutePath.getTotalLength();
 
-    function svgToWrapperPoint(x, y) {
-      const pt = svg.createSVGPoint();
-      pt.x = x;
-      pt.y = y;
-      const screenPt = pt.matrixTransform(svg.getScreenCTM());
-      const wrapRect = mapWrap.getBoundingClientRect();
-      return { left: screenPt.x - wrapRect.left, top: screenPt.y - wrapRect.top };
+    /* ---- pinned trip panel (click a bus / click another bus / close button) ---- */
+    const ROW_ICONS = {
+      bus: '<rect x="3" y="6" width="18" height="11" rx="2"/><path d="M3 12h18"/><circle cx="7.5" cy="19" r="1.4"/><circle cx="16.5" cy="19" r="1.4"/>',
+      users: '<circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/><path d="M17 3.13a4 4 0 0 1 0 7.75"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>',
+      person: '<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/>',
+      phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.68 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.32 1.85.55 2.81.68A2 2 0 0 1 22 16.92z"/>',
+      clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+      flag: '<path d="M4 3v18"/><path d="M4 4h13l-2.5 4.5L17 13H4"/>',
+      speed: '<path d="M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20z"/><path d="M12 12l4-4"/><path d="M12 8v1"/>',
+      activity: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+      trend: '<polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>',
+      temp: '<path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>',
+      route: '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>',
+      checkpoint: '<path d="M12 2l8 3v6c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V5z"/><polyline points="9 12 11 14 15 10"/>',
+    };
+    function tripRow(icon, label, value) {
+      return `<div class="trip-row">
+        <div class="trip-row-icon"><svg width="15" height="15" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ROW_ICONS[icon]}</svg></div>
+        <div><p class="trip-row-label">${label}</p><p class="trip-row-value">${value}</p></div>
+      </div>`;
     }
 
-    let hoveredBus = null;
-    function popupHTML(bus) {
-      const rows = [
-        ["رقم الحافلة", bus.id],
-        ["عدد الحجاج", bus.pilgrims],
-        ["الموظف المسؤول", bus.staff],
-        ["رقم التواصل", bus.phone],
-        ["وقت الانطلاق", bus.departure],
-        ["الوصول المتوقع", bus.eta],
-        ["السرعة الحالية", `${bus.speed} كم/س`],
-        ["حالة الرحلة", bus.status],
-        ["درجة الحرارة", `${bus.temp}°`],
-        ["نسبة التأخير", `${bus.delay}%`],
-      ];
-      return rows.map(([k, v]) => `<div class="popup-row"><span>${k}</span><span>${v}</span></div>`).join("");
-    }
-
-    function showPopup(bus) {
-      hoveredBus = bus;
-      popupEl.innerHTML = popupHTML(bus);
-      popupEl.classList.add("show");
-      positionPopup(bus);
-    }
-    function hidePopup() {
-      hoveredBus = null;
-      popupEl.classList.remove("show");
-    }
-    function positionPopup(bus) {
-      const p = svgToWrapperPoint(bus.x, bus.y);
-      popupEl.style.left = `${Math.max(8, Math.min(p.left - 110, mapWrap.clientWidth - 236))}px`;
-      popupEl.style.top = `${Math.max(8, p.top - 190)}px`;
-    }
-
+    let selectedBus = null;
     function openTripPanel(bus) {
-      tripPanelTitle.textContent = `الحافلة ${bus.id}`;
-      const rows = [
-        ["عدد الحجاج", bus.pilgrims],
-        ["الموظف المسؤول", bus.staff],
-        ["رقم التواصل", bus.phone],
-        ["وقت الانطلاق", bus.departure],
-        ["الوصول المتوقع", bus.eta],
-        ["السرعة الحالية", `${bus.speed} كم/س`],
-        ["حالة الرحلة", bus.status],
-        ["درجة الحرارة", `${bus.temp}°`],
-        ["نسبة التأخير", `${bus.delay}%`],
-      ];
-      tripPanelBody.innerHTML = rows
-        .map(
-          ([k, v]) =>
-            `<div class="flex items-center justify-between py-2 border-b border-white/10"><span class="text-white/45 text-xs font-bold">${k}</span><span class="text-white text-sm font-bold">${v}</span></div>`
-        )
-        .join("");
+      tripPanelTitle.textContent = bus.id;
+      tripPanelBody.innerHTML = [
+        tripRow("users", "عدد الحجاج", `${bus.pilgrims}/${CAPACITY}`),
+        tripRow("person", "الموظف المسؤول", bus.staff),
+        tripRow("phone", "رقم الجوال", bus.phone),
+        tripRow("clock", "وقت الانطلاق", bus.departure),
+        tripRow("flag", "الوقت المتوقع للوصول", bus.eta),
+        tripRow("speed", "السرعة الحالية", `${bus.speed} كم/س`),
+        tripRow("activity", "الحالة", bus.status),
+        tripRow("trend", "نسبة التأخير", `${bus.delay}%`),
+        tripRow("temp", "درجة الحرارة", `${bus.temp}°`),
+        tripRow("route", "المسار الحالي", bus.usingAlt ? "المسار البديل" : "طريق الهجرة"),
+        tripRow("checkpoint", "آخر نقطة تفتيش", lastCheckpoint(bus)),
+      ].join("");
       tripPanel.classList.add("open");
     }
-    if (tripPanelClose) {
-      tripPanelClose.addEventListener("click", () => tripPanel.classList.remove("open"));
+    function selectBus(bus) {
+      if (selectedBus && selectedBus.el) selectedBus.el.classList.remove("selected");
+      selectedBus = bus;
+      bus.el.classList.add("selected");
+      openTripPanel(bus);
     }
+    function deselectBus() {
+      if (selectedBus && selectedBus.el) selectedBus.el.classList.remove("selected");
+      selectedBus = null;
+      tripPanel.classList.remove("open");
+      selectedPulse.setAttribute("opacity", "0");
+      selectedConnLine.setAttribute("opacity", "0");
+    }
+    if (tripPanelClose) tripPanelClose.addEventListener("click", deselectBus);
 
     /* ---- filters ---- */
     document.querySelectorAll('#map-filters input[type="checkbox"]').forEach((cb) => {
       cb.addEventListener("change", () => {
         const layer = document.getElementById(`layer-${cb.dataset.layer}`);
         if (layer) layer.style.display = cb.checked ? "" : "none";
-        if (cb.dataset.layer === "buses" && !cb.checked) hidePopup();
+        if (cb.dataset.layer === "buses" && !cb.checked) deselectBus();
       });
     });
 
-    /* ---- Basirah suggestion ---- */
+    /* ---- map zoom controls ---- */
+    let zoomLevel = 1;
+    function applyZoom() {
+      mapViewport.setAttribute("transform", `translate(450,240) scale(${zoomLevel}) translate(-450,-240)`);
+    }
+    if (zoomInBtn) zoomInBtn.addEventListener("click", () => { zoomLevel = Math.min(1.8, zoomLevel + 0.2); applyZoom(); });
+    if (zoomOutBtn) zoomOutBtn.addEventListener("click", () => { zoomLevel = Math.max(0.7, zoomLevel - 0.2); applyZoom(); });
+    if (zoomResetBtn) zoomResetBtn.addEventListener("click", () => { zoomLevel = 1; applyZoom(); });
+
+    /* ---- Basirah suggestion: reroute onto المسار البديل ---- */
     if (suggestBtn) {
       suggestBtn.addEventListener("click", () => {
         suggestBtn.disabled = true;
         suggestionBanner.classList.remove("hidden");
         suggestionBanner.classList.add("suggestion-flash");
-        suggestionText.textContent =
-          "تم رصد ازدحام على طريق الهجرة. يقترح بصيرة تحويل 12 حافلة إلى المسار البديل لتقليل زمن الوصول بمقدار 18 دقيقة.";
         setTimeout(() => {
           altRoutePath.style.transition = "opacity .8s ease";
           altRoutePath.style.opacity = ".9";
+          altRouteLabel.style.transition = "opacity .8s ease";
+          altRouteLabel.setAttribute("opacity", ".9");
           buses.forEach((b) => (b.usingAlt = true));
           const hotspot = document.querySelector("#layer-congestion ellipse");
           if (hotspot) {
             hotspot.style.transition = "fill 1.2s ease, opacity 1.2s ease";
             hotspot.setAttribute("fill", "#4ADE80");
-            hotspot.setAttribute("opacity", ".16");
+            hotspot.setAttribute("opacity", ".14");
           }
+          if (selectedBus) openTripPanel(selectedBus);
         }, 1300);
         setTimeout(() => {
           suggestBtn.disabled = false;
@@ -320,7 +337,14 @@
     updateKpis();
 
     /* ---- gold data-stream dots: bus -> Basirah hub ---- */
-    const HUB_POINT = { x: 830, y: 450 };
+    function svgToWrapperPoint(x, y) {
+      const pt = svg.createSVGPoint();
+      pt.x = x;
+      pt.y = y;
+      const screenPt = pt.matrixTransform(svg.getScreenCTM());
+      const wrapRect = mapWrap.getBoundingClientRect();
+      return { left: screenPt.x - wrapRect.left, top: screenPt.y - wrapRect.top };
+    }
     function spawnDataDot() {
       if (!running) return;
       const bus = buses[Math.floor(Math.random() * buses.length)];
@@ -368,7 +392,13 @@
         bus.y = pt.y;
         bus.el.setAttribute("transform", `translate(${pt.x},${pt.y}) rotate(${angle})`);
       });
-      if (hoveredBus) positionPopup(hoveredBus);
+      if (selectedBus) {
+        selectedPulse.setAttribute("cx", selectedBus.x);
+        selectedPulse.setAttribute("cy", selectedBus.y);
+        selectedPulse.setAttribute("opacity", "1");
+        selectedConnLine.setAttribute("d", `M${selectedBus.x},${selectedBus.y} L${HUB_POINT.x},${HUB_POINT.y}`);
+        selectedConnLine.setAttribute("opacity", ".55");
+      }
       requestAnimationFrame(tick);
     }
 
@@ -388,7 +418,6 @@
             if (!kpiInterval) kpiInterval = setInterval(updateKpis, 4000);
           } else {
             running = false;
-            hidePopup();
             if (dataDotInterval) {
               clearInterval(dataDotInterval);
               dataDotInterval = null;
