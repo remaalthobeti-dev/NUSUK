@@ -148,98 +148,230 @@
 <!-- =========================================================
      SLIDE 02 — SCALE OF HAJJ (LIVING SCENE)
 ========================================================= -->
-<section id="slide-02" class="slide bg-primary flex items-center py-28 overflow-hidden vignette" data-nav="حجم العملية">
+<section id="slide-02" class="slide bg-primary flex items-center py-16 overflow-hidden vignette" data-nav="حجم العملية">
   <div class="noise"></div>
   <div class="absolute -top-32 right-1/4 w-[500px] h-[500px] rounded-full bg-gold/10 blur-3xl float-slow"></div>
 
-  <div class="max-w-7xl mx-auto px-6 md:px-10 w-full relative z-10">
-    <div class="text-center max-w-2xl mx-auto mb-14">
-      <p class="eyebrow reveal in">فهم حجم التحدي</p>
-      <h2 class="reveal in text-4xl md:text-6xl font-black text-white mt-3 leading-tight" style="transition-delay:.08s">
-        أكبر عملية تشغيل موسمية في العالم
+  <div class="max-w-7xl mx-auto px-4 md:px-8 w-full relative z-10">
+    <div class="text-center max-w-2xl mx-auto mb-5">
+      <p class="eyebrow reveal in">غرفة العمليات المباشرة</p>
+      <h2 class="reveal in text-3xl md:text-5xl font-black text-white mt-2 leading-tight" style="transition-delay:.08s">
+        خريطة العمليات — المدينة المنورة ⟶ مكة المكرمة
       </h2>
     </div>
 
-    <!-- Living scale scene -->
-    <div class="glass rounded-[28px] p-4 md:p-8 reveal-scale in mb-10" style="transition-delay:.12s">
-      <svg viewBox="0 0 1000 300" class="w-full h-auto">
-        <defs>
-          <radialGradient id="hubGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#E4C766" stop-opacity=".8"/>
-            <stop offset="100%" stop-color="#0F5C4B" stop-opacity="0"/>
-          </radialGradient>
-        </defs>
+    <!-- Filters + Suggestion trigger -->
+    <div class="flex flex-wrap items-center justify-center gap-2 mb-4 reveal in" id="map-filters" style="transition-delay:.1s">
+      <label class="map-filter-chip"><input type="checkbox" data-layer="buses" checked>الحافلات</label>
+      <label class="map-filter-chip"><input type="checkbox" data-layer="centers" checked>المراكز</label>
+      <label class="map-filter-chip"><input type="checkbox" data-layer="congestion" checked>الازدحام</label>
+      <label class="map-filter-chip"><input type="checkbox" data-layer="checkpoints" checked>نقاط التفتيش</label>
+      <label class="map-filter-chip"><input type="checkbox" data-layer="heat" checked>الحرارة</label>
+      <label class="map-filter-chip"><input type="checkbox" data-layer="incidents" checked>الحوادث</label>
+      <button type="button" id="basirah-suggest-btn" class="btn-gold !py-2 !px-4 !text-xs">اقتراح بصيرة</button>
+    </div>
 
-        <!-- centers left / right -->
-        <g>
-          <rect x="40" y="120" width="70" height="52" rx="8" fill="rgba(255,255,255,.06)" stroke="#C9A227" stroke-width="1"/>
-          <text x="75" y="150" text-anchor="middle" fill="#E4C766" font-size="11" font-family="IBM Plex Sans Arabic">مركز</text>
-          <circle cx="75" cy="146" r="2" fill="none" stroke="#C9A227" class="ring-pulse"/>
-        </g>
-        <g>
-          <rect x="890" y="120" width="70" height="52" rx="8" fill="rgba(255,255,255,.06)" stroke="#C9A227" stroke-width="1"/>
-          <text x="925" y="150" text-anchor="middle" fill="#E4C766" font-size="11" font-family="IBM Plex Sans Arabic">مركز</text>
-          <circle cx="925" cy="146" r="2" fill="none" stroke="#C9A227" class="ring-pulse" style="animation-delay:1s"/>
-        </g>
+    <!-- Suggestion banner -->
+    <div id="suggestion-banner" class="decision-box mb-4 hidden max-w-2xl mx-auto text-center">
+      <div class="flex items-center gap-2 mb-2 justify-center">
+        <div class="icon-tile on-dark w-7 h-7"><svg width="13" height="13" viewBox="0 0 24 24"><polygon points="12 2 14.5 9.5 22 12 14.5 14.5 12 22 9.5 14.5 2 12 9.5 9.5 12 2" fill="#C9A227" stroke="none"/></svg></div>
+        <p class="text-gold font-bold text-sm">اقتراح بصيرة</p>
+      </div>
+      <p id="suggestion-text" class="text-white/85 text-sm leading-relaxed"></p>
+    </div>
 
-        <!-- central AI hub -->
-        <circle cx="500" cy="150" r="60" fill="url(#hubGlow)" opacity=".5"/>
-        <circle cx="500" cy="150" r="30" fill="#0F5C4B" stroke="#C9A227" stroke-width="1.5" class="pulse-glow"/>
-        <text x="500" y="155" text-anchor="middle" fill="#F6F8F6" font-size="12" font-weight="700" font-family="IBM Plex Sans Arabic">بصيرة</text>
+    <!-- Map + Dashboard -->
+    <div class="relative reveal-scale in grid lg:grid-cols-[260px_1fr] gap-4" style="transition-delay:.15s" id="ops-room">
 
-        <!-- connection paths -->
-        <path id="scaleL" d="M110 148 C 250 148, 350 150, 470 150" fill="none" stroke="#C9A227" stroke-width="1" opacity=".2"/>
-        <path id="scaleR" d="M890 148 C 750 148, 650 150, 530 150" fill="none" stroke="#C9A227" stroke-width="1" opacity=".2"/>
+      <!-- Live dashboard (right of the map) -->
+      <div class="glass rounded-2xl p-4 space-y-3 order-2 lg:order-1">
+        <p class="micro text-gold mb-1">لوحة القيادة المباشرة</p>
+        <div class="grid grid-cols-2 lg:grid-cols-1 gap-3">
+          <div class="glass rounded-xl p-3">
+            <p class="text-white/45 text-[10px] font-bold">حافلات نشطة</p>
+            <p class="text-xl font-black text-white" id="kpi-active-buses">—</p>
+          </div>
+          <div class="glass rounded-xl p-3">
+            <p class="text-white/45 text-[10px] font-bold">حجاج قيد النقل</p>
+            <p class="text-xl font-black text-white" id="kpi-pilgrims">—</p>
+          </div>
+          <div class="glass rounded-xl p-3">
+            <p class="text-white/45 text-[10px] font-bold">متوسط زمن الوصول</p>
+            <p class="text-xl font-black text-white">3<span class="text-xs text-white/40"> س</span> 15<span class="text-xs text-white/40"> د</span></p>
+          </div>
+          <div class="glass rounded-xl p-3">
+            <p class="text-white/45 text-[10px] font-bold">نسبة التأخير</p>
+            <p class="text-xl font-black text-gold" id="kpi-delay">—</p>
+          </div>
+          <div class="glass rounded-xl p-3">
+            <p class="text-white/45 text-[10px] font-bold">مراكز نشطة</p>
+            <p class="text-xl font-black text-white">3<span class="text-xs text-white/40">/3</span></p>
+          </div>
+        </div>
+        <div class="pt-2 border-t border-white/10">
+          <p class="text-white/35 text-[9.5px] font-bold mb-1.5">مستوى الازدحام</p>
+          <div class="flex items-center gap-1">
+            <span class="h-1.5 flex-1 rounded-full" style="background:#4ADE80"></span>
+            <span class="h-1.5 flex-1 rounded-full" style="background:#E5D34C"></span>
+            <span class="h-1.5 flex-1 rounded-full" style="background:#E8A33D"></span>
+            <span class="h-1.5 flex-1 rounded-full" style="background:#E0574A"></span>
+          </div>
+        </div>
+      </div>
 
-        <!-- pilgrim streams -->
-        <g fill="#E4C766">
-          <circle r="2.6"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#scaleL"/></animateMotion></circle>
-          <circle r="2.6"><animateMotion dur="3s" begin=".4s" repeatCount="indefinite"><mpath href="#scaleL"/></animateMotion></circle>
-          <circle r="2.6"><animateMotion dur="2.8s" begin=".8s" repeatCount="indefinite"><mpath href="#scaleL"/></animateMotion></circle>
-          <circle r="2.6"><animateMotion dur="2.6s" begin=".2s" repeatCount="indefinite"><mpath href="#scaleR"/></animateMotion></circle>
-          <circle r="2.6"><animateMotion dur="3s" begin=".6s" repeatCount="indefinite"><mpath href="#scaleR"/></animateMotion></circle>
-          <circle r="2.6"><animateMotion dur="2.9s" begin="1s" repeatCount="indefinite"><mpath href="#scaleR"/></animateMotion></circle>
-        </g>
+      <!-- Map -->
+      <div class="ops-map-wrap rounded-2xl p-2 md:p-3 relative order-1 lg:order-2" id="ops-map-wrap">
+        <svg viewBox="0 0 900 480" class="ops-map-svg" id="ops-map" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="terrainGlow1" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#0F5C4B" stop-opacity=".45"/>
+              <stop offset="100%" stop-color="#0F5C4B" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="roadGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#E4C766"/>
+              <stop offset="100%" stop-color="#C9A227"/>
+            </linearGradient>
+            <filter id="heatBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="14"/>
+            </filter>
+          </defs>
 
-        <!-- buses on curved roads -->
-        <path id="busRoad1" d="M130 200 C 300 240, 400 220, 500 210" fill="none" stroke="#C9A227" stroke-width="1" opacity=".15"/>
-        <path id="busRoad2" d="M870 200 C 700 240, 600 220, 500 210" fill="none" stroke="#C9A227" stroke-width="1" opacity=".15"/>
-        <g>
-          <rect x="-12" y="-6" width="24" height="12" rx="3" fill="#0F5C4B" stroke="#C9A227" stroke-width="1"/>
-          <animateMotion dur="6s" repeatCount="indefinite" rotate="auto"><mpath href="#busRoad1"/></animateMotion>
-        </g>
-        <g>
-          <rect x="-12" y="-6" width="24" height="12" rx="3" fill="#0F5C4B" stroke="#C9A227" stroke-width="1"/>
-          <animateMotion dur="7s" begin="1.2s" repeatCount="indefinite" rotate="auto"><mpath href="#busRoad2"/></animateMotion>
-        </g>
+          <!-- terrain base -->
+          <rect x="0" y="0" width="900" height="480" fill="#062A22"/>
+          <circle cx="180" cy="90" r="220" fill="url(#terrainGlow1)"/>
+          <circle cx="720" cy="420" r="240" fill="url(#terrainGlow1)"/>
+          <g stroke="#ffffff" stroke-opacity=".05">
+            <line x1="0" y1="60" x2="900" y2="60"/><line x1="0" y1="140" x2="900" y2="140"/>
+            <line x1="0" y1="220" x2="900" y2="220"/><line x1="0" y1="300" x2="900" y2="300"/>
+            <line x1="0" y1="380" x2="900" y2="380"/><line x1="0" y1="460" x2="900" y2="460"/>
+            <line x1="120" y1="0" x2="120" y2="480"/><line x1="280" y1="0" x2="280" y2="480"/>
+            <line x1="440" y1="0" x2="440" y2="480"/><line x1="600" y1="0" x2="600" y2="480"/>
+            <line x1="760" y1="0" x2="760" y2="480"/>
+          </g>
 
-        <!-- ambient pilgrim dots at edges -->
-        <g fill="#E4C766" opacity=".7">
-          <circle cx="60" cy="90" r="2"/><circle cx="80" cy="80" r="2"/><circle cx="100" cy="95" r="2"/>
-          <circle cx="900" cy="90" r="2"/><circle cx="920" cy="80" r="2"/><circle cx="940" cy="95" r="2"/>
-        </g>
-      </svg>
+          <!-- congestion heat blobs (layer) -->
+          <g id="layer-congestion">
+            <ellipse cx="450" cy="255" rx="90" ry="46" fill="#E0574A" opacity=".28" filter="url(#heatBlur)"/>
+            <ellipse cx="300" cy="165" rx="55" ry="32" fill="#E5D34C" opacity=".22" filter="url(#heatBlur)"/>
+            <ellipse cx="640" cy="345" rx="60" ry="34" fill="#E8A33D" opacity=".22" filter="url(#heatBlur)"/>
+          </g>
+
+          <!-- alternate route (hidden by default) -->
+          <path id="altRoute" d="M150,60 C 320,140 380,195 480,190 C 600,180 680,300 750,420" fill="none" stroke="#4ADE80" stroke-width="3" stroke-dasharray="2 9" opacity="0"/>
+
+          <!-- main route -->
+          <path id="mainRoute" d="M150,60 C 300,150 350,250 450,260 C 550,270 650,320 750,420" fill="none" stroke="#0B231C" stroke-width="10" stroke-linecap="round"/>
+          <path id="mainRouteLine" d="M150,60 C 300,150 350,250 450,260 C 550,270 650,320 750,420" fill="none" stroke="url(#roadGrad)" stroke-width="2" stroke-dasharray="8 8" opacity=".8"/>
+
+          <!-- endpoints -->
+          <g>
+            <circle cx="150" cy="60" r="7" fill="#4ADE80"/>
+            <text x="150" y="42" text-anchor="middle" fill="#F6F8F6" font-size="12" font-weight="700" font-family="IBM Plex Sans Arabic">المدينة المنورة</text>
+          </g>
+          <g>
+            <circle cx="750" cy="420" r="7" fill="#C9A227"/>
+            <text x="750" y="445" text-anchor="middle" fill="#F6F8F6" font-size="12" font-weight="700" font-family="IBM Plex Sans Arabic">مكة المكرمة</text>
+          </g>
+
+          <!-- operation centers -->
+          <g id="layer-centers" font-family="IBM Plex Sans Arabic">
+            <g transform="translate(215,130)">
+              <rect x="-34" y="-22" width="68" height="40" rx="8" fill="rgba(255,255,255,.07)" stroke="#4ADE80" stroke-width="1.2"/>
+              <text text-anchor="middle" y="-4" fill="#F6F8F6" font-size="9.5" font-weight="700">مركز الانطلاق</text>
+              <text text-anchor="middle" y="10" fill="#4ADE80" font-size="8">نشط</text>
+            </g>
+            <g transform="translate(480,225)">
+              <rect x="-34" y="-22" width="68" height="40" rx="8" fill="rgba(255,255,255,.07)" stroke="#E4C766" stroke-width="1.2"/>
+              <text text-anchor="middle" y="-4" fill="#F6F8F6" font-size="9.5" font-weight="700">مركز المتابعة</text>
+              <text text-anchor="middle" y="10" fill="#E4C766" font-size="8">نشط</text>
+            </g>
+            <g transform="translate(690,375)">
+              <rect x="-34" y="-22" width="68" height="40" rx="8" fill="rgba(255,255,255,.07)" stroke="#4ADE80" stroke-width="1.2"/>
+              <text text-anchor="middle" y="-4" fill="#F6F8F6" font-size="9.5" font-weight="700">مركز الاستقبال</text>
+              <text text-anchor="middle" y="10" fill="#4ADE80" font-size="8">نشط</text>
+            </g>
+          </g>
+
+          <!-- checkpoints -->
+          <g id="layer-checkpoints" font-family="IBM Plex Sans Arabic">
+            <g transform="translate(305,178)">
+              <circle r="9" fill="rgba(201,162,39,.15)" stroke="#C9A227" stroke-width="1.2"/>
+              <path d="M-3,-3 L3,3 M3,-3 L-3,3" stroke="#E4C766" stroke-width="1.3" transform="scale(.01)"/>
+              <path d="M0,-4 L0,4 M-4,0 L4,0" stroke="none"/>
+              <text text-anchor="middle" y="20" fill="#E4C766" font-size="8">تفتيش 1</text>
+            </g>
+            <g transform="translate(605,318)">
+              <circle r="9" fill="rgba(201,162,39,.15)" stroke="#C9A227" stroke-width="1.2"/>
+              <text text-anchor="middle" y="20" fill="#E4C766" font-size="8">تفتيش 2</text>
+            </g>
+          </g>
+
+          <!-- temperature badges (heat layer) -->
+          <g id="layer-heat" font-family="IBM Plex Sans Arabic">
+            <g transform="translate(215,95)">
+              <rect x="-16" y="-11" width="32" height="20" rx="10" fill="rgba(74,222,128,.16)" stroke="#4ADE80" stroke-width="1"/>
+              <text text-anchor="middle" y="4" fill="#4ADE80" font-size="9" font-weight="700">34°</text>
+            </g>
+            <g transform="translate(450,225)">
+              <rect x="-16" y="-11" width="32" height="20" rx="10" fill="rgba(224,87,74,.18)" stroke="#E0574A" stroke-width="1"/>
+              <text text-anchor="middle" y="4" fill="#E0574A" font-size="9" font-weight="700">45°</text>
+            </g>
+            <g transform="translate(690,340)">
+              <rect x="-16" y="-11" width="32" height="20" rx="10" fill="rgba(232,163,61,.18)" stroke="#E8A33D" stroke-width="1"/>
+              <text text-anchor="middle" y="4" fill="#E8A33D" font-size="9" font-weight="700">39°</text>
+            </g>
+          </g>
+
+          <!-- incidents -->
+          <g id="layer-incidents" font-family="IBM Plex Sans Arabic">
+            <g transform="translate(560,300)">
+              <circle r="8" fill="rgba(224,87,74,.2)" stroke="#E0574A" stroke-width="1.3" class="ring-pulse"/>
+              <path d="M0,-4 L0,1 M0,3.2 L0,3.3" stroke="#E0574A" stroke-width="1.4" stroke-linecap="round"/>
+              <text text-anchor="middle" y="22" fill="#E0574A" font-size="8">تنبيه طفيف</text>
+            </g>
+          </g>
+
+          <!-- Basirah operations hub -->
+          <g transform="translate(830,450)">
+            <circle r="22" fill="#0F5C4B" stroke="#C9A227" stroke-width="1.4" class="pulse-glow"/>
+            <text text-anchor="middle" y="4" fill="#F6F8F6" font-size="9" font-weight="700" font-family="IBM Plex Sans Arabic">بصيرة</text>
+          </g>
+
+          <!-- buses layer (populated by JS) -->
+          <g id="layer-buses"></g>
+        </svg>
+
+        <div class="map-popup" id="bus-popup"></div>
+      </div>
     </div>
 
     <!-- compact stat strip -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4 text-center stagger in divide-x divide-white/10 lg:divide-x">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-4 text-center stagger in divide-x divide-white/10 lg:divide-x mt-5">
       <div class="reveal in" style="--i:0">
-        <p class="kpi-value text-3xl md:text-4xl font-black text-white" data-count="2000000">0</p>
+        <p class="kpi-value text-2xl md:text-3xl font-black text-white" data-count="2000000">0</p>
         <p class="text-white/50 text-xs font-semibold mt-1">حاج</p>
       </div>
       <div class="reveal in" style="--i:1">
-        <p class="kpi-value text-3xl md:text-4xl font-black text-white" data-count="150000">0</p>
+        <p class="kpi-value text-2xl md:text-3xl font-black text-white" data-count="150000">0</p>
         <p class="text-white/50 text-xs font-semibold mt-1">موظف تشغيل</p>
       </div>
       <div class="reveal in" style="--i:2">
-        <p class="kpi-value text-3xl md:text-4xl font-black text-white" data-count="25000">0</p>
+        <p class="kpi-value text-2xl md:text-3xl font-black text-white" data-count="25000">0</p>
         <p class="text-white/50 text-xs font-semibold mt-1">حافلة</p>
       </div>
       <div class="reveal in" style="--i:3">
-        <p class="kpi-value text-3xl md:text-4xl font-black text-white" data-count="1200">0</p>
+        <p class="kpi-value text-2xl md:text-3xl font-black text-white" data-count="1200">0</p>
         <p class="text-white/50 text-xs font-semibold mt-1">مركز تشغيلي</p>
       </div>
     </div>
+  </div>
+
+  <!-- Trip detail side panel -->
+  <div class="trip-panel" id="trip-panel">
+    <button type="button" id="trip-panel-close" class="icon-tile on-dark w-8 h-8 mb-4"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <p class="micro text-gold mb-1">تفاصيل الرحلة</p>
+    <h3 class="text-white font-black text-xl mb-4" id="trip-panel-title">—</h3>
+    <div class="space-y-2" id="trip-panel-body"></div>
   </div>
 </section>
 

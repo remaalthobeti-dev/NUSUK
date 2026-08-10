@@ -119,6 +119,292 @@
     heroObserver.observe(heroSection);
   })();
 
+  /* ---------------- Operations Map (Slide 02) — live control-room map ---------------- */
+  (function () {
+    const opsSection = document.getElementById("slide-02");
+    const svg = document.getElementById("ops-map");
+    if (!opsSection || !svg) return;
+
+    const mapWrap = document.getElementById("ops-map-wrap");
+    const mainRoutePath = document.getElementById("mainRoute");
+    const altRoutePath = document.getElementById("altRoute");
+    const busesLayer = document.getElementById("layer-buses");
+    const popupEl = document.getElementById("bus-popup");
+    const tripPanel = document.getElementById("trip-panel");
+    const tripPanelTitle = document.getElementById("trip-panel-title");
+    const tripPanelBody = document.getElementById("trip-panel-body");
+    const tripPanelClose = document.getElementById("trip-panel-close");
+    const suggestBtn = document.getElementById("basirah-suggest-btn");
+    const suggestionBanner = document.getElementById("suggestion-banner");
+    const suggestionText = document.getElementById("suggestion-text");
+    const kpiActiveBuses = document.getElementById("kpi-active-buses");
+    const kpiPilgrims = document.getElementById("kpi-pilgrims");
+    const kpiDelay = document.getElementById("kpi-delay");
+
+    const STAFF_NAMES = [
+      "عبدالله الحربي", "فيصل العتيبي", "سعود القحطاني", "ناصر الزهراني",
+      "خالد الشمري", "تركي الدوسري", "بندر السبيعي", "ماجد الغامدي",
+      "سلطان المطيري", "عبدالعزيز الرشيدي", "فهد العنزي", "يوسف الشهري",
+    ];
+    const STATUS_POOL = ["في الطريق", "في الطريق", "في الطريق", "متوقفة عند نقطة تفتيش"];
+
+    function pad(n) {
+      return String(n).padStart(2, "0");
+    }
+    function randPhone() {
+      return "05" + Math.floor(10000000 + Math.random() * 89999999);
+    }
+    function randBetween(min, max) {
+      return Math.round(min + Math.random() * (max - min));
+    }
+
+    const BUS_COUNT = 12;
+    const buses = [];
+    for (let i = 0; i < BUS_COUNT; i++) {
+      const depHour = 4 + Math.floor(i / 6);
+      const depMin = (i % 6) * 10;
+      const etaHour = depHour + 3 + (i % 2);
+      const etaMin = (depMin + 20) % 60;
+      buses.push({
+        id: `BUS-${pad(i + 1)}`,
+        pilgrims: randBetween(38, 52),
+        staff: STAFF_NAMES[i % STAFF_NAMES.length],
+        phone: randPhone(),
+        departure: `${pad(depHour)}:${pad(depMin)} ص`,
+        eta: `${pad(etaHour)}:${pad(etaMin)} ص`,
+        speed: randBetween(64, 96),
+        status: STATUS_POOL[i % STATUS_POOL.length],
+        temp: randBetween(34, 45),
+        delay: i % 5 === 0 ? 0 : randBetween(2, 15),
+        frac: i / BUS_COUNT,
+        speedFrac: 0.000018 + Math.random() * 0.000006,
+        usingAlt: false,
+        x: 0,
+        y: 0,
+      });
+    }
+
+    const NS = "http://www.w3.org/2000/svg";
+    buses.forEach((bus) => {
+      const g = document.createElementNS(NS, "g");
+      g.setAttribute("class", "bus-icon");
+      g.setAttribute("data-bus", bus.id);
+      g.innerHTML = `
+        <g class="bus-body">
+          <rect x="-9" y="-5" width="18" height="10" rx="3" fill="#0F5C4B" stroke="#C9A227" stroke-width="1"/>
+          <circle cx="-5" cy="6" r="2" fill="#083A2F" stroke="#E4C766" stroke-width=".6"/>
+          <circle cx="5" cy="6" r="2" fill="#083A2F" stroke="#E4C766" stroke-width=".6"/>
+        </g>`;
+      g.addEventListener("mouseenter", () => showPopup(bus));
+      g.addEventListener("mouseleave", hidePopup);
+      g.addEventListener("click", () => openTripPanel(bus));
+      busesLayer.appendChild(g);
+      bus.el = g;
+    });
+
+    let mainLen = mainRoutePath.getTotalLength();
+    let altLen = altRoutePath.getTotalLength();
+
+    function svgToWrapperPoint(x, y) {
+      const pt = svg.createSVGPoint();
+      pt.x = x;
+      pt.y = y;
+      const screenPt = pt.matrixTransform(svg.getScreenCTM());
+      const wrapRect = mapWrap.getBoundingClientRect();
+      return { left: screenPt.x - wrapRect.left, top: screenPt.y - wrapRect.top };
+    }
+
+    let hoveredBus = null;
+    function popupHTML(bus) {
+      const rows = [
+        ["رقم الحافلة", bus.id],
+        ["عدد الحجاج", bus.pilgrims],
+        ["الموظف المسؤول", bus.staff],
+        ["رقم التواصل", bus.phone],
+        ["وقت الانطلاق", bus.departure],
+        ["الوصول المتوقع", bus.eta],
+        ["السرعة الحالية", `${bus.speed} كم/س`],
+        ["حالة الرحلة", bus.status],
+        ["درجة الحرارة", `${bus.temp}°`],
+        ["نسبة التأخير", `${bus.delay}%`],
+      ];
+      return rows.map(([k, v]) => `<div class="popup-row"><span>${k}</span><span>${v}</span></div>`).join("");
+    }
+
+    function showPopup(bus) {
+      hoveredBus = bus;
+      popupEl.innerHTML = popupHTML(bus);
+      popupEl.classList.add("show");
+      positionPopup(bus);
+    }
+    function hidePopup() {
+      hoveredBus = null;
+      popupEl.classList.remove("show");
+    }
+    function positionPopup(bus) {
+      const p = svgToWrapperPoint(bus.x, bus.y);
+      popupEl.style.left = `${Math.max(8, Math.min(p.left - 110, mapWrap.clientWidth - 236))}px`;
+      popupEl.style.top = `${Math.max(8, p.top - 190)}px`;
+    }
+
+    function openTripPanel(bus) {
+      tripPanelTitle.textContent = `الحافلة ${bus.id}`;
+      const rows = [
+        ["عدد الحجاج", bus.pilgrims],
+        ["الموظف المسؤول", bus.staff],
+        ["رقم التواصل", bus.phone],
+        ["وقت الانطلاق", bus.departure],
+        ["الوصول المتوقع", bus.eta],
+        ["السرعة الحالية", `${bus.speed} كم/س`],
+        ["حالة الرحلة", bus.status],
+        ["درجة الحرارة", `${bus.temp}°`],
+        ["نسبة التأخير", `${bus.delay}%`],
+      ];
+      tripPanelBody.innerHTML = rows
+        .map(
+          ([k, v]) =>
+            `<div class="flex items-center justify-between py-2 border-b border-white/10"><span class="text-white/45 text-xs font-bold">${k}</span><span class="text-white text-sm font-bold">${v}</span></div>`
+        )
+        .join("");
+      tripPanel.classList.add("open");
+    }
+    if (tripPanelClose) {
+      tripPanelClose.addEventListener("click", () => tripPanel.classList.remove("open"));
+    }
+
+    /* ---- filters ---- */
+    document.querySelectorAll('#map-filters input[type="checkbox"]').forEach((cb) => {
+      cb.addEventListener("change", () => {
+        const layer = document.getElementById(`layer-${cb.dataset.layer}`);
+        if (layer) layer.style.display = cb.checked ? "" : "none";
+        if (cb.dataset.layer === "buses" && !cb.checked) hidePopup();
+      });
+    });
+
+    /* ---- Basirah suggestion ---- */
+    if (suggestBtn) {
+      suggestBtn.addEventListener("click", () => {
+        suggestBtn.disabled = true;
+        suggestionBanner.classList.remove("hidden");
+        suggestionBanner.classList.add("suggestion-flash");
+        suggestionText.textContent =
+          "تم رصد ازدحام على طريق الهجرة. يقترح بصيرة تحويل 12 حافلة إلى المسار البديل لتقليل زمن الوصول بمقدار 18 دقيقة.";
+        setTimeout(() => {
+          altRoutePath.style.transition = "opacity .8s ease";
+          altRoutePath.style.opacity = ".9";
+          buses.forEach((b) => (b.usingAlt = true));
+          const hotspot = document.querySelector("#layer-congestion ellipse");
+          if (hotspot) {
+            hotspot.style.transition = "fill 1.2s ease, opacity 1.2s ease";
+            hotspot.setAttribute("fill", "#4ADE80");
+            hotspot.setAttribute("opacity", ".16");
+          }
+        }, 1300);
+        setTimeout(() => {
+          suggestBtn.disabled = false;
+          suggestionBanner.classList.add("hidden");
+          suggestionBanner.classList.remove("suggestion-flash");
+        }, 7000);
+      });
+    }
+
+    /* ---- KPI ticker ---- */
+    function updateKpis() {
+      const active = buses.filter((b) => b.status !== "وصلت").length;
+      const pilgrims = buses.reduce((s, b) => s + b.pilgrims, 0);
+      const avgDelay = Math.round(buses.reduce((s, b) => s + b.delay, 0) / buses.length);
+      if (kpiActiveBuses) kpiActiveBuses.textContent = active;
+      if (kpiPilgrims) kpiPilgrims.textContent = pilgrims.toLocaleString("en-US");
+      if (kpiDelay) kpiDelay.textContent = `${avgDelay}%`;
+    }
+    updateKpis();
+
+    /* ---- gold data-stream dots: bus -> Basirah hub ---- */
+    const HUB_POINT = { x: 830, y: 450 };
+    function spawnDataDot() {
+      if (!running) return;
+      const bus = buses[Math.floor(Math.random() * buses.length)];
+      const dot = document.createElement("span");
+      dot.className = "data-dot-travel";
+      const start = svgToWrapperPoint(bus.x, bus.y);
+      dot.style.left = `${start.left}px`;
+      dot.style.top = `${start.top}px`;
+      mapWrap.appendChild(dot);
+      requestAnimationFrame(() => {
+        dot.style.opacity = "1";
+        requestAnimationFrame(() => {
+          const end = svgToWrapperPoint(HUB_POINT.x, HUB_POINT.y);
+          dot.style.left = `${end.left}px`;
+          dot.style.top = `${end.top}px`;
+          setTimeout(() => {
+            dot.style.opacity = "0";
+            setTimeout(() => dot.remove(), 350);
+          }, 950);
+        });
+      });
+    }
+
+    /* ---- animation loop ---- */
+    let running = false;
+    let tickScheduled = false;
+    let lastTime = 0;
+    function tick(now) {
+      if (!running) {
+        tickScheduled = false;
+        return;
+      }
+      const dt = lastTime ? now - lastTime : 16;
+      lastTime = now;
+      buses.forEach((bus) => {
+        bus.frac += bus.speedFrac * dt;
+        if (bus.frac > 1) bus.frac -= 1;
+        const path = bus.usingAlt ? altRoutePath : mainRoutePath;
+        const len = bus.usingAlt ? altLen : mainLen;
+        const d = bus.frac * len;
+        const pt = path.getPointAtLength(d);
+        const pt2 = path.getPointAtLength(Math.min(len, d + 2));
+        const angle = (Math.atan2(pt2.y - pt.y, pt2.x - pt.x) * 180) / Math.PI;
+        bus.x = pt.x;
+        bus.y = pt.y;
+        bus.el.setAttribute("transform", `translate(${pt.x},${pt.y}) rotate(${angle})`);
+      });
+      if (hoveredBus) positionPopup(hoveredBus);
+      requestAnimationFrame(tick);
+    }
+
+    let dataDotInterval = null;
+    let kpiInterval = null;
+    const opsObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            running = true;
+            if (!tickScheduled) {
+              tickScheduled = true;
+              lastTime = 0;
+              requestAnimationFrame(tick);
+            }
+            if (!dataDotInterval) dataDotInterval = setInterval(spawnDataDot, 2200);
+            if (!kpiInterval) kpiInterval = setInterval(updateKpis, 4000);
+          } else {
+            running = false;
+            hidePopup();
+            if (dataDotInterval) {
+              clearInterval(dataDotInterval);
+              dataDotInterval = null;
+            }
+            if (kpiInterval) {
+              clearInterval(kpiInterval);
+              kpiInterval = null;
+            }
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+    opsObserver.observe(opsSection);
+  })();
+
   /* ---------------- Build side navigation dots ---------------- */
   slides.forEach((slide, i) => {
     const dot = document.createElement("div");
