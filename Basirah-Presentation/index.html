@@ -116,101 +116,19 @@
       </div>
     </div>
 
-    <!-- Cinematic Operations Room -->
+    <!-- Live Hero Conversation -->
     <div class="relative reveal-scale in" style="transition-delay:.15s">
       <div class="relative rounded-[32px] p-3 md:p-5" style="box-shadow: 0 40px 120px -30px rgba(0,0,0,.6);">
         <div class="absolute -inset-6 rounded-[40px] bg-gold/10 blur-2xl -z-10"></div>
-        <div class="glass rounded-[26px] overflow-hidden">
-        <svg viewBox="0 0 560 460" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <radialGradient id="meccaGlow" cx="50%" cy="32%" r="60%">
-              <stop offset="0%" stop-color="#C9A227" stop-opacity="0.4"/>
-              <stop offset="100%" stop-color="#C9A227" stop-opacity="0"/>
-            </radialGradient>
-            <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#E4C766" stop-opacity=".9"/>
-              <stop offset="100%" stop-color="#0F5C4B" stop-opacity="0"/>
-            </radialGradient>
-            <linearGradient id="panelGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#0F5C4B"/>
-              <stop offset="100%" stop-color="#083A2F"/>
-            </linearGradient>
-          </defs>
-
-          <rect x="0" y="0" width="560" height="460" fill="#062A22"/>
-          <circle cx="280" cy="150" r="170" fill="url(#meccaGlow)"/>
-
-          <!-- Kaaba abstract -->
-          <g transform="translate(230,85)">
-            <rect x="0" y="0" width="90" height="90" fill="#0B231C" stroke="#C9A227" stroke-width="1.5"/>
-            <rect x="0" y="60" width="90" height="14" fill="#C9A227" opacity=".8"/>
-            <rect x="0" y="0" width="90" height="90" fill="none" stroke="#C9A227" stroke-opacity=".25" stroke-width="8"/>
-          </g>
-
-          <!-- buses moving along road paths -->
-          <path id="heroRoadA" d="M40 250 C 140 260, 200 300, 270 355" fill="none" stroke="none"/>
-          <path id="heroRoadB" d="M520 240 C 420 255, 350 300, 280 355" fill="none" stroke="none"/>
-          <g stroke="#C9A227" stroke-width="1" fill="none" opacity=".18">
-            <use href="#heroRoadA"/><use href="#heroRoadB"/>
-          </g>
-          <g>
-            <rect x="-13" y="-7" width="26" height="14" rx="4" fill="#0F5C4B" stroke="#C9A227" stroke-width="1"/>
-            <animateMotion dur="7s" repeatCount="indefinite" rotate="auto"><mpath href="#heroRoadA"/></animateMotion>
-          </g>
-          <g>
-            <rect x="-13" y="-7" width="26" height="14" rx="4" fill="#0F5C4B" stroke="#C9A227" stroke-width="1"/>
-            <animateMotion dur="9s" begin="1s" repeatCount="indefinite" rotate="auto"><mpath href="#heroRoadB"/></animateMotion>
-          </g>
-
-          <!-- centers -->
-          <g>
-            <rect x="60" y="215" width="52" height="40" rx="6" fill="#0F5C4B" stroke="#C9A227" stroke-width="1"/>
-            <circle cx="86" cy="235" r="2" fill="#C9A227"/>
-            <circle r="2" fill="none" stroke="#C9A227" stroke-width="1.2" class="ring-pulse" cx="86" cy="235"/>
-          </g>
-          <g>
-            <rect x="448" y="210" width="52" height="40" rx="6" fill="#0F5C4B" stroke="#C9A227" stroke-width="1"/>
-            <circle cx="474" cy="230" r="2" fill="#C9A227"/>
-            <circle r="2" fill="none" stroke="#C9A227" stroke-width="1.2" class="ring-pulse" cx="474" cy="230" style="animation-delay:.8s"/>
-          </g>
-
-          <!-- pilgrim particles flowing toward AI core -->
-          <path id="pgA" d="M120 200 C 180 260, 220 320, 278 372" fill="none" stroke="none"/>
-          <path id="pgB" d="M150 190 C 200 260, 230 320, 278 372" fill="none" stroke="none"/>
-          <path id="pgC" d="M410 195 C 360 260, 320 320, 282 372" fill="none" stroke="none"/>
-          <g fill="#E4C766">
-            <circle r="2.6"><animateMotion dur="3.2s" repeatCount="indefinite"><mpath href="#pgA"/></animateMotion></circle>
-            <circle r="2.6"><animateMotion dur="3.6s" begin=".5s" repeatCount="indefinite"><mpath href="#pgB"/></animateMotion></circle>
-            <circle r="2.6"><animateMotion dur="3s" begin="1s" repeatCount="indefinite"><mpath href="#pgC"/></animateMotion></circle>
-            <circle r="2.6"><animateMotion dur="3.4s" begin="1.6s" repeatCount="indefinite"><mpath href="#pgA"/></animateMotion></circle>
-          </g>
-
-          <!-- data lines toward AI core -->
-          <g stroke="#C9A227" stroke-width="1.2" fill="none" opacity=".7">
-            <path class="data-line" d="M95 240 C 180 320, 220 340, 280 365"/>
-            <path class="data-line" d="M175 270 C 220 330, 240 345, 280 365"/>
-            <path class="data-line" d="M465 235 C 400 320, 330 340, 280 365"/>
-            <path class="data-line" d="M280 130 C 280 220, 280 300, 280 365"/>
-          </g>
-
-          <!-- AI Core -->
-          <g transform="translate(280,375)">
-            <circle r="46" fill="url(#coreGlow)" opacity=".55"/>
-            <circle r="30" fill="url(#panelGrad)" stroke="#C9A227" stroke-width="1.5" class="pulse-glow"/>
-            <circle r="18" fill="none" stroke="#C9A227" stroke-width="1" opacity=".5" class="spin-slow"/>
-            <text text-anchor="middle" y="5" fill="#F6F8F6" font-size="12" font-weight="700" font-family="IBM Plex Sans Arabic">AI</text>
-          </g>
-
-          <!-- floating dashboard panel -->
-          <g transform="translate(24,20)">
-            <rect width="150" height="80" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(201,162,39,.35)" class="float-slow"/>
-            <rect x="12" y="16" width="126" height="6" rx="3" fill="#C9A227" opacity=".8"/>
-            <rect x="12" y="30" width="90" height="6" rx="3" fill="#C9A227" opacity=".5"/>
-            <rect x="12" y="44" width="110" height="6" rx="3" fill="#C9A227" opacity=".3"/>
-            <circle cx="20" cy="62" r="3" fill="#4ADE80"/>
-            <text x="30" y="66" fill="#F6F8F6" font-size="9" font-family="IBM Plex Sans Arabic">مباشر الآن</text>
-          </g>
-        </svg>
+        <div class="glass rounded-[26px] overflow-hidden p-5 md:p-6">
+          <div class="flex items-center gap-2 mb-4 pb-4 border-b border-white/10">
+            <span class="w-2.5 h-2.5 rounded-full bg-red-400/70"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-yellow-400/70"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-green-400/70"></span>
+            <span class="text-white/40 text-xs mr-3">بصيرة AI</span>
+            <span class="mr-auto flex items-center gap-1.5 text-[10px] text-green-400 font-bold"><span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>مباشر</span>
+          </div>
+          <div id="hero-thread" class="chat-thread-scroll space-y-3" style="max-height:min(50vh,420px)"></div>
         </div>
       </div>
       <div class="absolute -bottom-5 -right-5 glass rounded-2xl px-5 py-3 text-white text-xs font-semibold shadow-xl float-med flex items-center gap-2">

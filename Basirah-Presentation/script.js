@@ -23,6 +23,160 @@
     });
   }
 
+  /* ---------------- Hero live intro conversation (Slide 1) ---------------- */
+  (function () {
+    const heroSection = document.getElementById("slide-01");
+    const heroThread = document.getElementById("hero-thread");
+    if (!heroSection || !heroThread) return;
+
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    let token = 0;
+
+    function el(html) {
+      const wrap = document.createElement("div");
+      wrap.innerHTML = html.trim();
+      return wrap.firstElementChild;
+    }
+
+    function scrollThread() {
+      heroThread.scrollTo({ top: heroThread.scrollHeight, behavior: "smooth" });
+    }
+
+    async function typeAssistant(text, myToken) {
+      const bubble = el(`<div class="chat-bubble ai in text-sm"></div>`);
+      heroThread.appendChild(bubble);
+      scrollThread();
+      let i = 0;
+      while (i <= text.length) {
+        if (myToken !== token) return;
+        bubble.textContent = text.slice(0, i);
+        i++;
+        scrollThread();
+        await sleep(20);
+      }
+    }
+
+    async function typeUser(text, myToken) {
+      const bubble = el(`<div class="chat-bubble user in text-sm"></div>`);
+      heroThread.appendChild(bubble);
+      scrollThread();
+      let i = 0;
+      while (i <= text.length) {
+        if (myToken !== token) return;
+        bubble.textContent = text.slice(0, i);
+        i++;
+        scrollThread();
+        await sleep(38);
+      }
+    }
+
+    async function showTyping(myToken) {
+      const bubble = el(`
+        <div class="chat-bubble ai loading-bubble">
+          <div class="typing-row"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>
+          <span class="text-white/50 text-xs font-semibold">بصيرة يكتب...</span>
+        </div>`);
+      heroThread.appendChild(bubble);
+      requestAnimationFrame(() => bubble.classList.add("in"));
+      scrollThread();
+      await sleep(1100);
+      if (myToken !== token) return false;
+      bubble.remove();
+      return true;
+    }
+
+    const ACTIVITY = [
+      {
+        label: "تحليل الاحتياجات...",
+        icon: `<polygon points="12 2 14.5 9.5 22 12 14.5 14.5 12 22 9.5 14.5 2 12 9.5 9.5 12 2" fill="currentColor" stroke="none"/>`,
+      },
+      {
+        label: "تحليل البيانات...",
+        icon: `<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>`,
+      },
+      {
+        label: "توزيع الموارد...",
+        icon: `<circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/><path d="M17 3.13a4 4 0 0 1 0 7.75"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>`,
+      },
+      {
+        label: "تخطيط النقل...",
+        icon: `<rect x="3" y="6" width="18" height="11" rx="2"/><path d="M3 12h18"/><circle cx="7.5" cy="19" r="1.4"/><circle cx="16.5" cy="19" r="1.4"/>`,
+      },
+      {
+        label: "إنشاء خطة التشغيل...",
+        icon: `<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/>`,
+      },
+    ];
+
+    async function playActivityFeed(myToken) {
+      const container = el(`<div class="chat-bubble ai !bg-white/[.03]"><div class="space-y-2.5" data-feed></div></div>`);
+      heroThread.appendChild(container);
+      scrollThread();
+      const feed = container.querySelector("[data-feed]");
+      for (const step of ACTIVITY) {
+        if (myToken !== token) return;
+        const prev = feed.querySelector(".stream-item:last-child .stream-check");
+        if (prev) {
+          prev.style.background = "rgba(74,222,128,.15)";
+          prev.style.color = "#4ADE80";
+        }
+        const item = el(`
+          <div class="stream-item">
+            <span class="stream-check" style="background:rgba(201,162,39,.18); color:#E4C766;"><svg width="10" height="10" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${step.icon}</svg></span>
+            <span class="text-white/80 text-[13px] font-medium">${step.label}</span>
+          </div>`);
+        feed.appendChild(item);
+        requestAnimationFrame(() => item.classList.add("in"));
+        scrollThread();
+        await sleep(650);
+      }
+      const last = feed.querySelector(".stream-item:last-child .stream-check");
+      if (last) {
+        last.style.background = "rgba(74,222,128,.15)";
+        last.style.color = "#4ADE80";
+      }
+    }
+
+    async function playHeroDemo(myToken) {
+      heroThread.innerHTML = "";
+      await typeAssistant("أهلاً وسهلاً، كيف يمكنني مساعدتك اليوم؟", myToken);
+      await sleep(700);
+      if (myToken !== token) return;
+
+      await typeUser("خلك جاهز لموسم حج 1448هـ.", myToken);
+      await sleep(400);
+      if (myToken !== token) return;
+
+      if (!(await showTyping(myToken))) return;
+
+      await typeAssistant("تم. أنا جاهز لمساعدتك في التخطيط والتشغيل واتخاذ القرار طوال الموسم.", myToken);
+      await sleep(500);
+      if (myToken !== token) return;
+
+      await playActivityFeed(myToken);
+      if (myToken !== token) return;
+
+      await sleep(3500);
+      if (myToken !== token) return;
+      playHeroDemo(myToken);
+    }
+
+    const heroObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            token++;
+            playHeroDemo(token);
+          } else {
+            token++;
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+    heroObserver.observe(heroSection);
+  })();
+
   /* ---------------- Build side navigation dots ---------------- */
   slides.forEach((slide, i) => {
     const dot = document.createElement("div");
