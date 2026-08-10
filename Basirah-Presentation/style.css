@@ -855,6 +855,12 @@ p{ line-height: 1.9; text-wrap: pretty; }
 .center-glow{ animation: pulseGlow 3.2s ease-in-out infinite; }
 .route-arrow{ opacity: .55; }
 
+/* ---- icon-only map markers (centers / checkpoints / congestion / gathering) ---- */
+/* note: markers already carry a translate() transform attribute for positioning;
+   hover feedback uses filter (not CSS transform) so it never overrides that position. */
+.map-marker{ transition: filter .18s var(--ease-1); }
+.map-marker:hover{ filter: brightness(1.35) drop-shadow(0 0 3px rgba(228,199,102,.6)); }
+
 /* ---- bottom stat cards (alerts / incidents / distribution / flow) ---- */
 .stat-card-title{ font-size: .68rem; font-weight: 800; color: rgba(246,248,246,.55); margin-bottom: .65rem; }
 .donut-chip{

@@ -294,6 +294,111 @@
     }
     if (tripPanelClose) tripPanelClose.addEventListener("click", deselectBus);
 
+    /* ---- generic marker info panel (centers / checkpoints / congestion / gathering points) ---- */
+    function openInfoPanel(title, rowsHtml) {
+      if (selectedBus && selectedBus.el) {
+        selectedBus.el.classList.remove("selected");
+        selectedBus.paused = false;
+      }
+      selectedBus = null;
+      selectedPulse.setAttribute("opacity", "0");
+      selectedConnLine.setAttribute("opacity", "0");
+      selectedGlow.setAttribute("opacity", "0");
+      tripPanelTitle.textContent = title;
+      tripPanelBody.innerHTML = rowsHtml.join("");
+      tripPanel.classList.add("open");
+    }
+    const MARKER_INFO = {
+      "marker-congestion": [
+        "ازدحام مروري",
+        [
+          tripRow("activity", "الحالة", "ازدحام مرتفع"),
+          tripRow("trend", "التأخير المتوقع", "18 دقيقة"),
+          tripRow("route", "المسار المتأثر", "طريق الهجرة"),
+          tripRow("checkpoint", "التوصية", "استخدام المسار البديل"),
+        ],
+      ],
+      "marker-center-1": [
+        "مركز عمليات المدينة المنورة",
+        [
+          tripRow("person", "نسبة الإشغال", "85%"),
+          tripRow("users", "عدد الموظفين", "124"),
+          tripRow("bus", "عدد الحجاج", "3,820"),
+          tripRow("activity", "الحالة", "نشط"),
+        ],
+      ],
+      "marker-center-2": [
+        "مركز عمليات المسار الأوسط",
+        [
+          tripRow("person", "نسبة الإشغال", "72%"),
+          tripRow("users", "عدد الموظفين", "96"),
+          tripRow("bus", "عدد الحجاج", "2,450"),
+          tripRow("activity", "الحالة", "نشط"),
+        ],
+      ],
+      "marker-center-3": [
+        "مركز عمليات مكة المكرمة",
+        [
+          tripRow("person", "نسبة الإشغال", "90%"),
+          tripRow("users", "عدد الموظفين", "140"),
+          tripRow("bus", "عدد الحجاج", "4,100"),
+          tripRow("activity", "الحالة", "نشط"),
+        ],
+      ],
+      "marker-cp-1": [
+        "نقطة تفتيش 1",
+        [tripRow("clock", "متوسط زمن العبور", "3 دقائق"), tripRow("activity", "الحالة", "طبيعي")],
+      ],
+      "marker-cp-2": [
+        "نقطة تفتيش 2",
+        [tripRow("clock", "متوسط زمن العبور", "5 دقائق"), tripRow("activity", "الحالة", "طبيعي")],
+      ],
+      "marker-cp-3": [
+        "نقطة تفتيش 3",
+        [tripRow("clock", "متوسط زمن العبور", "9 دقائق"), tripRow("activity", "الحالة", "ازدحام خفيف")],
+      ],
+      "marker-cp-4": [
+        "نقطة تفتيش 4",
+        [tripRow("clock", "متوسط زمن العبور", "4 دقائق"), tripRow("activity", "الحالة", "طبيعي")],
+      ],
+      "marker-gather-1": [
+        "نقطة تجمع — المدينة المنورة",
+        [tripRow("users", "عدد الحجاج الحاليين", "612"), tripRow("activity", "الحالة", "استقبال مستمر")],
+      ],
+      "marker-gather-2": [
+        "نقطة تجمع — مكة المكرمة",
+        [tripRow("users", "عدد الحجاج الحاليين", "845"), tripRow("activity", "الحالة", "استقبال مستمر")],
+      ],
+      "marker-heat-1": [
+        "قراءة الحرارة — المدينة المنورة",
+        [tripRow("temp", "درجة الحرارة", "37°"), tripRow("activity", "الحالة", "طبيعية")],
+      ],
+      "marker-heat-2": [
+        "قراءة الحرارة — منتصف الطريق",
+        [tripRow("temp", "درجة الحرارة", "44°"), tripRow("activity", "الحالة", "مرتفعة")],
+      ],
+      "marker-heat-3": [
+        "قراءة الحرارة — مكة المكرمة",
+        [tripRow("temp", "درجة الحرارة", "41°"), tripRow("activity", "الحالة", "مرتفعة")],
+      ],
+      "marker-incident-1": [
+        "إشعار طارئ",
+        [
+          tripRow("activity", "النوع", "توقف مؤقت لحافلة"),
+          tripRow("clock", "الوقت المتوقع للحل", "6 دقائق"),
+        ],
+      ],
+    };
+    document.querySelectorAll("#ops-map .map-marker").forEach((marker) => {
+      const info = MARKER_INFO[marker.id];
+      if (!info) return;
+      marker.style.cursor = "pointer";
+      marker.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openInfoPanel(info[0], info[1]);
+      });
+    });
+
     /* ---- filters ---- */
     document.querySelectorAll('#map-filters input[type="checkbox"]').forEach((cb) => {
       cb.addEventListener("change", () => {
