@@ -638,17 +638,60 @@ p{ line-height: 1.9; text-wrap: pretty; }
 #ending-curtain.black{ opacity: 1; }
 
 /* ---------- Live Chat Demo (Slide 04) ---------- */
-.chat-thread-scroll{
-  max-height: min(58vh, 560px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 4px 6px 4px 2px;
-  scroll-behavior: smooth;
-  mask-image: linear-gradient(180deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
-  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
+/* Slide 04 tabs: one scenario visible at a time, no scroll inside the slide */
+.s4-tab{
+  padding: .55rem .5rem;
+  border-radius: 12px;
+  font-size: .72rem;
+  font-weight: 800;
+  color: rgba(246,248,246,.6);
+  background: rgba(255,255,255,.05);
+  border: 1.5px solid rgba(255,255,255,.08);
+  cursor: pointer;
+  text-align: center;
+  transition: color .22s var(--ease-1), background .22s var(--ease-1), border-color .22s var(--ease-1), transform .22s var(--ease-1);
 }
-.chat-thread-scroll::-webkit-scrollbar{ width: 5px; }
-.chat-thread-scroll::-webkit-scrollbar-thumb{ background: rgba(201,162,39,.4); border-radius: 10px; }
+.s4-tab:hover{ color: rgba(246,248,246,.85); border-color: rgba(255,255,255,.18); }
+.s4-tab.active{
+  color: #083A2F;
+  background: linear-gradient(135deg, #E4C766, #C9A227);
+  border-color: transparent;
+  box-shadow: 0 10px 26px -12px rgba(201,162,39,.6);
+}
+.s4-counter{
+  font-size: .68rem;
+  font-weight: 800;
+  color: #E4C766;
+  background: rgba(201,162,39,.12);
+  border: 1px solid rgba(201,162,39,.3);
+  border-radius: 999px;
+  padding: .3rem .7rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.s4-progress-track{
+  position: relative;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  overflow: hidden;
+  margin-bottom: 1.1rem;
+}
+.s4-progress-fill{
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  width: 33.333%;
+  background: linear-gradient(90deg, #C9A227, #E4C766);
+  border-radius: 999px;
+  transition: transform .35s var(--ease-1);
+}
+.s4-thread{
+  overflow: visible;
+  padding: 2px 2px 2px 2px;
+  transition: opacity .32s var(--ease-1);
+}
+.s4-thread.switching{ opacity: 0; }
 
 /* Hero conversation: content-driven height, no forced empty space, no top fade
    (short, finite thread — scrolling is a rare safety net, not the norm). */
@@ -686,25 +729,6 @@ p{ line-height: 1.9; text-wrap: pretty; }
   transition: opacity .6s var(--ease-1), transform .6s var(--ease-1);
 }
 .live-map-card.in{ opacity: 1; transform: translateY(0) scale(1); }
-
-.scenario-divider{
-  display: flex;
-  align-items: center;
-  gap: .6rem;
-  color: rgba(246,248,246,.3);
-  font-size: .68rem;
-  font-weight: 700;
-  margin: .5rem 0;
-  opacity: 0;
-  transition: opacity .5s var(--ease-1);
-}
-.scenario-divider.in{ opacity: 1; }
-.scenario-divider::before, .scenario-divider::after{
-  content: '';
-  height: 1px;
-  flex: 1;
-  background: rgba(246,248,246,.12);
-}
 
 .loading-bubble{
   display: flex;

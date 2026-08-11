@@ -819,15 +819,6 @@
       await sleep(1600);
     }
 
-    async function addDivider(label, token) {
-      if (token !== runToken) return;
-      const div = el(`<div class="scenario-divider">${label}</div>`);
-      thread.appendChild(div);
-      requestAnimationFrame(() => div.classList.add("in"));
-      scrollThread();
-      await sleep(500);
-    }
-
     async function addAssistantLine(text, token) {
       if (token !== runToken) return;
       const bubble = el(`<div class="chat-bubble ai in text-sm text-white/85">${text}</div>`);
@@ -957,39 +948,57 @@
       await addDecisionCard(["إنشاء نقطة تفعيل مؤقتة", "إعادة توزيع 64 موظفًا", "تفعيل داخل الحافلات", "إنهاء العملية خلال 6 ساعات"], token);
     }
 
-    async function playDemo(token) {
-      thread.innerHTML = "";
-      const welcome = el(`<div class="chat-bubble ai in text-sm text-white/90">مرحبًا، أنا بصيرة.<br>كيف يمكنني مساعدتك في التخطيط التشغيلي اليوم؟</div>`);
-      thread.appendChild(welcome);
-      scrollThread();
-      await sleep(1300);
-      if (token !== runToken) return;
+    /* ---- tabs: one scenario visible at a time, no auto-cycling ---- */
+    const SCENARIOS = [
+      { key: "activation", run: scenarioActivation },
+      { key: "transport", run: scenarioTransport },
+      { key: "fallback", run: scenarioFallback },
+    ];
+    const tabButtons = Array.from(document.querySelectorAll("#s4-tabs .s4-tab"));
+    const counterEl = document.getElementById("s4-counter");
+    const progressFill = document.getElementById("s4-progress");
+    let activeIndex = 0;
 
-      await scenarioActivation(token);
-      if (token !== runToken) return;
-      await addDivider("سيناريو تالٍ", token);
-      if (token !== runToken) return;
-
-      await scenarioTransport(token);
-      if (token !== runToken) return;
-      await addDivider("سيناريو تالٍ", token);
-      if (token !== runToken) return;
-
-      await scenarioFallback(token);
-      if (token !== runToken) return;
-
-      await sleep(3200);
-      if (token !== runToken) return;
-      playDemo(token);
+    function setActiveTabUI(index) {
+      tabButtons.forEach((btn, i) => btn.classList.toggle("active", i === index));
+      if (counterEl) counterEl.textContent = `${index + 1} / ${SCENARIOS.length}`;
+      if (progressFill) progressFill.style.transform = `translateX(${index * -100}%)`;
     }
 
+    async function playScenario(index, token) {
+      thread.innerHTML = "";
+      await SCENARIOS[index].run(token);
+    }
+
+    async function switchToScenario(index) {
+      if (index === activeIndex && thread.children.length) return;
+      activeIndex = index;
+      runToken++;
+      const token = runToken;
+      setActiveTabUI(index);
+      thread.classList.add("switching");
+      await sleep(320);
+      if (token !== runToken) return;
+      thread.classList.remove("switching");
+      await playScenario(index, token);
+    }
+
+    tabButtons.forEach((btn, i) => {
+      btn.addEventListener("click", () => switchToScenario(i));
+    });
+
+    let hasEntered = false;
     const liveObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
+            hasEntered = true;
+            activeIndex = 0;
             runToken++;
-            playDemo(runToken);
-          } else {
+            const token = runToken;
+            setActiveTabUI(0);
+            playScenario(0, token);
+          } else if (hasEntered) {
             runToken++;
           }
         });
